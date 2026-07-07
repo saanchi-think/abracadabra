@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Think Technologies — Client Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+<style>
+  /* ===== THINK TECHNOLOGIES THEME ===== */
+  :root {
+    --think-logo: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAXgAAACLCAYAAABr7IKlAAAHfUlEQVR42u3dW6jsVQHH8e9JLU1TE+t4KcxICxVJ6AqClArZS4ZFSWYXKdMwumg9pEUW5Uv1kCVREUKkVFjRQ+UlMgsskyzNW5iaectLHTOVjp7Tw2zhnO32nLNndjN7Zj4fmIc9Z9bM+q+15ndm1v8/a63ZuHFjAMyeZ2gCAAEPgIAHQMADIOABEPAAAl4TAAh4AAQ8AAIeAAEPgIAHEPCaAGA2bT9i+T2q546prndVjy5x/47Vvst4nkequ1dRH0x7/R37fDJux2Nddf8kAv7E6vwxN+xLq5s3+Xv/6q9DPM/51btXwUCZ9vo79vlk3I7XB6qvN+YpmrMn0LjvXPT324Z8nnetwLeXlTDt9Xfs88m4Ha9zmsAc/I4TONBnbuXv5VizCgbLtNffsc8n47axTwk5yQqAgAcQ8AAIeAAEPAACHgABD8D0BvxvddnMuHrIcrdX6zUfUzZum8a1aEbxs+rvy3j85dWPjK+Z8dPq+OrIZZS5r/qypmPKxu0+1RvnKeBfXN1qrMy1DdWFCzeY9XH7wupvzcEUzS3CHZgzd1TXzEPAP6ivgTn0gJOsAAh4AAQ8gIAHQMADIOABEPAACPimb29F9QcE/BicNuXHf5pvYECrdLGxSftCdVbLW/BsFJdXp1cPqX9VO1Sfrd68jDJ3Vh+sbpiBD1Yfr94zpte7beEDwc1z/H4/pPpqtdcyynyv+kz1uICfTs+uDhzTax1YbVedpP5VHVd9Yog6/Lras9o4xePu8IX/oBtj311bPWtO3+drqt9Uuy6z3JnVH6sfmKJhW+yl/puFzjD2mIEPJi9qMuds5vX9vsMQ4f6kl5iDB0DAM9VeoAlWxN4T/CSLgIclHVq9XDOMZPcGc7uT8N4G89HkKhpYyh8aXM2y6drW/1oIrSs0T5tu0/aVNp/D3ak6YIJ1+lr1+TbfWWhDg6tLvtV0n7hGwLNC9l24bepX1c7VI5qnGuzdeegq/Qax+6L7vtFgt6Hf67ZM0cDT2FETtOl01jTZTZcJeAAEPEt4LOv7NCc/rJk2u8i5Jf1bwLOt4X7OjB/jSbq5GvxSddp8cobz4Kghyz1YXZCTrFPpsurk6r4xvd5/qiemuP5rq/OqI7fwmM9VJ1S/WHT/JdWPm72rNF5dvaPBEg5POrg6Yivl7q2Ora5vfEtynF59bAuPeWX1z4VA23Sc3lB9c0q+fR7VU9c2em112FbKXVcd3+ZXFz356X2jgJ9OJ1T3qP82e6h668Knmi152cJtU6dWR1eXztD4eV515ZBlTx6h7LB9d3r1vrb8k/1dF+q22MHVKa3+k9qXjPBeui5zUzPlAfUf6lvIsF4xY+NnvxHKTmo1zNuGLHfMFPTHwSOUvSMnHwAQ8AAIeAAEPAACHgABDyDgARDwAOO1nSYQ8MBkHfB/3K2qIdebWZcNPwBGdkV1RnXTCmbY+6vXbeVxNzZYUG3dogUAf9fKrhEl4IG5tUeD7QHHaUODtWrWZ4oGYKZcOo/hLuCBefB4TrICyDkHDjA9Xt+cnm90khVoDvYKvqL6VJvvsfpog40+XEUDMMVeU13c0tsn7tPgSptM0QDMjrXVbpmDB5hJawQ8AAIeYIocmJOsACviouqqxndy9U1becyF1YnVzYvuv78p/5GUgAfG6Q3Vz8f8moc3uEzy6exXXb7E/f9d+Ld7MkUDsFW/nMBrXjXC9fNvzxw8QNu6suO4bRyh7I4CHgABD4CAB0DAAyDgAQQ8AAIeAAG/wv40QtnddL++g+zotGr9pDqtOqanrj+xx1bKnledWq0bU13XN9oPLmaNvgMBv0VPVOcu3Fq0vvOXqg9voexbFm7j8o/qiOpGw07fQaZoGuWnyV9cZXV6fnW2IafvQMCP7rFVWKedDTl9BwIeAAH/NB7WvVNrXTO6yz3kJOuKfc0/rsEVF7u2+RrPvrmsbuurV1VnVbtscv/e1UGaBwR8DbYGu6inXqVxVHWx7l/Vrq6OXeL+g6o/ax7IHHxLX6VxSXWL7p9K11fXaQYQ8Ftym+6fWvdqAhDwAAJ+Dv1lAq/54KK/bx/yeR6pHp9A/R9v+GvU75ixvnug0a4SmoSbhix3g3Er4KfNmdXlY3y9y6qPLrrvwuqCZT7PndWRTWZtlA3V0dXdyyz3ner7M9Z3t1afXmZgPVZ9pMlNMZ1WXbnMMldVJxm302nNxo1Dt/c91dohyl3V4BI4gHly6cJ/cg1xyfdOPsEDIOABBDwAAh4AAQ+AgAdAwAMg4AEEPAACfhvtqdmBObS2OQj4/atD9DUwRw6cRO5Nakena6trqruWUeaS6twmsxodQNV21SnVMcsos3d1WHOy2Ngojm+wkh3AJBxb/bDx7y89F4uNHWZ8ARN0aE6yAiDgARDwAAh4AAGvCQAEPAACHoBpDviHJ1DfR3UZMEGTyKCHJxHwZ4z5IDdU3za+gAn6buNfLuVDTWCpgqqdq+eM6SAfqNYbX8CEbd/4VsV9eJRP8KMGPAA5yQqAgAdAwAMg4AEEPAACHgABD4CAB0DAAyDgAQQ8AAIeAAEPwBj9Dw8DRA++Hz5pAAAAAElFTkSuQmCC");
+    --bg:          #FAF8F7;   /* warm off-white content bg         */
+    --panel:       #FFFFFF;
+    --surface-2:   #F4F1EF;
+    --border:      #ECE7E4;
+    --border-soft: #F1ECE9;
+    --ink:         #0E0E0E;   /* near-black (sidebar)              */
+    --ink-2:       #1A1A1A;
+    --text:        #141210;
+    --text-muted:  #5B5651;
+    --text-dim:    #97918B;
+    --accent:      #781301;   /* Think brick-red                   */
+    --accent-2:    #A61C05;   /* lighter brick for gradients       */
+    --accent-soft: rgba(120,19,1,0.06);
+    --accent-line: rgba(120,19,1,0.20);
+    --good:        #1F7A4D;
+    --warn:        #B26A00;
+    --grad:        linear-gradient(135deg, #A61C05, #781301);
+    --radius:      16px;
+    --radius-sm:   10px;
+    --shadow:      0 18px 44px -26px rgba(60,20,10,0.4);
+    --shadow-sm:   0 6px 18px -10px rgba(60,20,10,0.22);
+    --font:        'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --side:        238px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg); color: var(--text); font-family: var(--font);
+    font-weight: 400; line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--accent); color: #fff; }
+  [hidden] { display: none !important; }
+  svg.ic { width: 19px; height: 19px; stroke: currentColor; stroke-width: 1.7; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ===== INTRO: wave draws in, then the portal builds around it ===== */
+  @keyframes draw { from { stroke-dashoffset: 900; } to { stroke-dashoffset: 0; } }
+  .side-brand, .nav, .side-foot, .home-inner { transition: opacity .8s ease, transform .8s ease; }
+  body.loading .side-brand, body.loading .nav, body.loading .side-foot { opacity: 0; transform: translateX(-12px); }
+  body.loading .home-inner { opacity: 0; transform: translateY(16px); }
+  body.loading .home-waves path { stroke-dasharray: 900; stroke-linecap: round; animation: draw 1.6s ease forwards, drift 17s ease-in-out infinite alternate; }
+
+  /* ===== LAYOUT ===== */
+  .app { display: flex; min-height: 100vh; }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: var(--side); flex-shrink: 0; background: var(--ink); color: #EDE9E6;
+    position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column;
+    padding: 26px 18px; overflow: hidden;
+  }
+  .sidebar::before {
+    content: ""; position: absolute; top: -80px; right: -80px; width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(166,28,5,0.5), transparent 70%); pointer-events: none;
+  }
+  .side-brand { display: flex; align-items: center; gap: 11px; padding: 4px 8px 26px; position: relative; z-index: 1; }
+  .think-mark { display: block; -webkit-mask: var(--think-logo) no-repeat center / contain; mask: var(--think-logo) no-repeat center / contain; }
+  .side-brand .brand-logo { height: 23px; aspect-ratio: 376 / 139; background: linear-gradient(180deg, #F3A06E, #D8481B); }
+  .side-brand .nm { font: 600 11px/1 var(--font); letter-spacing: .1em; text-transform: uppercase; color: #8A827C; }
+  .nav { display: flex; flex-direction: column; gap: 3px; position: relative; z-index: 1; }
+  .nav-item {
+    display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 11px;
+    color: #B4ADA7; font: 500 14px/1 var(--font); cursor: pointer; border: none; background: none;
+    text-align: left; width: 100%; transition: all .16s; position: relative;
+  }
+  .nav-item:hover { color: #fff; background: rgba(255,255,255,0.05); }
+  .nav-item.active { color: #fff; background: rgba(166,28,5,0.16); }
+  .nav-item.active::before { content: ""; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 3px; background: var(--accent-2); }
+  .side-foot { margin-top: auto; position: relative; z-index: 1; padding: 14px 10px 4px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .side-foot .client { display: flex; align-items: center; gap: 9px; font-size: 12.5px; color: #CFC9C4; font-weight: 500; }
+  .side-foot .client .dot { width: 7px; height: 7px; border-radius: 50%; background: #3ECf8e; }
+  .side-foot .tag { font-size: 11px; font-style: italic; color: #78716B; margin-top: 10px; line-height: 1.5; }
+
+  /* ===== CONTENT ===== */
+  .content { flex: 1; min-width: 0; position: relative; }
+  .content::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(1000px 300px at 100% -5%, rgba(166,28,5,0.05), transparent 60%),
+      radial-gradient(700px 260px at -10% 8%, rgba(120,19,1,0.035), transparent 60%);
+  }
+  .panel { display: none; padding: 48px 52px 72px; position: relative; z-index: 1; max-width: 1020px; }
+  .panel.active { display: block; animation: fade .35s ease; }
+  @keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* ===== CREATIVE MOTION ===== */
+  @keyframes rise  { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  @keyframes drift { 0% { transform: translateX(-16px); } 100% { transform: translateX(16px); } }
+  @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+  .home-waves path { animation: drift 17s ease-in-out infinite alternate; }
+  .home-waves path:nth-child(2) { animation-duration: 22s; }
+  .home-waves path:nth-child(3) { animation-duration: 27s; }
+  .lockup .mk.think-logo { animation: floaty 5s ease-in-out infinite; }
+  .lockup .mk.client { animation: floaty 5.6s ease-in-out infinite .3s; }
+  .card:hover, .mtg:hover { box-shadow: 0 22px 52px -26px rgba(120,19,1,0.42); }
+  .watermark { position: absolute; right: -60px; bottom: 30px; width: 520px; z-index: 0; opacity: .55; pointer-events: none; }
+  .watermark path { animation: drift 26s ease-in-out infinite alternate; }
+  @media (max-width: 820px) { .watermark { display: none; } }
+  .eyebrow { font: 600 11px/1 var(--font); letter-spacing: .16em; text-transform: uppercase; color: var(--accent); display: inline-flex; align-items: center; gap: 9px; }
+  .eyebrow::before { content: ""; width: 18px; height: 2px; background: var(--accent); }
+  .page-title { font: 700 30px/1.1 var(--font); letter-spacing: -0.02em; margin: 13px 0 30px; }
+
+  /* ===== HOME (dark hero) ===== */
+  #home.panel { padding: 0; max-width: none; }
+  .home {
+    min-height: 100vh; display: grid; place-items: center; text-align: center;
+    background: radial-gradient(1200px 700px at 50% 120%, #2a0a03 0%, #0E0E0E 55%);
+    color: #F4EFEC; position: relative; overflow: hidden;
+  }
+  .home-waves { position: absolute; inset: 0; z-index: 0; opacity: .9; }
+  .home-inner { position: relative; z-index: 1; max-width: 640px; padding: 40px; }
+  .lockup { display: inline-flex; align-items: center; gap: 22px; margin-bottom: 42px; }
+  .lockup .mk { width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; font: 800 27px/1 var(--font); }
+  .lockup .mk.client { background: #fff; color: #0E0E0E; }
+  .lockup .mk.think-logo { width: auto; height: 60px; border-radius: 0; background: none; padding: 0 6px; }
+  .lockup .mk.think-logo .think-mark { height: 60px; aspect-ratio: 376 / 139; background: linear-gradient(180deg, #F7AB77 0%, #E8814F 40%, #C0330F 100%); filter: drop-shadow(0 6px 20px rgba(192,51,15,.45)); }
+  .lockup .x { font-size: 18px; color: #7C736D; }
+  .lockup .lbl { font-size: 10.5px; letter-spacing: .16em; text-transform: uppercase; color: #8A817B; margin-top: 9px; }
+  .home h1 { font: 800 44px/1.1 var(--font); letter-spacing: -0.03em; margin-bottom: 20px; }
+  .home h1 .accent { color: #E8814F; }
+  .home p { font-size: 16.5px; color: #B7AEA8; max-width: 500px; margin: 0 auto 36px; }
+  .home .btn-lg { background: var(--grad); color: #fff; font: 600 15px/1 var(--font); padding: 15px 30px; border-radius: 999px; border: none; cursor: pointer; box-shadow: 0 14px 34px -10px rgba(166,28,5,.7); transition: transform .15s; }
+  .home .btn-lg:hover { transform: translateY(-2px); }
+  .home .tagline { margin-top: 34px; font-style: italic; font-size: 13px; color: #6E655F; }
+
+  /* ===== BUTTONS ===== */
+  .btn { display: inline-flex; align-items: center; gap: 8px; background: var(--grad); color: #fff; font: 600 13.5px/1 var(--font); padding: 12px 20px; border-radius: 999px; border: none; cursor: pointer; transition: transform .15s, opacity .2s; box-shadow: var(--shadow-sm); }
+  .btn:hover { transform: translateY(-1px); }
+  .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); box-shadow: none; }
+  .btn.ghost:hover { border-color: var(--accent-line); color: var(--accent); }
+
+  /* ===== CARD / GRID ===== */
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); transition: border-color .2s, box-shadow .2s, transform .2s; }
+  .grid { display: grid; gap: 16px; }
+  .grid.c3 { grid-template-columns: repeat(3,1fr); }
+  @media (max-width: 900px) { .grid.c3 { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 640px) { .grid.c3 { grid-template-columns: 1fr; } }
+  .pill { display: inline-flex; align-items: center; gap: 6px; font: 600 11.5px/1 var(--font); padding: 5px 11px; border-radius: 999px; border: 1px solid var(--border); }
+  .pill.accent { background: var(--accent-soft); color: var(--accent); border-color: var(--accent-line); }
+
+  /* ===== MEETING NOTES ===== */
+  .next { display: flex; align-items: center; gap: 20px; margin-bottom: 32px; background: var(--ink); color: #EFEAE6; border: none; overflow: hidden; position: relative; }
+  .next::before { content: ""; position: absolute; right: -60px; top: -60px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(166,28,5,.55), transparent 70%); }
+  .cal { width: 66px; height: 66px; border-radius: 12px; overflow: hidden; text-align: center; flex-shrink: 0; background: #fff; position: relative; z-index: 1; }
+  .cal .m { background: var(--grad); color: #fff; font: 600 10.5px/1 var(--font); letter-spacing: .1em; padding: 6px 0; text-transform: uppercase; }
+  .cal .d { color: #0E0E0E; font: 800 26px/1 var(--font); padding: 10px 0 3px; }
+  .cal .wd { color: #8A817B; font-size: 9.5px; text-transform: uppercase; letter-spacing: .1em; padding-bottom: 7px; }
+  .next .info { position: relative; z-index: 1; }
+  .next .info .lbl { font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: #E8814F; font-weight: 600; }
+  .next .info h3 { font: 600 18px/1.2 var(--font); margin: 4px 0 5px; }
+  .next .info .meta { font-size: 13px; color: #B7AEA8; display: flex; gap: 14px; flex-wrap: wrap; }
+  .next .btn { margin-left: auto; position: relative; z-index: 1; }
+  @media (max-width: 640px) { .next { flex-wrap: wrap; } .next .btn { margin-left: 0; } }
+
+  .next-actions { margin-left: auto; display: flex; flex-direction: column; gap: 8px; position: relative; z-index: 1; }
+  .btn.ghost-dark { background: rgba(255,255,255,0.06); color: #EFEAE6; border: 1px solid rgba(255,255,255,0.22); box-shadow: none; }
+  .btn.ghost-dark:hover { background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.4); }
+  @media (max-width: 640px) { .next-actions { margin-left: 0; flex-direction: row; flex-wrap: wrap; } }
+
+  .propose { margin: 14px 0 4px; padding: 20px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--border); box-shadow: var(--shadow-sm); animation: rise .35s ease; }
+  .propose-grid { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 14px; }
+  .propose-grid label { flex: 1; min-width: 160px; font: 600 12px/1 var(--font); color: var(--text-muted); display: flex; flex-direction: column; gap: 7px; }
+  .propose-grid input { font: 400 14px/1 var(--font); color: var(--text); background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 11px 12px; outline: none; }
+  .propose-grid input:focus { border-color: var(--accent-line); }
+  .propose textarea { width: 100%; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 13px; font: 400 14px/1.5 var(--font); color: var(--text); resize: vertical; min-height: 64px; outline: none; }
+  .propose textarea:focus { border-color: var(--accent-line); }
+  .propose-actions { display: flex; gap: 10px; margin-top: 14px; }
+  .propose-done { margin: 14px 0 4px; padding: 15px 18px; border-radius: var(--radius); background: rgba(31,122,77,0.08); border: 1px solid rgba(31,122,77,0.28); color: var(--good); font: 500 14px/1.5 var(--font); display: flex; align-items: center; gap: 10px; animation: rise .35s ease; }
+
+  .mtg { display: flex; gap: 22px; padding: 20px; margin-bottom: 12px; border-radius: var(--radius); background: var(--panel); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
+  .mtg > div:nth-child(2) { flex: 1; min-width: 0; }
+  .mtg .mdate { flex: 0 0 66px; text-align: center; border-right: 1px solid var(--border-soft); padding-right: 20px; align-self: flex-start; }
+  .mtg .mdate .mo { display: block; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-dim); font-weight: 600; }
+  .mtg .mdate .dy { display: block; font: 800 32px/1 var(--font); background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin: 3px 0 2px; }
+  .mtg .mdate .yr { display: block; font-size: 11px; color: var(--text-dim); font-weight: 500; }
+  .mtg h4 { font: 600 15.5px/1.3 var(--font); margin-bottom: 8px; }
+  .mtg ul { list-style: none; }
+  .mtg li { position: relative; padding: 5px 0 5px 18px; font-size: 14px; color: var(--text-muted); }
+  .mtg li::before { content: ""; position: absolute; left: 0; top: 13px; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+  .mtg li .added-tag { font: 600 10px/1 var(--font); letter-spacing: .05em; text-transform: uppercase; color: var(--accent); margin-left: 8px; vertical-align: middle; }
+  .mtg-actions { align-self: stretch; display: flex; align-items: center; flex-shrink: 0; padding-left: 20px; margin-left: 4px; border-left: 1px solid var(--border-soft); }
+  .mtg-comment-btn { display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: none; cursor: pointer; color: var(--text-dim); font: 600 11px/1 var(--font); padding: 6px 4px; transition: color .15s, transform .15s; }
+  .mtg-comment-btn svg { width: 20px; height: 20px; transition: transform .15s; }
+  .mtg-comment-btn:hover { color: var(--accent); }
+  .mtg-comment-btn:hover svg { transform: scale(1.08); }
+  .comments:empty { margin-top: 0; }
+  @media (max-width: 640px) { .mtg-actions { border-left: none; border-top: 1px solid var(--border-soft); padding-left: 0; padding-top: 12px; margin-left: 0; margin-top: 12px; align-self: stretch; } .mtg-comment-btn { flex-direction: row; } }
+  .mini { font: 600 12px/1 var(--font); padding: 8px 13px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-muted); cursor: pointer; transition: all .15s; }
+  .mini:hover { border-color: var(--accent-line); color: var(--accent); }
+  .mini-input { display: flex; gap: 8px; margin-top: 12px; }
+  .mini-input input { flex: 1; border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px; font: 400 13.5px/1.4 var(--font); color: var(--text); background: var(--panel); outline: none; }
+  .mini-input input:focus { border-color: var(--accent-line); }
+  .mini-input .go { flex-shrink: 0; background: var(--grad); color: #fff; border: none; }
+  .comments { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+  .cmt { display: flex; gap: 10px; align-items: flex-start; }
+  .cmt-av { width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: #fff; font: 600 10.5px/28px var(--font); text-align: center; flex-shrink: 0; }
+  .cmt-b { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px; font-size: 13.5px; color: var(--text); line-height: 1.5; }
+  .cmt-b .cmt-who { font-weight: 600; font-size: 12px; margin-bottom: 2px; }
+
+  /* ===== STATUS ===== */
+  .prog-card { margin-bottom: 30px; }
+  .prog-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 14px; }
+  .prog-head .pct { font: 800 30px/1 var(--font); background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .prog-head .count { font-size: 13px; color: var(--text-dim); }
+  .track { height: 12px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+  .fill { height: 100%; background: var(--grad); border-radius: 999px; width: 0; transition: width 1s ease; }
+  .stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin: 22px 0 34px; }
+  .stat { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; box-shadow: var(--shadow-sm); }
+  .stat .n { font: 800 34px/1 var(--font); background: var(--grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+  .stat .l { font-size: 12.5px; color: var(--text-dim); margin-top: 8px; font-weight: 500; }
+  @media (max-width: 640px) { .stat-row { grid-template-columns: repeat(3,1fr); gap: 10px; } .stat { padding: 16px 14px; } .stat .n { font-size: 26px; } }
+  .deliv { display: flex; align-items: center; gap: 14px; padding: 15px 0; border-top: 1px solid var(--border-soft); }
+  .deliv:last-child { border-bottom: 1px solid var(--border-soft); }
+  .st-icon { width: 28px; height: 28px; flex-shrink: 0; display: grid; place-items: center; }
+  .st-icon svg { width: 28px; height: 28px; stroke-width: 2.4; }
+  .st-icon.done { color: var(--good); }
+  .st-icon.prog { color: var(--warn); }
+  .st-icon.later { color: var(--text-dim); }
+  .deliv .name { font-size: 15px; font-weight: 500; flex: 1; }
+
+  /* status discussion */
+  .discuss { margin-top: 40px; border-top: 1px solid var(--border-soft); padding-top: 30px; }
+  .discuss-title { font: 700 20px/1.1 var(--font); margin-bottom: 18px; }
+  .discuss-composer { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow-sm); margin-bottom: 26px; }
+  .dc-label { font: 600 11px/1 var(--font); letter-spacing: .06em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+  .dc-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .dc-tag { font: 600 11.5px/1 var(--font); color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line); padding: 6px 9px; border-radius: 999px; cursor: pointer; transition: all .15s; white-space: nowrap; }
+  .dc-tag:hover { background: var(--accent-line); }
+  .dc-tag.on { background: var(--grad); color: #fff; border-color: transparent; }
+  .dc-row { display: flex; gap: 10px; }
+  .dc-row input { flex: 1; border: 1px solid var(--border); border-radius: 9px; padding: 11px 13px; font: 400 14px/1.4 var(--font); color: var(--text); background: var(--surface-2); outline: none; }
+  .dc-row input:focus { border-color: var(--accent-line); }
+  .discuss-thread { display: flex; flex-direction: column; gap: 20px; }
+  .dcomment { display: flex; gap: 12px; align-items: flex-start; }
+  .dcomment-main { flex: 1; }
+  .dcomment-head { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; flex-wrap: wrap; }
+  .dcomment-who { font-weight: 600; font-size: 13.5px; }
+  .deliv-tag { font: 600 11px/1 var(--font); color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line); padding: 4px 9px; border-radius: 999px; }
+  .dcomment-text { font-size: 14px; color: var(--text); line-height: 1.55; }
+  .dc-reply { margin-top: 7px; font: 600 12px/1 var(--font); color: var(--text-dim); background: none; border: none; cursor: pointer; padding: 0; }
+  .dc-reply:hover { color: var(--accent); }
+  .dcomment-replies { margin-top: 14px; padding-left: 16px; border-left: 2px solid var(--border); display: flex; flex-direction: column; gap: 14px; }
+  .cmt-av.think { background: var(--grad); }
+  .deliv .tag { font-size: 12.5px; font-weight: 600; }
+  .deliv .tag.done { color: var(--good); }
+  .deliv .tag.prog { color: var(--warn); }
+  .deliv .tag.later { color: var(--text-dim); }
+
+  /* ===== PROPOSALS & MEDIA ===== */
+  .item { display: flex; flex-direction: column; }
+  .item:hover { border-color: var(--accent-line); transform: translateY(-4px); box-shadow: var(--shadow); }
+  .item .ficon { width: 46px; height: 46px; border-radius: 13px; background: var(--accent-soft); border: 1px solid var(--accent-line); display: grid; place-items: center; color: var(--accent); margin-bottom: 16px; transition: background .2s, color .2s, border-color .2s, transform .2s; }
+  .item .ficon svg { width: 23px; height: 23px; stroke-width: 1.8; }
+  .item:hover .ficon { background: var(--grad); color: #fff; border-color: transparent; transform: translateY(-2px); }
+  /* file-type colour coding */
+  .item .ficon.t-pdf    { color: #A61C05; background: rgba(166,28,5,0.08);  border-color: rgba(166,28,5,0.22); }
+  .item .ficon.t-slides { color: #C2410C; background: rgba(194,65,12,0.09); border-color: rgba(194,65,12,0.22); }
+  .item .ficon.t-video  { color: #3B5BA5; background: rgba(59,91,165,0.10); border-color: rgba(59,91,165,0.22); }
+  .item .ficon.t-image  { color: #6D4AA6; background: rgba(109,74,166,0.10); border-color: rgba(109,74,166,0.22); }
+  .item:hover .ficon.t-pdf    { background: linear-gradient(135deg,#C0330F,#8A1804); color: #fff; border-color: transparent; }
+  .item:hover .ficon.t-slides { background: linear-gradient(135deg,#E0611F,#C2410C); color: #fff; border-color: transparent; }
+  .item:hover .ficon.t-video  { background: linear-gradient(135deg,#4E6DC2,#3B5BA5); color: #fff; border-color: transparent; }
+  .item:hover .ficon.t-image  { background: linear-gradient(135deg,#835FC0,#6D4AA6); color: #fff; border-color: transparent; }
+
+  /* requested-from-client section */
+  .reqfrom { background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 24px; }
+  .reqfrom-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .reqfrom-title { font: 700 15px/1.2 var(--font); color: var(--text); }
+  .reqfrom-count { font: 600 11.5px/1 var(--font); color: var(--accent); background: #fff; border: 1px solid var(--accent-line); padding: 5px 10px; border-radius: 999px; white-space: nowrap; }
+  .reqfrom-sub { font-size: 12.5px; color: var(--text-muted); margin: 4px 0 6px; }
+  .reqrow { display: flex; align-items: center; gap: 14px; padding: 13px 0; border-top: 1px solid var(--accent-line); }
+  .reqrow-ic { width: 36px; height: 36px; border-radius: 9px; background: #fff; border: 1px solid var(--accent-line); display: grid; place-items: center; color: var(--accent); flex-shrink: 0; }
+  .reqrow-ic svg { width: 18px; height: 18px; stroke-width: 2; }
+  .reqrow-main { flex: 1; }
+  .reqrow-name { font-weight: 600; font-size: 14px; }
+  .reqrow-note { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+  .btn.small { padding: 8px 15px; font-size: 12.5px; }
+  .reqrow[data-state="done"] .reqrow-ic { background: var(--good); color: #fff; border-color: transparent; }
+  .reqrow-done { font: 600 12.5px/1 var(--font); color: var(--good); display: inline-flex; align-items: center; gap: 6px; }
+  .reqrow-done::before { content: "✓"; }
+
+  /* library toolbar: search + type filters */
+  .lib-bar { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+  .lib-search { flex: 1; min-width: 210px; display: flex; align-items: center; gap: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 11px; padding: 11px 14px; box-shadow: var(--shadow-sm); }
+  .lib-search:focus-within { border-color: var(--accent-line); }
+  .lib-search svg { width: 17px; height: 17px; fill: none; stroke: var(--text-dim); stroke-width: 2; stroke-linecap: round; flex-shrink: 0; }
+  .lib-search input { flex: 1; border: none; outline: none; background: transparent; font: 400 14px/1 var(--font); color: var(--text); }
+  .lib-search input::placeholder { color: var(--text-dim); }
+  .lib-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+  .fchip { font: 500 12.5px/1 var(--font); padding: 9px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--panel); color: var(--text-muted); cursor: pointer; transition: all .15s; }
+  .fchip:hover { border-color: var(--accent-line); color: var(--text); }
+  .fchip.on { background: var(--grad); color: #fff; border-color: transparent; }
+  .lib-empty { color: var(--text-dim); font-size: 14px; padding: 18px 2px; }
+  .item .kind { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); font-weight: 600; }
+  .item h4 { font: 600 15.5px/1.3 var(--font); margin: 5px 0 6px; }
+  .item .meta { font-size: 12.5px; color: var(--text-dim); flex: 1; }
+  .item .go { margin-top: 14px; font: 600 13px/1 var(--font); color: var(--accent); display: inline-flex; gap: 6px; align-items: center; }
+  .item:hover .go { gap: 10px; }
+
+  /* ===== CONTRACT ===== */
+  .contract { display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap; }
+  .doc { flex: 0 0 296px; height: 384px; border-radius: 12px; background: #fff; box-shadow: var(--shadow); padding: 26px 24px; overflow: hidden; position: relative; border: 1px solid var(--border); }
+  .doc::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 100px; background: linear-gradient(transparent, #fff); }
+  .doc .dh { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; }
+  .doc .dh .m { width: 22px; height: 22px; border-radius: 50%; background: var(--grad); }
+  .doc .dh span { font: 600 12px/1 var(--font); }
+  .doc h5 { font: 700 15px/1.3 var(--font); margin-bottom: 16px; }
+  .doc p { font-size: 9.5px; line-height: 1.8; color: var(--text-muted); margin-bottom: 10px; }
+  .doc .line { height: 7px; background: var(--surface-2); border-radius: 3px; margin-bottom: 8px; }
+  .doc .line.s { width: 60%; }
+  .contract .side { flex: 1; min-width: 240px; }
+  .contract .side h3 { font: 600 19px/1.3 var(--font); margin-bottom: 6px; }
+  .contract .side .sub { font-size: 13.5px; color: var(--text-dim); margin-bottom: 22px; }
+  .meta-line { display: flex; gap: 22px; margin: 22px 0; flex-wrap: wrap; }
+  .meta-line .b .k { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-dim); }
+  .meta-line .b .v { font-size: 14px; font-weight: 600; margin-top: 3px; }
+  .contract .row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* ===== REQUEST WORK ===== */
+  .req { max-width: 560px; }
+  .req .lbl { font: 600 13px/1 var(--font); margin: 22px 0 10px; }
+  .chips { display: flex; gap: 9px; flex-wrap: wrap; }
+  .chip { font: 500 13px/1 var(--font); padding: 10px 16px; border-radius: 999px; border: 1px solid var(--border); cursor: pointer; transition: all .15s; background: var(--panel); }
+  .chip:hover { border-color: var(--accent-line); }
+  .chip.on { background: var(--grad); color: #fff; border-color: transparent; }
+  .subchips { margin: 12px 0 4px; padding: 14px 16px; background: var(--surface-2); border: 1px dashed var(--accent-line); border-radius: 12px; animation: rise .3s ease; }
+  .sub-lbl { font: 600 10.5px/1 var(--font); letter-spacing: .08em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
+  .chip.sub { font-size: 12.5px; padding: 8px 13px; background: var(--panel); }
+  .req textarea { width: 100%; background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; font: 400 14.5px/1.6 var(--font); color: var(--text); resize: vertical; min-height: 110px; outline: none; }
+  .req textarea:focus { border-color: var(--accent-line); }
+  .req .btn { margin-top: 22px; }
+
+  /* ===== LIVE FEEDBACK: product preview + comments ===== */
+  .preview-card { max-width: 680px; }
+  .preview-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+  .preview-title { font: 600 16px/1.2 var(--font); }
+  .preview-sub { font-size: 12.5px; color: var(--text-dim); margin-top: 3px; }
+  .preview-frame { border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; box-shadow: var(--shadow-sm); }
+  .pf-bar { display: flex; align-items: center; gap: 6px; padding: 10px 14px; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+  .pf-bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--border); }
+  .pf-bar i:nth-child(1) { background: #E0611F; } .pf-bar i:nth-child(2) { background: #D8B024; } .pf-bar i:nth-child(3) { background: #1F7A4D; }
+  .pf-url { margin-left: 12px; font: 500 11.5px/1 var(--font); color: var(--text-dim); background: var(--panel); border: 1px solid var(--border); padding: 5px 12px; border-radius: 999px; }
+  .pf-body { padding: 20px; display: flex; flex-direction: column; gap: 12px; background: var(--bg-2); }
+  .mock-msg { max-width: 78%; font-size: 13.5px; line-height: 1.5; padding: 10px 14px; border-radius: 14px; }
+  .mock-msg.bot { align-self: flex-start; background: #fff; border: 1px solid var(--border); border-top-left-radius: 4px; }
+  .mock-msg.user { align-self: flex-end; background: var(--grad); color: #fff; border-top-right-radius: 4px; }
+  .mock-input { margin-top: 6px; display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid var(--border); border-radius: 999px; padding: 11px 8px 11px 16px; font-size: 13px; color: var(--text-dim); }
+  .mock-send { width: 28px; height: 28px; border-radius: 50%; background: var(--grad); }
+  .preview-actions { margin-top: 16px; }
+  .fb-compose { display: flex; gap: 10px; margin: 26px 0 22px; max-width: 680px; }
+  .fb-compose input { flex: 1; border: 1px solid var(--border); border-radius: 11px; padding: 12px 14px; font: 400 14px/1.4 var(--font); color: var(--text); background: var(--panel); outline: none; box-shadow: var(--shadow-sm); }
+  .fb-compose input:focus { border-color: var(--accent-line); }
+
+  /* ===== RESPONSIVE SIDEBAR ===== */
+  @media (max-width: 820px) {
+    .app { flex-direction: column; }
+    .sidebar { width: 100%; height: auto; position: sticky; top: 0; z-index: 50; flex-direction: row; align-items: center; padding: 12px 16px; gap: 10px; }
+    .sidebar::before { display: none; }
+    .side-brand { padding: 0; }
+    .side-brand .nm { display: none; }
+    .nav { flex-direction: row; overflow-x: auto; gap: 4px; margin-left: 8px; }
+    .nav-item { padding: 9px 12px; white-space: nowrap; }
+    .nav-item span.txt { display: none; }
+    .nav-item.active::before { display: none; }
+    .side-foot { display: none; }
+    .panel { padding: 32px 24px 60px; }
+    #home.panel { padding: 0; }
+  }
+</style>
+</head>
+<body class="loading">
+<div class="app">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="side-brand">
+      <span class="brand-logo think-mark" role="img" aria-label="Think Technologies"></span>
+      <div class="nm">Technologies</div>
+    </div>
+    <nav class="nav">
+      <button class="nav-item active" data-tab="home">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg><span class="txt">Home</span>
+      </button>
+      <button class="nav-item" data-tab="notes">
+        <svg class="ic" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></svg><span class="txt">Meeting Notes</span>
+      </button>
+      <button class="nav-item" data-tab="status">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M4 19V5M4 8h9M4 13h14M4 18h6"/></svg><span class="txt">Status</span>
+      </button>
+      <button class="nav-item" data-tab="proposals">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span class="txt">Proposals &amp; Media</span>
+      </button>
+      <button class="nav-item" data-tab="actioncenter">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M12 2 3 7v6c0 5 4 8 9 9 5-1 9-4 9-9V7z"/><path d="M9 12l2 2 4-4"/></svg><span class="txt">Client Action Center</span>
+      </button>
+      <button class="nav-item" data-tab="contract">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 17c1.5-2 3-2 4 0"/></svg><span class="txt">Contract</span>
+      </button>
+      <button class="nav-item" data-tab="request">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg><span class="txt">See Our Work</span>
+      </button>
+      <button class="nav-item" data-tab="demo">
+        <svg class="ic" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg><span class="txt">Live Feedback</span>
+      </button>
+    </nav>
+    <div class="side-foot">
+      <div class="client"><span class="dot"></span> Acme Corp</div>
+      <div class="tag">Navigating the present, creating the future.</div>
+    </div>
+  </aside>
+
+  <!-- ===== CONTENT ===== -->
+  <div class="content">
+    <svg class="watermark" viewBox="0 0 600 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M0,150 C120,80 240,220 360,150 C450,98 540,180 600,140" stroke="rgba(120,19,1,0.14)" stroke-width="1.4"/>
+      <path d="M0,190 C110,120 250,250 370,180 C460,128 550,205 600,170" stroke="rgba(120,19,1,0.10)" stroke-width="1"/>
+      <path d="M0,110 C140,50 250,180 380,120 C470,80 560,150 600,120" stroke="rgba(120,19,1,0.07)" stroke-width=".8"/>
+    </svg>
+
+    <!-- HOME -->
+    <section class="panel active" id="home">
+      <div class="home">
+        <svg class="home-waves" viewBox="0 0 1440 800" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="w" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#E8814F" stop-opacity="0"/>
+              <stop offset=".5" stop-color="#F0975E" stop-opacity="1"/>
+              <stop offset="1" stop-color="#E8814F" stop-opacity="0"/>
+            </linearGradient>
+            <filter id="glow" x="-20%" y="-40%" width="140%" height="180%">
+              <feGaussianBlur stdDeviation="6" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <g filter="url(#glow)">
+            <path d="M0,300 C360,200 720,440 1080,340 C1260,290 1380,380 1440,340" fill="none" stroke="url(#w)" stroke-width="3"/>
+            <path d="M0,420 C300,320 660,520 1080,420 C1260,378 1380,470 1440,430" fill="none" stroke="url(#w)" stroke-width="2" opacity=".8"/>
+            <path d="M0,540 C420,440 720,620 1120,530 C1300,494 1400,560 1440,550" fill="none" stroke="url(#w)" stroke-width="1.4" opacity=".6"/>
+          </g>
+        </svg>
+        <div class="home-inner">
+          <div class="lockup">
+            <div><div class="mk think-logo"><span class="think-mark" role="img" aria-label="Think Technologies"></span></div></div>
+            <div class="x">✕</div>
+            <div><div class="mk client">A</div><div class="lbl">Acme Corp</div></div>
+          </div>
+          <h1>Welcome to your <span class="accent">Think</span> workspace.</h1>
+          <p>We invite you to work with Think Technologies, your trusted AI expert team. We built this platform to collaborate with you directly and keep every workflow tailored to your goals.</p>
+          <button class="btn-lg" data-goto="notes">Enter portal →</button>
+          <div class="tagline">“Navigating the present, creating the future.”</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEETING NOTES -->
+    <section class="panel" id="notes">
+      <span class="eyebrow">Records</span>
+      <h2 class="page-title">Meeting Notes</h2>
+
+      <div class="card next">
+        <div class="cal"><div class="m">Jul</div><div class="d">09</div><div class="wd">Thu</div></div>
+        <div class="info">
+          <div class="lbl">Next Meeting</div>
+          <h3>Pilot proposal walkthrough</h3>
+          <div class="meta"><span>2:00–3:00 PM EST</span><span>Google Meet</span></div>
+        </div>
+        <div class="next-actions">
+          <button class="btn">Add to calendar →</button>
+          <button class="btn ghost-dark" id="proposeToggle">Propose new time</button>
+        </div>
+      </div>
+
+      <div class="propose" id="proposeBox" hidden>
+        <div class="propose-grid">
+          <label>Preferred date<input type="date" id="propDate"></label>
+          <label>Time<input type="time" id="propTime"></label>
+        </div>
+        <textarea id="propNote" placeholder="Add a note for the Think team (optional)…"></textarea>
+        <div class="propose-actions">
+          <button class="btn" id="proposeSend">Send proposal →</button>
+          <button class="btn ghost" id="proposeCancel">Cancel</button>
+        </div>
+      </div>
+      <div class="propose-done" id="proposeDone" hidden></div>
+
+      <div class="mtg">
+        <div class="mdate"><span class="mo">Jun</span><span class="dy">28</span><span class="yr">2026</span></div>
+        <div>
+          <h4>Scoping the customer-support AI assistant</h4>
+          <ul>
+            <li>Priority use case: tier-1 support ticket triage.</li>
+            <li>Acme to export 18 months of Zendesk history.</li>
+            <li>Target: first-response time from 6h to under 30min.</li>
+            <li>Decision: proceed to a 4-week pilot.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mtg">
+        <div class="mdate"><span class="mo">Jun</span><span class="dy">12</span><span class="yr">2026</span></div>
+        <div>
+          <h4>AI opportunity mapping</h4>
+          <ul>
+            <li>Shortlisted support automation &amp; sales forecasting.</li>
+            <li>Agreed to prioritise support for the first build.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="mtg">
+        <div class="mdate"><span class="mo">May</span><span class="dy">28</span><span class="yr">2026</span></div>
+        <div>
+          <h4>Data stack deep-dive</h4>
+          <ul>
+            <li>Reviewed Snowflake, Zendesk, Salesforce integration paths.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATUS -->
+    <section class="panel" id="status">
+      <span class="eyebrow">Progress</span>
+      <h2 class="page-title">Status</h2>
+      <div class="card prog-card">
+        <div class="prog-head">
+          <div class="pct" data-count="50" data-suffix="%">0%</div>
+          <div class="count">3 of 6 deliverables complete</div>
+        </div>
+        <div class="track"><div class="fill" data-w="50%"></div></div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat"><div class="n" data-count="3">0</div><div class="l">Completed</div></div>
+        <div class="stat"><div class="n" data-count="2">0</div><div class="l">In progress</div></div>
+        <div class="stat"><div class="n" data-count="1">0</div><div class="l">Upcoming</div></div>
+      </div>
+
+      <div class="deliv"><div class="st-icon done"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5 9-11"/></svg></div><div class="name">Data readiness assessment</div><div class="tag done">Complete</div></div>
+      <div class="deliv"><div class="st-icon done"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5 9-11"/></svg></div><div class="name">Pilot architecture design</div><div class="tag done">Complete</div></div>
+      <div class="deliv"><div class="st-icon done"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5 9-11"/></svg></div><div class="name">Zendesk data export &amp; cleaning</div><div class="tag done">Complete</div></div>
+      <div class="deliv"><div class="st-icon prog"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></div><div class="name">Support assistant build</div><div class="tag prog">In progress</div></div>
+      <div class="deliv"><div class="st-icon prog"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></svg></div><div class="name">French-language validation</div><div class="tag prog">In progress</div></div>
+      <div class="deliv"><div class="st-icon later"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"/></svg></div><div class="name">Production deployment &amp; handover</div><div class="tag later">Upcoming</div></div>
+
+      <div class="discuss">
+        <h3 class="discuss-title">Discussion</h3>
+        <div class="discuss-composer">
+          <div class="dc-label">Tag a stage so we know what you mean</div>
+          <div class="dc-tags" id="dcTags">
+            <button class="dc-tag" data-tag="Data readiness">@Data</button>
+            <button class="dc-tag" data-tag="Architecture">@Architecture</button>
+            <button class="dc-tag" data-tag="Zendesk export">@Zendesk</button>
+            <button class="dc-tag" data-tag="Support build">@Support</button>
+            <button class="dc-tag" data-tag="French validation">@French</button>
+            <button class="dc-tag" data-tag="Deployment">@Deployment</button>
+          </div>
+          <div class="dc-row">
+            <input id="dcText" type="text" placeholder="Ask a question or leave a comment…">
+            <button class="btn" id="dcPost">Post</button>
+          </div>
+        </div>
+        <div class="discuss-thread" id="dcThread"></div>
+      </div>
+    </section>
+
+    <!-- LIVE FEEDBACK -->
+    <section class="panel" id="demo">
+      <span class="eyebrow">Live feedback</span>
+      <h2 class="page-title">Review the latest build</h2>
+
+      <div class="card preview-card">
+        <div class="preview-head">
+          <div>
+            <div class="preview-title">Support Assistant — v0.3</div>
+            <div class="preview-sub">Uploaded by Think Technologies · Jul 1, 2026</div>
+          </div>
+          <span class="pill accent">New preview</span>
+        </div>
+        <div class="preview-frame">
+          <div class="pf-bar"><i></i><i></i><i></i><span class="pf-url">support-assistant.acme.dev</span></div>
+          <div class="pf-body">
+            <div class="mock-msg bot">Hi! I’m Acme’s support assistant. How can I help?</div>
+            <div class="mock-msg user">I was charged twice this month.</div>
+            <div class="mock-msg bot">I’m sorry about that — I can see the duplicate charge on order #4821 and I’ve issued a full refund. It’ll land in 3–5 business days. Anything else?</div>
+            <div class="mock-input"><span>Type a message…</span><div class="mock-send"></div></div>
+          </div>
+        </div>
+        <div class="preview-actions"><a class="work-link" href="#">Open full preview →</a></div>
+      </div>
+
+      <div class="fb-compose">
+        <input id="pvText" type="text" placeholder="Leave feedback on this build…">
+        <button class="btn" id="pvPost">Comment</button>
+      </div>
+      <div class="discuss-thread" id="pvThread"></div>
+    </section>
+
+    <!-- PROPOSALS & MEDIA -->
+    <section class="panel" id="proposals">
+      <span class="eyebrow">Shared with you</span>
+      <h2 class="page-title">Proposals &amp; Media</h2>
+
+      <div class="lib-bar">
+        <div class="lib-search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input id="libSearch" type="text" placeholder="Search files…">
+        </div>
+        <div class="lib-filters">
+          <button class="fchip on" data-f="all">All</button>
+          <button class="fchip" data-f="pdf">PDF</button>
+          <button class="fchip" data-f="slides">Slides</button>
+          <button class="fchip" data-f="video">Video</button>
+          <button class="fchip" data-f="image">Image</button>
+        </div>
+      </div>
+      <div class="grid c3">
+        <div class="card item" data-type="pdf"><div class="ficon"><svg class="ic" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/></svg></div><div class="kind">Proposal</div><h4>Support Automation — 4-Week Pilot</h4><div class="meta">PDF · Jun 29, 2026</div><a class="go" href="#">Open →</a></div>
+        <div class="card item" data-type="pdf"><div class="ficon"><svg class="ic" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/></svg></div><div class="kind">Proposal</div><h4>Data Readiness Assessment</h4><div class="meta">PDF · Jun 05, 2026</div><a class="go" href="#">Open →</a></div>
+        <div class="card item" data-type="slides"><div class="ficon"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M9 21h6"/></svg></div><div class="kind">Deck</div><h4>AI Opportunity Map</h4><div class="meta">Slides · Jun 12, 2026</div><a class="go" href="#">Open →</a></div>
+        <div class="card item" data-type="video"><div class="ficon"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z"/></svg></div><div class="kind">Video</div><h4>Assistant demo walkthrough</h4><div class="meta">6 min · Jun 24, 2026</div><a class="go" href="#">Watch →</a></div>
+        <div class="card item" data-type="pdf"><div class="ficon"><svg class="ic" viewBox="0 0 24 24"><path d="M4 19V5M4 15l4-4 3 3 6-7"/></svg></div><div class="kind">Report</div><h4>Data readiness findings</h4><div class="meta">PDF · Jun 08, 2026</div><a class="go" href="#">Open →</a></div>
+        <div class="card item" data-type="image"><div class="ficon"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M5 17l4-4 4 3 3-2 3 3"/></svg></div><div class="kind">Media</div><h4>Architecture diagram</h4><div class="meta">Image · Jun 20, 2026</div><a class="go" href="#">View →</a></div>
+      </div>
+      <div class="lib-empty" id="libEmpty" style="display:none">No files match your search.</div>
+    </section>
+
+    <!-- CLIENT ACTION CENTER -->
+    <section class="panel" id="actioncenter">
+      <span class="eyebrow">Needed from you</span>
+      <h2 class="page-title">Client Action Center</h2>
+
+      <div class="reqfrom" id="reqfrom">
+        <div class="reqfrom-head">
+          <div class="reqfrom-title">Requested from you</div>
+          <span class="reqfrom-count" id="reqCount"></span>
+        </div>
+        <div class="reqfrom-sub">A few items we’re still waiting on from your team to keep things moving.</div>
+        <div class="reqrow" data-state="pending">
+          <div class="reqrow-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg></div>
+          <div class="reqrow-main"><div class="reqrow-name">Signed pilot agreement</div><div class="reqrow-note">Needed to kick off the 4-week pilot</div></div>
+          <button class="btn small reqrow-up">Upload</button>
+        </div>
+        <div class="reqrow" data-state="pending">
+          <div class="reqrow-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg></div>
+          <div class="reqrow-main"><div class="reqrow-name">Zendesk export — 18 months</div><div class="reqrow-note">For grounding the support assistant</div></div>
+          <button class="btn small reqrow-up">Upload</button>
+        </div>
+        <div class="reqrow" data-state="done">
+          <div class="reqrow-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5 9-11"/></svg></div>
+          <div class="reqrow-main"><div class="reqrow-name">Brand assets (logo + guidelines)</div><div class="reqrow-note">Received Jun 18, 2026</div></div>
+          <span class="reqrow-done">Received</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTRACT -->
+    <section class="panel" id="contract">
+      <span class="eyebrow">Agreement</span>
+      <h2 class="page-title">Contract</h2>
+      <div class="contract">
+        <div class="doc">
+          <div class="dh"><div class="m"></div><span>Think Technologies</span></div>
+          <h5>Master Services Agreement</h5>
+          <p>This agreement is entered into between Think Technologies and Acme Corp for the delivery of AI advisory and development services as scoped below.</p>
+          <div class="line"></div><div class="line"></div><div class="line s"></div>
+          <p>1. Scope of engagement. 2. Deliverables &amp; timeline. 3. Fees &amp; payment terms. 4. Confidentiality &amp; data handling.</p>
+          <div class="line"></div><div class="line"></div><div class="line s"></div>
+        </div>
+        <div class="side">
+          <h3>Master Services Agreement</h3>
+          <div class="sub">Signed · effective March 14, 2026</div>
+          <div class="meta-line">
+            <div class="b"><div class="k">Status</div><div class="v">Fully executed</div></div>
+            <div class="b"><div class="k">Term</div><div class="v">12 months</div></div>
+            <div class="b"><div class="k">Version</div><div class="v">v1.2</div></div>
+          </div>
+          <div class="row">
+            <button class="btn">Download PDF ↓</button>
+            <button class="btn ghost">Open full screen</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REQUEST WORK -->
+    <section class="panel" id="request">
+      <span class="eyebrow">Explore our work</span>
+      <h2 class="page-title">Request to See Our Previous Work</h2>
+      <div class="req">
+        <div class="lbl">Which area are you curious about?</div>
+        <div class="chips">
+          <div class="chip" data-chip="industry">Industry</div>
+          <div class="chip">Consulting</div>
+          <div class="chip">Engineering</div>
+          <div class="chip">Training</div>
+        </div>
+        <div class="subchips" id="industrySubs" hidden>
+          <div class="sub-lbl">Which industry?</div>
+          <div class="chips">
+            <div class="chip sub">Healthcare</div>
+            <div class="chip sub">Finance</div>
+            <div class="chip sub">Retail &amp; E-commerce</div>
+            <div class="chip sub">Manufacturing</div>
+            <div class="chip sub">Legal</div>
+            <div class="chip sub">Logistics</div>
+          </div>
+        </div>
+        <div class="lbl">Anything else you'd like to mention?</div>
+        <textarea placeholder="General comments, specific examples you're after, or context that helps us point you to the right work…"></textarea>
+        <button class="btn">Send request →</button>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+  var items = document.querySelectorAll('.nav-item');
+  var panels = document.querySelectorAll('.panel');
+  function stagger(id) {
+    var p = document.getElementById(id);
+    var els = p.querySelectorAll('.next, .mtg, .prog-card, .deliv, .item, .doc, .contract .side, .req .lbl, .req .chips, .req textarea, .req .btn');
+    els.forEach(function (el, i) { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = 'rise .5s ease backwards'; el.style.animationDelay = (0.045 * i) + 's'; });
+  }
+  function animateCount(el) {
+    var target = +el.dataset.count, suffix = el.dataset.suffix || '';
+    var cur = 0, step = Math.max(1, Math.ceil(target / 26));
+    el.textContent = '0' + suffix;
+    var t = setInterval(function () { cur += step; if (cur >= target) { cur = target; clearInterval(t); } el.textContent = cur + suffix; }, 22);
+  }
+  function runCounts(id) {
+    document.getElementById(id).querySelectorAll('[data-count]').forEach(animateCount);
+  }
+  function show(id) {
+    items.forEach(function (t) { t.classList.toggle('active', t.dataset.tab === id); });
+    panels.forEach(function (p) { p.classList.toggle('active', p.id === id); });
+    window.scrollTo(0, 0);
+    stagger(id);
+    runCounts(id);
+    if (id === 'status') {
+      var f = document.querySelector('.fill');
+      if (f) { f.style.width = '0'; requestAnimationFrame(function () { setTimeout(function () { f.style.width = f.dataset.w; }, 60); }); }
+    }
+  }
+
+  // Wave draws itself first, then the portal fades in around it.
+  setTimeout(function () { document.body.classList.remove('loading'); }, 1800);
+  items.forEach(function (t) { t.addEventListener('click', function () { show(t.dataset.tab); }); });
+  document.querySelectorAll('[data-goto]').forEach(function (b) { b.addEventListener('click', function () { show(b.dataset.goto); }); });
+  document.querySelectorAll('.chip').forEach(function (c) { c.addEventListener('click', function () { c.classList.toggle('on'); }); });
+
+  // reveal sub-industry chips when "Industry" is selected
+  (function () {
+    var indChip = document.querySelector('#request [data-chip="industry"]');
+    var subs = document.getElementById('industrySubs');
+    if (!indChip || !subs) return;
+    indChip.addEventListener('click', function () {
+      var on = indChip.classList.contains('on');
+      subs.hidden = !on;
+      if (!on) subs.querySelectorAll('.chip.on').forEach(function (c) { c.classList.remove('on'); });
+    });
+  })();
+
+  // ===== STATUS: threaded discussion tagged to deliverables =====
+  (function () {
+    var thread = document.getElementById('dcThread');
+    if (!thread) return;
+    var tagBtns = document.querySelectorAll('#dcTags .dc-tag');
+    var text = document.getElementById('dcText');
+    var post = document.getElementById('dcPost');
+    var activeTag = '';
+    function esc(s) { return s.replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+    tagBtns.forEach(function (b) {
+      b.addEventListener('click', function () {
+        var already = b.classList.contains('on');
+        tagBtns.forEach(function (x) { x.classList.remove('on'); });
+        activeTag = already ? '' : b.dataset.tag;
+        if (!already) b.classList.add('on');
+        text.focus();
+      });
+    });
+
+    function replyNode(who, txt) {
+      var r = document.createElement('div'); r.className = 'dcomment';
+      r.innerHTML = '<div class="cmt-av think">T</div><div class="dcomment-main"><div class="dcomment-head"><span class="dcomment-who">' + who + '</span></div><div class="dcomment-text">' + esc(txt) + '</div></div>';
+      return r;
+    }
+    function wireReply(comment, replies) {
+      comment.querySelector('.dc-reply').addEventListener('click', function () {
+        var ex = replies.querySelector('.mini-input'); if (ex) { ex.remove(); return; }
+        var wrap = document.createElement('div'); wrap.className = 'mini-input';
+        wrap.innerHTML = '<input type="text" placeholder="Reply as Think…"><button class="mini go">Reply</button>';
+        replies.appendChild(wrap);
+        var inp = wrap.querySelector('input'); inp.focus();
+        function submit() { var v = inp.value.trim(); if (!v) return; replies.insertBefore(replyNode('Think Technologies', v), wrap); wrap.remove(); }
+        wrap.querySelector('.go').addEventListener('click', submit);
+        inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+      });
+    }
+    function addComment(deliv, txt) {
+      var c = document.createElement('div'); c.className = 'dcomment';
+      var tag = deliv ? '<span class="deliv-tag">@' + esc(deliv) + '</span>' : '';
+      c.innerHTML = '<div class="cmt-av">You</div><div class="dcomment-main"><div class="dcomment-head"><span class="dcomment-who">Acme Corp</span>' + tag + '</div><div class="dcomment-text">' + esc(txt) + '</div><button class="dc-reply">Reply</button><div class="dcomment-replies"></div></div>';
+      thread.appendChild(c);
+      wireReply(c, c.querySelector('.dcomment-replies'));
+      return c;
+    }
+    post.addEventListener('click', function () {
+      var v = text.value.trim(); if (!v) return;
+      addComment(activeTag, v);
+      text.value = ''; activeTag = ''; tagBtns.forEach(function (x) { x.classList.remove('on'); });
+    });
+    text.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); post.click(); } });
+
+    // seed an example thread to show tagging + reply
+    var seed = addComment('Support build', 'Will the assistant handle refunds automatically, or just flag them for us?');
+    seed.querySelector('.dcomment-replies').appendChild(replyNode('Think Technologies', 'For the pilot it flags them for your team to approve — full auto-refund is a phase 2 option we can scope with you.'));
+  })();
+
+  // ===== PROPOSALS & MEDIA: requested-from-client list =====
+  (function () {
+    var box = document.getElementById('reqfrom');
+    if (!box) return;
+    var countEl = document.getElementById('reqCount');
+    function refresh() {
+      var pending = box.querySelectorAll('.reqrow[data-state="pending"]').length;
+      countEl.textContent = pending ? pending + ' pending' : 'All received';
+    }
+    box.querySelectorAll('.reqrow-up').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var row = btn.closest('.reqrow');
+        row.dataset.state = 'done';
+        row.querySelector('.reqrow-ic').innerHTML = '<svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5 9-11"/></svg>';
+        row.querySelector('.reqrow-note').textContent = 'Received just now';
+        btn.replaceWith(Object.assign(document.createElement('span'), { className: 'reqrow-done', textContent: 'Received' }));
+        refresh();
+      });
+    });
+    refresh();
+  })();
+
+  // ===== PROPOSALS & MEDIA: search + type filter =====
+  (function () {
+    var panel = document.getElementById('proposals');
+    if (!panel) return;
+    var search = panel.querySelector('#libSearch');
+    var chips = panel.querySelectorAll('.fchip');
+    var items = panel.querySelectorAll('.item');
+    items.forEach(function (it) { var f = it.querySelector('.ficon'); if (f) f.classList.add('t-' + it.dataset.type); });
+    var empty = panel.querySelector('#libEmpty');
+    var filter = 'all';
+    function apply() {
+      var q = (search.value || '').toLowerCase().trim();
+      var shown = 0;
+      items.forEach(function (it) {
+        var okType = filter === 'all' || it.dataset.type === filter;
+        var okText = !q || it.textContent.toLowerCase().indexOf(q) > -1;
+        var show = okType && okText;
+        it.style.display = show ? '' : 'none';
+        if (show) shown++;
+      });
+      empty.style.display = shown ? 'none' : '';
+    }
+    search.addEventListener('input', apply);
+    chips.forEach(function (c) {
+      c.addEventListener('click', function () {
+        chips.forEach(function (x) { x.classList.remove('on'); });
+        c.classList.add('on');
+        filter = c.dataset.f;
+        apply();
+      });
+    });
+  })();
+
+  // ===== PROPOSE NEW MEETING TIME =====
+  (function () {
+    var toggle = document.getElementById('proposeToggle');
+    if (!toggle) return;
+    var box = document.getElementById('proposeBox');
+    var done = document.getElementById('proposeDone');
+    var cancel = document.getElementById('proposeCancel');
+    var send = document.getElementById('proposeSend');
+    var dateEl = document.getElementById('propDate');
+    var timeEl = document.getElementById('propTime');
+
+    function open() { done.hidden = true; box.hidden = false; toggle.textContent = 'Hide'; }
+    function close() { box.hidden = true; toggle.textContent = 'Propose new time'; }
+    toggle.addEventListener('click', function () { box.hidden ? open() : close(); });
+    cancel.addEventListener('click', close);
+    send.addEventListener('click', function () {
+      var d = dateEl.value, t = timeEl.value;
+      var when = d ? new Date(d + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'your suggested date';
+      if (t) { var hm = t.split(':'); var h = +hm[0], ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; when += ' at ' + h + ':' + hm[1] + ' ' + ap; }
+      box.hidden = true;
+      toggle.textContent = 'Propose new time';
+      done.innerHTML = '<span>✓</span> New time proposed for <b>' + when + '</b> — the Think team will confirm by email shortly.';
+      done.hidden = false;
+    });
+  })();
+
+  // ===== LIVE FEEDBACK: comment on the uploaded build preview =====
+  (function () {
+    var thread = document.getElementById('pvThread');
+    if (!thread) return;
+    var text = document.getElementById('pvText');
+    var post = document.getElementById('pvPost');
+    function esc(s) { return s.replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+    function replyNode(txt) {
+      var r = document.createElement('div'); r.className = 'dcomment';
+      r.innerHTML = '<div class="cmt-av think">T</div><div class="dcomment-main"><div class="dcomment-head"><span class="dcomment-who">Think Technologies</span></div><div class="dcomment-text">' + esc(txt) + '</div></div>';
+      return r;
+    }
+    function wireReply(replies) {
+      return function () {
+        var ex = replies.querySelector('.mini-input'); if (ex) { ex.remove(); return; }
+        var wrap = document.createElement('div'); wrap.className = 'mini-input';
+        wrap.innerHTML = '<input type="text" placeholder="Reply as Think…"><button class="mini go">Reply</button>';
+        replies.appendChild(wrap);
+        var inp = wrap.querySelector('input'); inp.focus();
+        function submit() { var v = inp.value.trim(); if (!v) return; replies.insertBefore(replyNode(v), wrap); wrap.remove(); }
+        wrap.querySelector('.go').addEventListener('click', submit);
+        inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+      };
+    }
+    function addComment(txt) {
+      var c = document.createElement('div'); c.className = 'dcomment';
+      c.innerHTML = '<div class="cmt-av">You</div><div class="dcomment-main"><div class="dcomment-head"><span class="dcomment-who">Acme Corp</span></div><div class="dcomment-text">' + esc(txt) + '</div><button class="dc-reply">Reply</button><div class="dcomment-replies"></div></div>';
+      thread.appendChild(c);
+      c.querySelector('.dc-reply').addEventListener('click', wireReply(c.querySelector('.dcomment-replies')));
+      return c;
+    }
+    post.addEventListener('click', function () { var v = text.value.trim(); if (!v) return; addComment(v); text.value = ''; });
+    text.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); post.click(); } });
+
+    // seed an example so the flow is clear
+    var seed = addComment('Love it! Can the assistant show the refund amount in the reply, not just confirm it?');
+    seed.querySelector('.dcomment-replies').appendChild(replyNode('Great call — we’ll include the exact amount and date in v0.4. Thanks for the feedback!'));
+  })();
+
+  // ===== MEETING NOTES: comment on a meeting =====
+  (function () {
+    function esc(s) { return s.replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+    var meetings = document.querySelectorAll('#notes .mtg');
+    if (!meetings.length) return;
+
+    meetings.forEach(function (m) {
+      var body = m.children[1];
+      // comments live at the bottom of the card body
+      var bottom = document.createElement('div'); bottom.className = 'mtg-bottom';
+      var comments = document.createElement('div'); comments.className = 'comments';
+      bottom.appendChild(comments);
+      body.appendChild(bottom);
+      // a single comment action, vertically centered on the right
+      var actions = document.createElement('div'); actions.className = 'mtg-actions';
+      actions.innerHTML = '<button class="mtg-comment-btn" title="Comment on this meeting">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>' +
+        '<span>Comment</span></button>';
+      m.appendChild(actions);
+
+      actions.querySelector('.mtg-comment-btn').addEventListener('click', function () {
+        var existing = bottom.querySelector('.mini-input');
+        if (existing) { existing.remove(); return; }
+        var wrap = document.createElement('div'); wrap.className = 'mini-input';
+        wrap.innerHTML = '<input type="text" placeholder="Leave a comment…"><button class="mini go">Post</button>';
+        bottom.appendChild(wrap);
+        var inp = wrap.querySelector('input'); inp.focus();
+        function submit() {
+          var v = inp.value.trim(); if (!v) return;
+          var c = document.createElement('div'); c.className = 'cmt';
+          c.innerHTML = '<div class="cmt-av">You</div><div class="cmt-b"><div class="cmt-who">Acme Corp</div>' + esc(v) + '</div>';
+          comments.appendChild(c);
+          wrap.remove();
+        }
+        wrap.querySelector('.go').addEventListener('click', submit);
+        inp.addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); submit(); } });
+      });
+    });
+  })();
+</script>
+</body>
+</html>
