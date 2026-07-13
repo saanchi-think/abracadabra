@@ -83,6 +83,8 @@
   .side-foot .client { display: flex; align-items: center; gap: 9px; font-size: 12.5px; color: #CFC9C4; font-weight: 500; }
   .side-foot .client .dot { width: 7px; height: 7px; border-radius: 50%; background: #3ECf8e; }
   .side-foot .tag { font-size: 11px; font-style: italic; color: #78716B; margin-top: 10px; line-height: 1.5; }
+  .side-foot .sign-out { display: inline-block; margin-top: 14px; font: 600 11.5px/1 var(--font); color: #9A928C; text-decoration: none; transition: color .15s; }
+  .side-foot .sign-out:hover { color: #F0975E; }
 
   /* ===== CONTENT ===== */
   .content { flex: 1; min-width: 0; position: relative; }
@@ -125,6 +127,9 @@
   .lockup { display: inline-flex; align-items: center; gap: 22px; margin-bottom: 42px; }
   .lockup .mk { width: 68px; height: 68px; border-radius: 50%; display: grid; place-items: center; font: 800 27px/1 var(--font); }
   .lockup .mk.client { background: #fff; color: #0E0E0E; }
+  /* client logo: brand icon on a clean white tile (app-icon style) */
+  .lockup .mk.client.has-logo { background: #fff; border-radius: 16px; overflow: hidden; padding: 0; box-shadow: 0 8px 24px -10px rgba(0,0,0,.5); }
+  .lockup .mk.client.has-logo img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .lockup .mk.think-logo { width: auto; height: 60px; border-radius: 0; background: none; padding: 0 6px; }
   .lockup .mk.think-logo .think-mark { height: 60px; aspect-ratio: 376 / 139; background: linear-gradient(180deg, #F7AB77 0%, #E8814F 40%, #C0330F 100%); filter: drop-shadow(0 6px 20px rgba(192,51,15,.45)); }
   .lockup .x { font-size: 18px; color: #7C736D; }
@@ -434,6 +439,7 @@
     <div class="side-foot">
       <div class="client"><span class="dot"></span> <span id="clientNameFoot">Acme Corp</span></div>
       <div class="tag" id="clientTagFoot">Navigating the present, creating the future.</div>
+      <a href="#" id="signOut" class="sign-out">Sign out</a>
     </div>
   </aside>
 
@@ -1013,15 +1019,41 @@
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
   const sb = createClient('https://gnhuwffzttgriyjjbfyf.supabase.co', 'sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9');
 
-  const slug = new URLSearchParams(location.search).get('client');
   const showNotFound = () => { document.getElementById('portalNotFound').hidden = false; };
 
   (async () => {
-    if (!slug) { showNotFound(); return; }
+    // 1. must be signed in
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { location.replace('login.html'); return; }
+
+    // 2. who is this user?
+    const { data: profile } = await sb.from('profiles').select('role, client_id').eq('id', session.user.id).maybeSingle();
+    const role = profile ? profile.role : 'none';
+
+    // 3. decide which client portal to show
+    const urlSlug = new URLSearchParams(location.search).get('client');
+    let q = sb.from('clients').select('*');
+    if (role === 'staff') {
+      if (!urlSlug) { location.replace('admin.html'); return; }   // staff with no client → admin
+      q = q.eq('slug', urlSlug);
+    } else {
+      // clients are locked to their own portal — the URL slug is ignored
+      if (!profile || !profile.client_id) { showNotFound(); return; }
+      q = q.eq('id', profile.client_id);
+    }
+
     let data, error;
-    try { ({ data, error } = await sb.from('clients').select('*').eq('slug', slug).maybeSingle()); }
-    catch (e) { error = e; }
+    try { ({ data, error } = await q.maybeSingle()); } catch (e) { error = e; }
     if (error || !data) { showNotFound(); return; }
+
+    // keep the client's URL honest
+    if (role !== 'staff' && data.slug && urlSlug !== data.slug) {
+      history.replaceState(null, '', 'index.html?client=' + data.slug);
+    }
+
+    // wire sign-out
+    const so = document.getElementById('signOut');
+    if (so) so.addEventListener('click', async (e) => { e.preventDefault(); await sb.auth.signOut(); location.replace('login.html'); });
 
     const name = data.name || 'Client';
     document.title = name + ' · Think Technologies';
@@ -1031,8 +1063,13 @@
 
     const mark = document.getElementById('clientMark');
     if (mark) {
-      if (data.logo_url) mark.innerHTML = '<img src="' + data.logo_url + '" alt="' + name + '" style="width:100%;height:100%;object-fit:contain;border-radius:50%;background:#fff;">';
-      else mark.textContent = name.charAt(0).toUpperCase();
+      if (data.logo_url) {
+        mark.classList.add('has-logo');
+        if (data.logo_on_light) mark.classList.add('on-light');
+        mark.innerHTML = '<img src="' + data.logo_url + '" alt="' + name + '">';
+      } else {
+        mark.textContent = name.charAt(0).toUpperCase();
+      }
     }
     if (data.tagline) {
       setText('clientTagline', '“' + data.tagline + '”');

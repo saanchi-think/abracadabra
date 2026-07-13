@@ -85,6 +85,10 @@
         <input id="domain" type="text" placeholder="acme.com" autocomplete="off">
         <div class="hint">Used to fetch the logo. Just the domain — no https://</div>
 
+        <label>Client login email</label>
+        <input id="clientEmail" type="email" placeholder="contact@acme.com" autocomplete="off">
+        <div class="hint">This person gets access to this client's portal via a magic-link sign-in.</div>
+
         <label>Tagline <span style="color:var(--text-dim);font-weight:400">(optional)</span></label>
         <input id="tagline" type="text" placeholder="Navigating the present, creating the future." autocomplete="off">
 
@@ -112,37 +116,69 @@
   const SUPABASE_KEY = 'sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9';
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+  // --- gate: staff only ---
+  {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) { location.replace('login.html'); }
+    else {
+      const { data: profile } = await sb.from('profiles').select('role').eq('id', session.user.id).maybeSingle();
+      if (!profile || profile.role !== 'staff') {
+        document.body.innerHTML = '<div style="min-height:100vh;display:grid;place-items:center;text-align:center;padding:40px;font-family:Poppins,sans-serif"><div><h1 style="font-size:24px;margin-bottom:10px">Staff access only</h1><p style="color:#6B6B6B">This area is for Think Technologies staff. <a href="index.html" style="color:#C0330F">Go to your portal →</a></p></div></div>';
+        throw new Error('not staff');
+      }
+    }
+  }
+
   const $ = id => document.getElementById(id);
-  const nameEl = $('name'), domainEl = $('domain'), taglineEl = $('tagline');
+  const nameEl = $('name'), domainEl = $('domain'), taglineEl = $('tagline'), emailEl = $('clientEmail');
   const logoBox = $('logoBox'), logoMeta = $('logoMeta'), msg = $('msg'), createBtn = $('createBtn');
 
-  // --- logo resolution: Clearbit first, Google favicon as fallback ---
-  function clearbit(domain) { return `https://logo.clearbit.com/${domain}?size=200`; }
+  // --- logo resolution via Brandfetch (transparent, high-quality) + favicon fallback ---
+  const BRANDFETCH_CLIENT_ID = '1id0MMCBxRhX8u81xkT';
+  // brand icon (square app-icon mark) — clean and uniform on a white tile
+  function bfCheck(domain) { return `https://cdn.brandfetch.io/${domain}/w/400/h/400/type/icon/fallback/404?c=${BRANDFETCH_CLIENT_ID}`; }
+  function bfShow(domain)  { return `https://cdn.brandfetch.io/${domain}/w/400/h/400/type/icon/fallback/transparent?c=${BRANDFETCH_CLIENT_ID}`; }
   function favicon(domain) { return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`; }
-  let resolvedLogo = '';
+  let resolvedLogo = '';       // URL to display
+  let resolvedOnLight = true;  // logos render on a clean white tile
 
   function cleanDomain(v) {
     return v.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
   }
-
-  function previewLogo() {
-    const domain = cleanDomain(domainEl.value);
-    if (!domain) { logoBox.innerHTML = '<span class="ph">Logo preview</span>'; logoMeta.textContent = 'Enter a domain to preview the logo.'; resolvedLogo = ''; return; }
-    const primary = clearbit(domain);
-    resolvedLogo = primary;
-    logoMeta.textContent = 'Fetching logo…';
-    const img = new Image();
-    img.onload = () => { logoBox.innerHTML = ''; logoBox.appendChild(img); logoMeta.textContent = 'Logo found ✓'; resolvedLogo = primary; };
-    img.onerror = () => {
-      const fb = favicon(domain);
-      const img2 = new Image();
-      img2.onload = () => { logoBox.innerHTML = ''; logoBox.appendChild(img2); logoMeta.textContent = 'Using favicon (no full logo found).'; resolvedLogo = fb; };
-      img2.onerror = () => { logoBox.innerHTML = '<span class="ph">No logo found</span>'; logoMeta.textContent = 'Couldn’t find a logo — you can still create the portal.'; resolvedLogo = ''; };
-      img2.src = fb;
-    };
-    img.src = primary;
+  function loadImg(url) {
+    return new Promise(res => { const i = new Image(); i.onload = () => res(i.naturalWidth ? i : null); i.onerror = () => res(null); i.src = url; });
   }
-  let t; domainEl.addEventListener('input', () => { clearTimeout(t); t = setTimeout(previewLogo, 400); });
+  function renderPreview(src, onLight) {
+    logoBox.style.background = onLight ? '#fff' : '#0E0E0E';
+    logoBox.innerHTML = '<img src="' + src + '" style="max-width:100%;max-height:100%;object-fit:contain">';
+  }
+
+  async function previewLogo() {
+    const domain = cleanDomain(domainEl.value);
+    logoBox.style.background = '';
+    if (!domain) { logoBox.innerHTML = '<span class="ph">Logo preview</span>'; logoMeta.textContent = 'Enter a domain to preview the logo.'; resolvedLogo = ''; resolvedOnLight = false; return; }
+    logoMeta.textContent = 'Fetching logo…';
+
+    // 1. Brandfetch brand icon — errors out via fallback/404 if none
+    if (await loadImg(bfCheck(domain))) {
+      resolvedLogo = bfShow(domain); resolvedOnLight = true;
+      renderPreview(resolvedLogo, true);
+      logoMeta.textContent = 'Brandfetch icon found ✓';
+      return;
+    }
+    // 2. favicon fallback
+    if (await loadImg(favicon(domain))) {
+      resolvedLogo = favicon(domain); resolvedOnLight = true;
+      renderPreview(resolvedLogo, true);
+      logoMeta.textContent = 'No Brandfetch icon — using favicon.';
+      return;
+    }
+    // 3. nothing
+    logoBox.innerHTML = '<span class="ph">No logo found</span>'; logoBox.style.background = '';
+    logoMeta.textContent = 'Couldn’t find a logo — you can still create the portal.';
+    resolvedLogo = ''; resolvedOnLight = false;
+  }
+  let t; domainEl.addEventListener('input', () => { clearTimeout(t); t = setTimeout(previewLogo, 450); });
 
   function slugify(s) { return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
   function portalUrl(slug) { return `${location.origin}${location.pathname.replace(/admin\.html$/, 'index.html')}?client=${slug}`; }
@@ -158,7 +194,7 @@
       const row = document.createElement('div');
       row.className = 'client-row';
       row.innerHTML = `
-        <div class="client-logo">${c.logo_url ? `<img src="${c.logo_url}" alt="">` : '<span style="font-size:16px;font-weight:700">' + c.name.charAt(0) + '</span>'}</div>
+        <div class="client-logo" style="${c.logo_url && !c.logo_on_light ? 'background:#0E0E0E' : ''}">${c.logo_url ? `<img src="${c.logo_url}" alt="">` : '<span style="font-size:16px;font-weight:700">' + c.name.charAt(0) + '</span>'}</div>
         <div class="client-info">
           <div class="client-name">${c.name}</div>
           <a class="client-link" href="${url}">${url}</a>
@@ -178,17 +214,24 @@
     if (!name) { showMsg('Please enter a company name.', 'err'); return; }
     const slug = slugify(name);
     const domain = cleanDomain(domainEl.value);
-    createBtn.disabled = true; createBtn.textContent = 'Creating…';
-    const { error } = await sb.from('clients').insert({
-      slug, name, domain: domain || null, logo_url: resolvedLogo || null, tagline: taglineEl.value.trim() || null
-    });
-    createBtn.disabled = false; createBtn.textContent = 'Create portal →';
+    const email = emailEl.value.trim().toLowerCase();
+    createBtn.disabled = true; createBtn.textContent = 'Saving…';
+    const { data: created, error } = await sb.from('clients').upsert({
+      slug, name, domain: domain || null, logo_url: resolvedLogo || null, logo_on_light: resolvedOnLight, tagline: taglineEl.value.trim() || null
+    }, { onConflict: 'slug' }).select('id').single();
     if (error) {
-      showMsg(error.code === '23505' ? `A client with the slug "${slug}" already exists.` : error.message, 'err');
+      createBtn.disabled = false; createBtn.textContent = 'Create portal →';
+      showMsg(error.message, 'err');
       return;
     }
-    showMsg(`Portal created for ${name}! Their link is in the list →`, 'ok');
-    nameEl.value = domainEl.value = taglineEl.value = '';
+    // grant the client's contact access to this portal (magic-link invitation)
+    if (email) {
+      const { error: invErr } = await sb.from('invitations').upsert({ email, role: 'client', client_id: created.id });
+      if (invErr) { showMsg(`Portal created, but couldn't add the login email: ${invErr.message}`, 'err'); createBtn.disabled = false; createBtn.textContent = 'Create portal →'; loadClients(); return; }
+    }
+    createBtn.disabled = false; createBtn.textContent = 'Create portal →';
+    showMsg(`Portal created for ${name}${email ? ' — ' + email + ' can now sign in' : ''}! Their link is in the list →`, 'ok');
+    nameEl.value = domainEl.value = taglineEl.value = emailEl.value = '';
     logoBox.innerHTML = '<span class="ph">Logo preview</span>'; logoMeta.textContent = 'Enter a domain to preview the logo.'; resolvedLogo = '';
     loadClients();
   });
