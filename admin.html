@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Think · Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0E0E0E; --panel: #FFFFFF; --text: #101010; --text-muted: #6B6B6B; --text-dim: #9A9A9A;
+    --accent: #C0330F; --accent-soft: rgba(192,51,15,.07); --accent-line: rgba(192,51,15,.22);
+    --good: #1F7A4D; --surface-2: #F6F6F6; --border: #E7E7E7; --border-soft: #F0F0F0;
+    --grad: linear-gradient(135deg, #E8814F, #C0330F);
+    --radius: 16px; --shadow-sm: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+    --font: 'Poppins', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--surface-2); color: var(--text); min-height: 100vh; }
+  .top { background: var(--bg); color: #fff; padding: 20px 34px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .logo { font: 800 20px/1 var(--font); letter-spacing: -.5px; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .brand .logo b { color: #fff; -webkit-text-fill-color: #fff; }
+  .brand .sub { font: 600 11px/1 var(--font); letter-spacing: .14em; text-transform: uppercase; color: #8A827C; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 34px 80px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font: 600 12px/1 var(--font); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+  .eyebrow::before { content: ""; width: 22px; height: 2px; background: var(--accent); border-radius: 2px; }
+  h1 { font: 700 30px/1.1 var(--font); margin-bottom: 6px; }
+  .lede { color: var(--text-muted); font-size: 14.5px; margin-bottom: 34px; }
+  .grid { display: grid; grid-template-columns: 1.1fr 1.3fr; gap: 26px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); }
+  .card h2 { font: 700 17px/1.2 var(--font); margin-bottom: 18px; }
+  label { display: block; font: 600 12.5px/1 var(--font); margin: 16px 0 8px; }
+  label:first-of-type { margin-top: 0; }
+  input { width: 100%; border: 1px solid var(--border); border-radius: 11px; padding: 12px 14px; font: 400 14px/1.4 var(--font); color: var(--text); background: var(--surface-2); outline: none; }
+  input:focus { border-color: var(--accent-line); }
+  .hint { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+  .logo-preview { margin-top: 18px; display: flex; align-items: center; gap: 14px; padding: 16px; border: 1px dashed var(--border); border-radius: 12px; background: var(--surface-2); }
+  .logo-box { width: 64px; height: 64px; border-radius: 12px; background: #fff; border: 1px solid var(--border); display: grid; place-items: center; overflow: hidden; flex-shrink: 0; }
+  .logo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .logo-box .ph { font-size: 11px; color: var(--text-dim); text-align: center; padding: 6px; }
+  .logo-meta { font-size: 13px; color: var(--text-muted); }
+  .btn { margin-top: 22px; width: 100%; border: none; border-radius: 999px; padding: 14px 20px; font: 600 14px/1 var(--font); color: #fff; background: var(--grad); cursor: pointer; box-shadow: 0 8px 22px -8px rgba(192,51,15,.6); transition: transform .12s; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .msg { margin-top: 14px; font-size: 13px; padding: 11px 14px; border-radius: 10px; display: none; }
+  .msg.ok { display: block; background: rgba(31,122,77,.08); border: 1px solid rgba(31,122,77,.28); color: var(--good); }
+  .msg.err { display: block; background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--accent); }
+  .client-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border-soft); }
+  .client-row:last-child { border-bottom: none; }
+  .client-logo { width: 42px; height: 42px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); display: grid; place-items: center; overflow: hidden; flex-shrink: 0; }
+  .client-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .client-info { flex: 1; min-width: 0; }
+  .client-name { font-weight: 600; font-size: 14px; }
+  .client-link { font-size: 12.5px; color: var(--accent); text-decoration: none; word-break: break-all; }
+  .client-link:hover { text-decoration: underline; }
+  .empty { color: var(--text-dim); font-size: 13.5px; padding: 20px 0; text-align: center; }
+  .copy-btn { border: 1px solid var(--border); background: var(--surface-2); border-radius: 8px; padding: 7px 11px; font: 600 12px/1 var(--font); color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+  .copy-btn:hover { border-color: var(--accent-line); color: var(--accent); }
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand">
+      <div class="logo">[<b>think</b>]</div>
+      <div class="sub">Admin</div>
+    </div>
+    <div class="sub" style="color:#8A827C">Client Portal Manager</div>
+  </div>
+
+  <div class="wrap">
+    <span class="eyebrow">Internal</span>
+    <h1>Add a client</h1>
+    <p class="lede">Create a branded portal for a new client. We auto-fetch their logo from their website domain.</p>
+
+    <div class="grid">
+      <!-- ADD CLIENT -->
+      <div class="card">
+        <h2>New client</h2>
+        <label>Company name</label>
+        <input id="name" type="text" placeholder="Acme Corp" autocomplete="off">
+
+        <label>Website domain</label>
+        <input id="domain" type="text" placeholder="acme.com" autocomplete="off">
+        <div class="hint">Used to fetch the logo. Just the domain — no https://</div>
+
+        <label>Tagline <span style="color:var(--text-dim);font-weight:400">(optional)</span></label>
+        <input id="tagline" type="text" placeholder="Navigating the present, creating the future." autocomplete="off">
+
+        <div class="logo-preview">
+          <div class="logo-box" id="logoBox"><span class="ph">Logo preview</span></div>
+          <div class="logo-meta" id="logoMeta">Enter a domain to preview the logo.</div>
+        </div>
+
+        <button class="btn" id="createBtn">Create portal →</button>
+        <div class="msg" id="msg"></div>
+      </div>
+
+      <!-- EXISTING CLIENTS -->
+      <div class="card">
+        <h2>Client portals</h2>
+        <div id="clientList"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+  const SUPABASE_URL = 'https://gnhuwffzttgriyjjbfyf.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9';
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  const $ = id => document.getElementById(id);
+  const nameEl = $('name'), domainEl = $('domain'), taglineEl = $('tagline');
+  const logoBox = $('logoBox'), logoMeta = $('logoMeta'), msg = $('msg'), createBtn = $('createBtn');
+
+  // --- logo resolution: Clearbit first, Google favicon as fallback ---
+  function clearbit(domain) { return `https://logo.clearbit.com/${domain}?size=200`; }
+  function favicon(domain) { return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`; }
+  let resolvedLogo = '';
+
+  function cleanDomain(v) {
+    return v.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
+  }
+
+  function previewLogo() {
+    const domain = cleanDomain(domainEl.value);
+    if (!domain) { logoBox.innerHTML = '<span class="ph">Logo preview</span>'; logoMeta.textContent = 'Enter a domain to preview the logo.'; resolvedLogo = ''; return; }
+    const primary = clearbit(domain);
+    resolvedLogo = primary;
+    logoMeta.textContent = 'Fetching logo…';
+    const img = new Image();
+    img.onload = () => { logoBox.innerHTML = ''; logoBox.appendChild(img); logoMeta.textContent = 'Logo found ✓'; resolvedLogo = primary; };
+    img.onerror = () => {
+      const fb = favicon(domain);
+      const img2 = new Image();
+      img2.onload = () => { logoBox.innerHTML = ''; logoBox.appendChild(img2); logoMeta.textContent = 'Using favicon (no full logo found).'; resolvedLogo = fb; };
+      img2.onerror = () => { logoBox.innerHTML = '<span class="ph">No logo found</span>'; logoMeta.textContent = 'Couldn’t find a logo — you can still create the portal.'; resolvedLogo = ''; };
+      img2.src = fb;
+    };
+    img.src = primary;
+  }
+  let t; domainEl.addEventListener('input', () => { clearTimeout(t); t = setTimeout(previewLogo, 400); });
+
+  function slugify(s) { return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
+  function portalUrl(slug) { return `${location.origin}${location.pathname.replace(/admin\.html$/, 'index.html')}?client=${slug}`; }
+
+  async function loadClients() {
+    const { data, error } = await sb.from('clients').select('*').order('created_at', { ascending: false });
+    const list = $('clientList');
+    if (error) { list.innerHTML = `<div class="msg err" style="display:block">${error.message}</div>`; return; }
+    if (!data.length) { list.innerHTML = '<div class="empty">No clients yet. Add your first one.</div>'; return; }
+    list.innerHTML = '';
+    data.forEach(c => {
+      const url = portalUrl(c.slug);
+      const row = document.createElement('div');
+      row.className = 'client-row';
+      row.innerHTML = `
+        <div class="client-logo">${c.logo_url ? `<img src="${c.logo_url}" alt="">` : '<span style="font-size:16px;font-weight:700">' + c.name.charAt(0) + '</span>'}</div>
+        <div class="client-info">
+          <div class="client-name">${c.name}</div>
+          <a class="client-link" href="${url}">${url}</a>
+        </div>
+        <button class="copy-btn" data-url="${url}">Copy link</button>`;
+      row.querySelector('.copy-btn').addEventListener('click', e => {
+        navigator.clipboard.writeText(e.target.dataset.url);
+        e.target.textContent = 'Copied ✓';
+        setTimeout(() => e.target.textContent = 'Copy link', 1500);
+      });
+      list.appendChild(row);
+    });
+  }
+
+  createBtn.addEventListener('click', async () => {
+    const name = nameEl.value.trim();
+    if (!name) { showMsg('Please enter a company name.', 'err'); return; }
+    const slug = slugify(name);
+    const domain = cleanDomain(domainEl.value);
+    createBtn.disabled = true; createBtn.textContent = 'Creating…';
+    const { error } = await sb.from('clients').insert({
+      slug, name, domain: domain || null, logo_url: resolvedLogo || null, tagline: taglineEl.value.trim() || null
+    });
+    createBtn.disabled = false; createBtn.textContent = 'Create portal →';
+    if (error) {
+      showMsg(error.code === '23505' ? `A client with the slug "${slug}" already exists.` : error.message, 'err');
+      return;
+    }
+    showMsg(`Portal created for ${name}! Their link is in the list →`, 'ok');
+    nameEl.value = domainEl.value = taglineEl.value = '';
+    logoBox.innerHTML = '<span class="ph">Logo preview</span>'; logoMeta.textContent = 'Enter a domain to preview the logo.'; resolvedLogo = '';
+    loadClients();
+  });
+
+  function showMsg(text, type) { msg.textContent = text; msg.className = 'msg ' + type; }
+
+  loadClients();
+</script>
+</body>
+</html>
