@@ -53,7 +53,11 @@
   .client-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
   .client-info { flex: 1; min-width: 0; }
   .client-name { font-weight: 600; font-size: 14px; }
-  .client-email { font-size: 12px; color: var(--text-muted); margin: 2px 0 3px; }
+  .client-email { font-size: 12px; color: var(--text-muted); margin: 2px 0 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .warn-email { color: #B26A00; }
+  .mini-email { font: 400 12px/1 var(--font); border: 1px solid var(--border); border-radius: 7px; padding: 5px 8px; background: var(--surface-2); outline: none; }
+  .mini-email:focus { border-color: var(--accent-line); }
+  .set-email { font: 600 11.5px/1 var(--font); border: 1px solid var(--accent-line); background: var(--accent-soft); color: var(--accent); border-radius: 7px; padding: 5px 10px; cursor: pointer; }
   .client-link { font-size: 12.5px; color: var(--accent); text-decoration: none; word-break: break-all; }
   .client-link:hover { text-decoration: underline; }
   .empty { color: var(--text-dim); font-size: 13.5px; padding: 20px 0; text-align: center; }
@@ -205,7 +209,9 @@
         <div class="client-logo" style="${c.logo_url && !c.logo_on_light ? 'background:#0E0E0E' : ''}">${c.logo_url ? `<img src="${c.logo_url}" alt="">` : '<span style="font-size:16px;font-weight:700">' + c.name.charAt(0) + '</span>'}</div>
         <div class="client-info">
           <div class="client-name">${c.name}</div>
-          <div class="client-email">${emailByClient[c.id] ? '✉ ' + emailByClient[c.id] : '⚠ no login email — invites won’t send'}</div>
+          <div class="client-email">${emailByClient[c.id]
+            ? '✉ ' + emailByClient[c.id]
+            : '<span class="warn-email">⚠ no login email</span> <input type="email" class="mini-email" placeholder="client@email.com"> <button class="set-email">Set</button>'}</div>
           <a class="client-link" href="${url}">${url}</a>
         </div>
         <button class="copy-btn" data-url="${url}">Copy link</button>`;
@@ -213,6 +219,16 @@
         navigator.clipboard.writeText(e.target.dataset.url);
         e.target.textContent = 'Copied ✓';
         setTimeout(() => e.target.textContent = 'Copy link', 1500);
+      });
+      const setBtn = row.querySelector('.set-email');
+      if (setBtn) setBtn.addEventListener('click', async () => {
+        const inp = row.querySelector('.mini-email');
+        const em = (inp.value || '').trim().toLowerCase();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { inp.focus(); return; }
+        setBtn.disabled = true; setBtn.textContent = 'Saving…';
+        const { error: e2 } = await sb.from('invitations').upsert({ email: em, role: 'client', client_id: c.id });
+        if (e2) { setBtn.disabled = false; setBtn.textContent = 'Set'; alert('Could not save: ' + e2.message); return; }
+        loadClients();
       });
       list.appendChild(row);
     });
@@ -224,6 +240,7 @@
     const slug = slugify(name);
     const domain = cleanDomain(domainEl.value);
     const email = emailEl.value.trim().toLowerCase();
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showMsg('Please enter the client’s login email — without it they can’t sign in or receive invites.', 'err'); return; }
     createBtn.disabled = true; createBtn.textContent = 'Saving…';
     const { data: created, error } = await sb.from('clients').upsert({
       slug, name, domain: domain || null, logo_url: resolvedLogo || null, logo_on_light: resolvedOnLight, tagline: taglineEl.value.trim() || null
