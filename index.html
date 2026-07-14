@@ -400,6 +400,24 @@
   .mtg-toast { font: 500 13.5px/1.5 var(--font); padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; }
   .mtg-toast.ok { background: rgba(31,122,77,0.08); border: 1px solid rgba(31,122,77,0.28); color: var(--good); }
   .mtg-toast.warn { background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--accent); }
+  /* meeting requests */
+  .reqs-box { background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 22px; }
+  .reqs-title { font: 700 14px/1.2 var(--font); margin-bottom: 12px; }
+  .req-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 12px 0; border-top: 1px solid var(--accent-line); flex-wrap: wrap; }
+  .req-row:first-of-type { border-top: none; }
+  .req-main { flex: 1; min-width: 200px; }
+  .req-when { font-weight: 600; font-size: 14px; }
+  .req-who { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+  .req-msg { font-size: 12.5px; color: var(--text-dim); margin-top: 6px; font-style: italic; }
+  .req-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .btn.small { padding: 8px 14px; font-size: 12.5px; }
+  .req-badge { font: 600 11px/1 var(--font); text-transform: uppercase; letter-spacing: .04em; padding: 5px 10px; border-radius: 999px; align-self: center; }
+  .req-badge.pending { background: rgba(178,106,0,.12); color: var(--warn); }
+  .req-badge.accepted { background: rgba(31,122,77,.12); color: var(--good); }
+  .req-badge.declined { background: var(--surface-2); color: var(--text-dim); }
+  .decline-box { width: 100%; margin-top: 10px; }
+  .decline-box textarea { width: 100%; border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px; font: 400 13.5px/1.5 var(--font); color: var(--text); background: var(--panel); outline: none; font-family: var(--font); margin-bottom: 8px; }
+  .decline-box textarea:focus { border-color: var(--accent-line); }
   .mtg-titlerow { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
   .mtg-titlerow h4 { margin: 0; }
   .mtg-tools { display: flex; gap: 6px; flex-shrink: 0; }
@@ -518,8 +536,11 @@
 
       <div class="notes-head">
         <button class="btn staff-only" id="addMeetingBtn" hidden>+ Add meeting</button>
+        <button class="btn client-only" id="requestMeetingBtn" hidden>Request a meeting</button>
       </div>
       <div id="mtgToast" class="mtg-toast" hidden></div>
+      <div id="requestFormWrap"></div>
+      <div id="requestsWrap"></div>
       <div id="nextMeetingWrap"></div>
       <div id="meetingsList"></div>
       <div class="mtg-empty" id="meetingsEmpty" hidden>No meeting notes yet.</div>
@@ -1179,7 +1200,103 @@
     }
     const addBtn = document.getElementById('addMeetingBtn');
     if (addBtn) addBtn.addEventListener('click', () => openEditor(null));
+
+    // ===== MEETING REQUESTS (client asks → staff approves) =====
+    const REQUEST_NOTIFY_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-request';
+    const DECLINE_NOTIFY_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-decline';
+
+    function openRequestForm() {
+      const wrap = document.getElementById('requestFormWrap');
+      wrap.innerHTML =
+        '<div class="mtg-editor"><h3>Request a meeting</h3>' +
+        '<div class="ed-row"><label>Preferred date<input id="rq-date" type="date"></label>' +
+        '<label>Start<input id="rq-start" type="time"></label>' +
+        '<label>End<input id="rq-end" type="time"></label></div>' +
+        '<label>What’s it about?<textarea id="rq-note" rows="3" placeholder="A note for the Think team…"></textarea></label>' +
+        '<div class="ed-actions"><button class="btn" id="rq-send">Send request</button><button class="btn ghost" id="rq-cancel">Cancel</button></div></div>';
+      wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById('rq-cancel').addEventListener('click', () => { wrap.innerHTML = ''; });
+      document.getElementById('rq-send').addEventListener('click', submitRequest);
+    }
+    async function submitRequest() {
+      const date = document.getElementById('rq-date').value || null;
+      const start = document.getElementById('rq-start').value || null;
+      if (!date || !start) { alert('Please pick a preferred date and start time.'); return; }
+      const end = document.getElementById('rq-end').value || null;
+      const note = document.getElementById('rq-note').value.trim() || null;
+      const btn = document.getElementById('rq-send'); btn.disabled = true; btn.textContent = 'Sending…';
+      const { error } = await sb.from('meeting_requests').insert({ client_id: clientId, requester_name: name, preferred_date: date, preferred_start: start, preferred_end: end, note, status: 'pending' });
+      if (error) { btn.disabled = false; btn.textContent = 'Send request'; alert('Could not send: ' + error.message); return; }
+      const f = fmtDate(date);
+      const when = f.mo + ' ' + f.dy + ', ' + f.yr + ' at ' + fmtTime(start) + (end ? ' – ' + fmtTime(end) : '');
+      try { await fetch(REQUEST_NOTIFY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientName: name, when: when, note: note || '', portalLink: location.origin + '/index.html?client=' + (data.slug || '') }) }); } catch (e) {}
+      document.getElementById('requestFormWrap').innerHTML = '';
+      mtgToast('Request sent — the Think team will confirm by email.', true);
+      renderRequests();
+    }
+    function requestRow(r) {
+      const f = fmtDate(r.preferred_date);
+      const when = f.mo + ' ' + f.dy + ', ' + f.yr + (r.preferred_start ? ' · ' + fmtTime(r.preferred_start) + (r.preferred_end ? ' – ' + fmtTime(r.preferred_end) : '') : '');
+      const el = document.createElement('div'); el.className = 'req-row';
+      const right = (isStaff && r.status === 'pending')
+        ? '<div class="req-actions"><button class="btn small req-accept">Accept</button><button class="btn small ghost req-decline">Decline</button></div>'
+        : '<span class="req-badge ' + r.status + '">' + r.status + '</span>';
+      el.innerHTML = '<div class="req-main"><div class="req-when">' + esc(when) + '</div>' +
+        '<div class="req-who">' + esc(r.requester_name || 'Client') + (r.note ? ': ' + esc(r.note) : '') + '</div>' +
+        (r.status === 'declined' && r.staff_message ? '<div class="req-msg">Think replied: ' + esc(r.staff_message) + '</div>' : '') +
+        '</div>' + right;
+      if (isStaff && r.status === 'pending') {
+        el.querySelector('.req-accept').addEventListener('click', () => acceptRequest(r));
+        el.querySelector('.req-decline').addEventListener('click', () => declineRequest(r, el));
+      }
+      return el;
+    }
+    async function renderRequests() {
+      const wrap = document.getElementById('requestsWrap'); if (!wrap) return;
+      const { data: reqs } = await sb.from('meeting_requests').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
+      wrap.innerHTML = '';
+      if (!reqs || !reqs.length) return;
+      const box = document.createElement('div'); box.className = 'reqs-box';
+      const t = document.createElement('div'); t.className = 'reqs-title'; t.textContent = isStaff ? 'Meeting requests' : 'Your meeting requests';
+      box.appendChild(t);
+      reqs.forEach(r => box.appendChild(requestRow(r)));
+      wrap.appendChild(box);
+    }
+    async function acceptRequest(r) {
+      const payload = { client_id: clientId, title: 'Meeting with ' + (r.requester_name || name), meeting_date: r.preferred_date, start_time: r.preferred_start, end_time: r.preferred_end, time_label: r.preferred_start ? fmtTime(r.preferred_start) + (r.preferred_end ? ' – ' + fmtTime(r.preferred_end) : '') : null, location: 'Google Meet', upcoming: true, points: r.note ? [r.note] : [] };
+      await sb.from('meetings').update({ upcoming: false }).eq('client_id', clientId);
+      const { data: saved, error } = await sb.from('meetings').insert(payload).select().single();
+      if (error) { alert('Could not accept: ' + error.message); return; }
+      const res = await sendInvite(saved);
+      await sb.from('meeting_requests').update({ status: 'accepted' }).eq('id', r.id);
+      mtgToast(res.sent ? ('Accepted — invite sent to ' + res.reason) : ('Accepted & booked — no invite: ' + res.reason), res.sent);
+      renderRequests(); renderMeetings();
+    }
+    function declineRequest(r, el) {
+      if (el.querySelector('.decline-box')) return;
+      const box = document.createElement('div'); box.className = 'decline-box';
+      box.innerHTML = '<textarea class="decline-msg" rows="2" placeholder="Message to the client (why, or suggest another time)…"></textarea><div class="ed-actions"><button class="btn small decline-send">Send decline</button><button class="btn small ghost decline-cancel">Cancel</button></div>';
+      el.appendChild(box);
+      const ta = box.querySelector('.decline-msg'); ta.focus();
+      box.querySelector('.decline-cancel').addEventListener('click', () => box.remove());
+      box.querySelector('.decline-send').addEventListener('click', async () => {
+        const msg = ta.value.trim(); if (!msg) { ta.focus(); return; }
+        const b = box.querySelector('.decline-send'); b.disabled = true; b.textContent = 'Sending…';
+        await sb.from('meeting_requests').update({ status: 'declined', staff_message: msg }).eq('id', r.id);
+        let clientEmail = null;
+        const { data: inv } = await sb.from('invitations').select('email').eq('client_id', clientId).eq('role', 'client').limit(1);
+        if (inv && inv.length) clientEmail = inv[0].email;
+        try { await fetch(DECLINE_NOTIFY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientEmail: clientEmail, clientName: name, message: msg, when: fmtDate(r.preferred_date).mo + ' ' + fmtDate(r.preferred_date).dy }) }); } catch (e) {}
+        mtgToast('Request declined — your message was emailed to the client.', true);
+        renderRequests();
+      });
+    }
+    const reqBtn = document.getElementById('requestMeetingBtn');
+    if (reqBtn) reqBtn.addEventListener('click', openRequestForm);
+    if (!isStaff) document.querySelectorAll('.client-only').forEach(e => e.hidden = false);
+
     renderMeetings();
+    renderRequests();
   })();
 </script>
 </body>
