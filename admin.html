@@ -94,9 +94,6 @@
         <input id="clientEmail" type="email" placeholder="contact@acme.com" autocomplete="off">
         <div class="hint">This person gets access to this client's portal via a magic-link sign-in.</div>
 
-        <label>Tagline <span style="color:var(--text-dim);font-weight:400">(optional)</span></label>
-        <input id="tagline" type="text" placeholder="Navigating the present, creating the future." autocomplete="off">
-
         <div class="logo-preview">
           <div class="logo-box" id="logoBox"><span class="ph">Logo preview</span></div>
           <div class="logo-meta" id="logoMeta">Enter a domain to preview the logo.</div>
@@ -138,7 +135,7 @@
   }
 
   const $ = id => document.getElementById(id);
-  const nameEl = $('name'), domainEl = $('domain'), taglineEl = $('tagline'), emailEl = $('clientEmail');
+  const nameEl = $('name'), domainEl = $('domain'), emailEl = $('clientEmail');
   const logoBox = $('logoBox'), logoMeta = $('logoMeta'), msg = $('msg'), createBtn = $('createBtn');
 
   // --- logo resolution via Brandfetch (transparent, high-quality) + favicon fallback ---
@@ -243,7 +240,7 @@
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showMsg('Please enter the client’s login email — without it they can’t sign in or receive invites.', 'err'); return; }
     createBtn.disabled = true; createBtn.textContent = 'Saving…';
     const { data: created, error } = await sb.from('clients').upsert({
-      slug, name, domain: domain || null, logo_url: resolvedLogo || null, logo_on_light: resolvedOnLight, tagline: taglineEl.value.trim() || null
+      slug, name, domain: domain || null, logo_url: resolvedLogo || null, logo_on_light: resolvedOnLight
     }, { onConflict: 'slug' }).select('id').single();
     if (error) {
       createBtn.disabled = false; createBtn.textContent = 'Create portal →';
@@ -257,7 +254,7 @@
     }
     createBtn.disabled = false; createBtn.textContent = 'Create portal →';
     showMsg(`Portal created for ${name}${email ? ' — ' + email + ' can now sign in' : ''}! Their link is in the list →`, 'ok');
-    nameEl.value = domainEl.value = taglineEl.value = emailEl.value = '';
+    nameEl.value = domainEl.value = emailEl.value = '';
     logoBox.innerHTML = '<span class="ph">Logo preview</span>'; logoMeta.textContent = 'Enter a domain to preview the logo.'; resolvedLogo = '';
     loadClients();
   });
