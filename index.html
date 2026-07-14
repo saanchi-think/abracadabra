@@ -397,6 +397,9 @@
   .notes-head { display: flex; justify-content: flex-end; margin-bottom: 8px; min-height: 1px; }
   .staff-only[hidden] { display: none; }
   .mtg-empty { color: var(--text-dim); font-size: 14px; padding: 22px 2px; }
+  .mtg-toast { font: 500 13.5px/1.5 var(--font); padding: 12px 16px; border-radius: 12px; margin-bottom: 16px; }
+  .mtg-toast.ok { background: rgba(31,122,77,0.08); border: 1px solid rgba(31,122,77,0.28); color: var(--good); }
+  .mtg-toast.warn { background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--accent); }
   .mtg-titlerow { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
   .mtg-titlerow h4 { margin: 0; }
   .mtg-tools { display: flex; gap: 6px; flex-shrink: 0; }
@@ -516,6 +519,7 @@
       <div class="notes-head">
         <button class="btn staff-only" id="addMeetingBtn" hidden>+ Add meeting</button>
       </div>
+      <div id="mtgToast" class="mtg-toast" hidden></div>
       <div id="nextMeetingWrap"></div>
       <div id="meetingsList"></div>
       <div class="mtg-empty" id="meetingsEmpty" hidden>No meeting notes yet.</div>
@@ -1122,18 +1126,24 @@
       document.getElementById('ed-save').addEventListener('click', () => saveMeeting(m));
     }
     function fmtTime(t) { if (!t) return ''; let [h, mm] = t.split(':').map(Number); const ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12; return h + ':' + String(mm).padStart(2, '0') + ' ' + ap; }
+    function mtgToast(msg, ok) {
+      const t = document.getElementById('mtgToast'); if (!t) return;
+      t.textContent = msg; t.className = 'mtg-toast ' + (ok ? 'ok' : 'warn'); t.hidden = false;
+      clearTimeout(mtgToast._t); mtgToast._t = setTimeout(() => { t.hidden = true; }, 7000);
+    }
     async function sendInvite(mtg) {
-      if (!WEBHOOK_URL || WEBHOOK_URL.indexOf('REPLACE') === 0) { console.warn('Invite skipped: n8n webhook not configured yet.'); return; }
-      if (!mtg.meeting_date || !mtg.start_time) { console.warn('Invite skipped: needs a date and start time.'); return; }
+      if (!WEBHOOK_URL || WEBHOOK_URL.indexOf('REPLACE') === 0) return { sent: false, reason: 'the portal isn’t linked to the invite service (try a hard refresh — Cmd+Shift+R)' };
+      if (!mtg.meeting_date || !mtg.start_time) return { sent: false, reason: 'this meeting has no start time' };
       let attendeeEmail = null;
       const { data: inv } = await sb.from('invitations').select('email').eq('client_id', clientId).eq('role', 'client').limit(1);
       if (inv && inv.length) attendeeEmail = inv[0].email;
+      if (!attendeeEmail) return { sent: false, reason: 'this client has no login email set (add one in the admin panel)' };
       const toISO = (ds, ts) => { const [y, mo, d] = ds.split('-').map(Number); const [hh, mi] = ts.split(':').map(Number); return new Date(y, mo - 1, d, hh, mi).toISOString(); };
       const startISO = toISO(mtg.meeting_date, mtg.start_time);
       const endISO = mtg.end_time ? toISO(mtg.meeting_date, mtg.end_time) : new Date(new Date(startISO).getTime() + 3600000).toISOString();
       const payload = { title: mtg.title, description: (mtg.points || []).join('\n'), location: mtg.location || '', start: startISO, end: endISO, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, attendeeEmail: attendeeEmail, clientName: name, organizer: 'Think Technologies' };
-      try { await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); }
-      catch (e) { console.warn('Invite webhook failed:', e); }
+      try { const r = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); return { sent: r.ok, reason: r.ok ? attendeeEmail : ('the invite service returned ' + r.status) }; }
+      catch (e) { return { sent: false, reason: 'the invite request failed to reach the service' }; }
     }
     async function saveMeeting(m) {
       const title = document.getElementById('ed-title').value.trim();
@@ -1152,7 +1162,12 @@
       if (error) { btn.disabled = false; btn.textContent = 'Save'; alert('Could not save: ' + error.message); return; }
       // on a NEW meeting, if staff opted in, fire the calendar invite
       const inviteEl = document.getElementById('ed-invite');
-      if (!m && inviteEl && inviteEl.checked) await sendInvite(saved);
+      if (!m && inviteEl && inviteEl.checked) {
+        const res = await sendInvite(saved);
+        mtgToast(res.sent ? ('Meeting saved — calendar invite sent to ' + res.reason) : ('Meeting saved, but no invite: ' + res.reason), res.sent);
+      } else {
+        mtgToast('Meeting saved.', true);
+      }
       document.getElementById('meetingEditorWrap').innerHTML = '';
       renderMeetings();
     }
