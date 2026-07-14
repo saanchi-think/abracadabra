@@ -1013,7 +1013,7 @@
 
     // ===== MEETING NOTES (per-client, from Supabase) =====
     // n8n webhook that creates a Google Calendar invite (see setup notes). Paste the URL here.
-    const WEBHOOK_URL = 'REPLACE_WITH_N8N_WEBHOOK_URL';
+    const WEBHOOK_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-meeting';
     const isStaff = role === 'staff';
     const clientId = data.id;
     const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
