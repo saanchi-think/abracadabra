@@ -53,6 +53,7 @@
   .client-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
   .client-info { flex: 1; min-width: 0; }
   .client-name { font-weight: 600; font-size: 14px; }
+  .client-email { font-size: 12px; color: var(--text-muted); margin: 2px 0 3px; }
   .client-link { font-size: 12.5px; color: var(--accent); text-decoration: none; word-break: break-all; }
   .client-link:hover { text-decoration: underline; }
   .empty { color: var(--text-dim); font-size: 13.5px; padding: 20px 0; text-align: center; }
@@ -191,6 +192,10 @@
     const list = $('clientList');
     if (error) { list.innerHTML = `<div class="msg err" style="display:block">${error.message}</div>`; return; }
     if (!data.length) { list.innerHTML = '<div class="empty">No clients yet. Add your first one.</div>'; return; }
+    // map each client to its login email (where invites go)
+    const emailByClient = {};
+    const { data: invs } = await sb.from('invitations').select('email, client_id').eq('role', 'client');
+    (invs || []).forEach(i => { if (i.client_id) emailByClient[i.client_id] = i.email; });
     list.innerHTML = '';
     data.forEach(c => {
       const url = portalUrl(c.slug);
@@ -200,6 +205,7 @@
         <div class="client-logo" style="${c.logo_url && !c.logo_on_light ? 'background:#0E0E0E' : ''}">${c.logo_url ? `<img src="${c.logo_url}" alt="">` : '<span style="font-size:16px;font-weight:700">' + c.name.charAt(0) + '</span>'}</div>
         <div class="client-info">
           <div class="client-name">${c.name}</div>
+          <div class="client-email">${emailByClient[c.id] ? '✉ ' + emailByClient[c.id] : '⚠ no login email — invites won’t send'}</div>
           <a class="client-link" href="${url}">${url}</a>
         </div>
         <button class="copy-btn" data-url="${url}">Copy link</button>`;
