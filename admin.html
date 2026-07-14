@@ -114,7 +114,10 @@
 
   const SUPABASE_URL = 'https://gnhuwffzttgriyjjbfyf.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9';
-  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+  const _persist = localStorage.getItem('tt_persist') !== '0';
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { storage: _persist ? window.localStorage : window.sessionStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
 
   // --- gate: staff only ---
   {

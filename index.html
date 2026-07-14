@@ -949,7 +949,10 @@
 <!-- ===== CLIENT LOADER: pull this client's branding from Supabase ===== -->
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-  const sb = createClient('https://gnhuwffzttgriyjjbfyf.supabase.co', 'sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9');
+  const _persist = localStorage.getItem('tt_persist') !== '0';
+  const sb = createClient('https://gnhuwffzttgriyjjbfyf.supabase.co', 'sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9', {
+    auth: { storage: _persist ? window.localStorage : window.sessionStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
 
   const showNotFound = () => { document.getElementById('portalNotFound').hidden = false; };
 

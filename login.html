@@ -25,6 +25,8 @@
   input { width: 100%; background: rgba(255,255,255,.05); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; font: 400 15px/1 var(--font); color: var(--text); outline: none; }
   input::placeholder { color: #6F6862; }
   input:focus { border-color: rgba(232,129,79,.6); }
+  .keep { display: flex; align-items: center; gap: 9px; font: 500 13px/1 var(--font); color: var(--muted); cursor: pointer; padding: 2px 2px 2px; }
+  .keep input { width: auto; }
   button { border: none; border-radius: 999px; padding: 15px 20px; font: 600 15px/1 var(--font); color: #fff; background: var(--grad); cursor: pointer; box-shadow: 0 10px 26px -8px rgba(192,51,15,.6); transition: transform .12s; }
   button:hover { transform: translateY(-1px); }
   button:disabled { opacity: .5; cursor: not-allowed; transform: none; }
@@ -41,6 +43,7 @@
     <p class="sub">Enter your email and we’ll send you a secure sign-in link. No password needed.</p>
     <form id="loginForm">
       <input id="email" type="email" placeholder="you@company.com" autocomplete="email" required>
+      <label class="keep"><input type="checkbox" id="keep" checked> Keep me signed in</label>
       <button type="submit" id="sendBtn">Send sign-in link</button>
     </form>
     <div class="msg" id="msg"></div>
@@ -49,9 +52,13 @@
 
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-  const sb = createClient('https://gnhuwffzttgriyjjbfyf.supabase.co', 'sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9');
+  const persist = localStorage.getItem('tt_persist') !== '0'; // default: stay signed in
+  const sb = createClient('https://gnhuwffzttgriyjjbfyf.supabase.co', 'sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9', {
+    auth: { storage: persist ? window.localStorage : window.sessionStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
 
   const form = document.getElementById('loginForm');
+  const keepEl = document.getElementById('keep');
   const emailEl = document.getElementById('email');
   const btn = document.getElementById('sendBtn');
   const msg = document.getElementById('msg');
@@ -65,6 +72,7 @@
     e.preventDefault();
     const email = emailEl.value.trim();
     if (!email) return;
+    localStorage.setItem('tt_persist', keepEl.checked ? '1' : '0'); // remembered for when the magic link lands
     btn.disabled = true; btn.textContent = 'Sending…';
     const { error } = await sb.auth.signInWithOtp({
       email,
