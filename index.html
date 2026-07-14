@@ -431,6 +431,8 @@
   .mtg-editor input:focus, .mtg-editor textarea:focus { border-color: var(--accent-line); }
   .mtg-editor .ed-row { display: flex; gap: 12px; }
   .mtg-editor .ed-row label { flex: 1; }
+  .mtg-editor .tz-note { font-size: 12px; color: var(--text-dim); margin: -6px 0 14px; line-height: 1.5; }
+  .mtg-editor .tz-note strong { color: var(--text-muted); font-weight: 600; }
   .mtg-editor .ed-check { display: flex; align-items: center; gap: 9px; }
   .mtg-editor .ed-check input { width: auto; margin: 0; }
   .mtg-editor .ed-actions { display: flex; gap: 10px; }
@@ -1131,12 +1133,14 @@
     }
     function openEditor(m) {
       const wrap = document.getElementById('meetingEditorWrap');
+      const tz = tzInfo();
       wrap.innerHTML =
         '<div class="mtg-editor"><h3>' + (m ? 'Edit meeting' : 'New meeting') + '</h3>' +
         '<label>Title<input id="ed-title" type="text" value="' + esc(m && m.title) + '"></label>' +
         '<div class="ed-row"><label>Date<input id="ed-date" type="date" value="' + ((m && m.meeting_date) || '') + '"></label>' +
         '<label>Start<input id="ed-start" type="time" value="' + ((m && m.start_time) || '') + '"></label>' +
         '<label>End<input id="ed-end" type="time" value="' + ((m && m.end_time) || '') + '"></label></div>' +
+        '<div class="tz-note">Times are in your timezone — <strong>' + esc(tz.zone) + '</strong>' + (tz.abbr ? ' (' + esc(tz.abbr) + ')' : '') + '. The client sees the invite in their own timezone.</div>' +
         '<label>Location<input id="ed-loc" type="text" placeholder="Google Meet" value="' + esc(m && m.location) + '"></label>' +
         '<label class="ed-check"><input id="ed-upcoming" type="checkbox" ' + (m && m.upcoming ? 'checked' : '') + '> Show this as the “Next meeting” banner</label>' +
         (m ? '' : '<label class="ed-check"><input id="ed-invite" type="checkbox" checked> Email the client a calendar invite</label>') +
@@ -1147,6 +1151,12 @@
       document.getElementById('ed-save').addEventListener('click', () => saveMeeting(m));
     }
     function fmtTime(t) { if (!t) return ''; let [h, mm] = t.split(':').map(Number); const ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12; return h + ':' + String(mm).padStart(2, '0') + ' ' + ap; }
+    function tzInfo() {
+      const zone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'your timezone';
+      let abbr = '';
+      try { const p = new Intl.DateTimeFormat('en-US', { timeZoneName: 'short' }).formatToParts(new Date()).find(x => x.type === 'timeZoneName'); abbr = p ? p.value : ''; } catch (e) {}
+      return { zone, abbr };
+    }
     function mtgToast(msg, ok) {
       const t = document.getElementById('mtgToast'); if (!t) return;
       t.textContent = msg; t.className = 'mtg-toast ' + (ok ? 'ok' : 'warn'); t.hidden = false;
@@ -1173,7 +1183,8 @@
       const upcoming = document.getElementById('ed-upcoming').checked;
       const startT = document.getElementById('ed-start').value || null;
       const endT = document.getElementById('ed-end').value || null;
-      const time_label = startT ? (fmtTime(startT) + (endT ? ' – ' + fmtTime(endT) : '')) : null;
+      const _tz = tzInfo();
+      const time_label = startT ? (fmtTime(startT) + (endT ? ' – ' + fmtTime(endT) : '') + (_tz.abbr ? ' ' + _tz.abbr : '')) : null;
       const payload = { client_id: clientId, title, meeting_date: document.getElementById('ed-date').value || null, start_time: startT, end_time: endT, time_label, location: document.getElementById('ed-loc').value.trim() || null, upcoming, points };
       const btn = document.getElementById('ed-save'); btn.disabled = true; btn.textContent = 'Saving…';
       if (upcoming) await sb.from('meetings').update({ upcoming: false }).eq('client_id', clientId).neq('id', m ? m.id : '00000000-0000-0000-0000-000000000000');
@@ -1207,11 +1218,13 @@
 
     function openRequestForm() {
       const wrap = document.getElementById('requestFormWrap');
+      const tz = tzInfo();
       wrap.innerHTML =
         '<div class="mtg-editor"><h3>Request a meeting</h3>' +
         '<div class="ed-row"><label>Preferred date<input id="rq-date" type="date"></label>' +
         '<label>Start<input id="rq-start" type="time"></label>' +
         '<label>End<input id="rq-end" type="time"></label></div>' +
+        '<div class="tz-note">Times are in your timezone — <strong>' + esc(tz.zone) + '</strong>' + (tz.abbr ? ' (' + esc(tz.abbr) + ')' : '') + '.</div>' +
         '<label>What’s it about?<textarea id="rq-note" rows="3" placeholder="A note for the Think team…"></textarea></label>' +
         '<div class="ed-actions"><button class="btn" id="rq-send">Send request</button><button class="btn ghost" id="rq-cancel">Cancel</button></div></div>';
       wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1263,7 +1276,7 @@
       wrap.appendChild(box);
     }
     async function acceptRequest(r) {
-      const payload = { client_id: clientId, title: 'Meeting with ' + (r.requester_name || name), meeting_date: r.preferred_date, start_time: r.preferred_start, end_time: r.preferred_end, time_label: r.preferred_start ? fmtTime(r.preferred_start) + (r.preferred_end ? ' – ' + fmtTime(r.preferred_end) : '') : null, location: 'Google Meet', upcoming: true, points: r.note ? [r.note] : [] };
+      const payload = { client_id: clientId, title: 'Meeting with ' + (r.requester_name || name), meeting_date: r.preferred_date, start_time: r.preferred_start, end_time: r.preferred_end, time_label: r.preferred_start ? fmtTime(r.preferred_start) + (r.preferred_end ? ' – ' + fmtTime(r.preferred_end) : '') + (tzInfo().abbr ? ' ' + tzInfo().abbr : '') : null, location: 'Google Meet', upcoming: true, points: r.note ? [r.note] : [] };
       await sb.from('meetings').update({ upcoming: false }).eq('client_id', clientId);
       const { data: saved, error } = await sb.from('meetings').insert(payload).select().single();
       if (error) { alert('Could not accept: ' + error.message); return; }
