@@ -335,6 +335,14 @@
   .contract .row { display: flex; gap: 10px; flex-wrap: wrap; }
 
   /* ===== REQUEST WORK ===== */
+  .portfolio-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 18px; }
+  .pf-card { display: block; text-decoration: none; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow-sm); transition: transform .15s, box-shadow .15s; }
+  .pf-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px -12px rgba(0,0,0,.18); }
+  .pf-img { aspect-ratio: 16/10; background-size: cover; background-position: center; background-color: var(--surface-2); }
+  .pf-title { padding: 12px 14px; font: 600 13.5px/1.4 var(--font); color: var(--text); }
+  .portfolio-link { display: inline-flex; text-decoration: none; margin-bottom: 34px; }
+  @media (max-width: 860px) { .portfolio-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 560px) { .portfolio-grid { grid-template-columns: 1fr; } }
   .req { max-width: 560px; }
   .req .lbl { font: 600 13px/1 var(--font); margin: 22px 0 10px; }
   .chips { display: flex; gap: 9px; flex-wrap: wrap; }
@@ -718,6 +726,35 @@
     <section class="panel" id="request">
       <span class="eyebrow">Explore our work</span>
       <h2 class="page-title">Request to See Our Previous Work</h2>
+
+      <div class="portfolio-grid">
+        <a class="pf-card" href="https://think-technologies.com/watchmework/design-core-detroit-ai-workflow-case-study" target="_blank" rel="noopener">
+          <div class="pf-img" style="background-image:url('https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/7552e97d-2af4-438d-b352-ec610a1fa184/Design+Core+%26+Think++v3.png')"></div>
+          <div class="pf-title">Design Core Detroit — AI Workflow Case Study</div>
+        </a>
+        <a class="pf-card" href="https://think-technologies.com/watchmework/xclusive-seats-mvp-platform-case-study" target="_blank" rel="noopener">
+          <div class="pf-img" style="background-image:url('https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/9d887bb7-980b-4f5c-9201-23158d2eab42/xclusive+seats+v2.png')"></div>
+          <div class="pf-title">Xclusive Seats — Platform Case Study</div>
+        </a>
+        <a class="pf-card" href="https://think-technologies.com/watchmework/ai-media-recovery-local-government" target="_blank" rel="noopener">
+          <div class="pf-img" style="background-image:url('https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/f87e0c6b-c1a7-4d49-836c-6af73747b018/Local+Government+AI+.png')"></div>
+          <div class="pf-title">AI Media Recovery for Local Government</div>
+        </a>
+        <a class="pf-card" href="https://think-technologies.com/watchmework/wheelworks-inventory-system" target="_blank" rel="noopener">
+          <div class="pf-img" style="background-image:url('https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/a3c610a4-632e-40a1-be29-9a4939bfb73c/Wheelworks+Think+Review+v2.png')"></div>
+          <div class="pf-title">Wheelworks Detroit — Custom AI-Powered IMS</div>
+        </a>
+        <a class="pf-card" href="https://think-technologies.com/watchmework/realteam" target="_blank" rel="noopener">
+          <div class="pf-img" style="background-image:url('https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/d5ffdf89-82c1-4341-baec-eb0c7771d1d2/ChatGPT+Image+May+10%2C+2025%2C+02_09_00+PM.png')"></div>
+          <div class="pf-title">RealTeam — Performance Dashboard &amp; Data Infrastructure</div>
+        </a>
+        <a class="pf-card" href="https://think-technologies.com/watchmework/pogoai" target="_blank" rel="noopener">
+          <div class="pf-img" style="background-image:url('https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/27a51e7e-80a1-4adb-bb70-3e1c21ba2ff3/Copy+of+Politica+AI+v2+%28LinkedIn+Post%29.png')"></div>
+          <div class="pf-title">Politica — AI-Powered Political Research Tool</div>
+        </a>
+      </div>
+      <a class="btn ghost-dark portfolio-link" href="https://think-technologies.com/watchmework" target="_blank" rel="noopener">View Full Portfolio →</a>
+
       <div class="req">
         <div class="lbl">Which area are you curious about?</div>
         <div class="chips">
@@ -751,7 +788,7 @@
   var panels = document.querySelectorAll('.panel');
   function stagger(id) {
     var p = document.getElementById(id);
-    var els = p.querySelectorAll('.next, .mtg, .prog-card, .deliv, .item, .doc, .contract .side, .req .lbl, .req .chips, .req textarea, .req .btn');
+    var els = p.querySelectorAll('.next, .mtg, .prog-card, .deliv, .item, .doc, .contract .side, .req .lbl, .req .chips, .req textarea, .req .btn, .pf-card');
     els.forEach(function (el, i) { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = 'rise .5s ease backwards'; el.style.animationDelay = (0.045 * i) + 's'; });
   }
   function animateCount(el) {
@@ -1053,12 +1090,6 @@
       const [y, m, d] = ds.split('-').map(Number);
       return { mo: MO[m - 1] || '', dy: String(d).padStart(2, '0'), yr: String(y), wd: WD[new Date(y, m - 1, d).getDay()] || '' };
     }
-    function calLink(m) {
-      let s = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(m.title || 'Meeting');
-      if (m.meeting_date) { const d = m.meeting_date.replace(/-/g, ''); s += '&dates=' + d + '/' + d; }
-      if (m.location) s += '&location=' + encodeURIComponent(m.location);
-      return s;
-    }
     function commentEl(c) {
       const think = c.author_role === 'think';
       const av = think ? 'T' : (c.author_name ? c.author_name.trim().charAt(0).toUpperCase() : 'C');
@@ -1111,7 +1142,7 @@
         '<div class="cal"><div class="m">' + f.mo + '</div><div class="d">' + f.dy + '</div><div class="wd">' + f.wd + '</div></div>' +
         '<div class="info"><div class="lbl">Next Meeting</div><h3>' + esc(m.title) + '</h3>' +
           '<div class="meta">' + (m.time_label ? '<span>' + esc(m.time_label) + '</span>' : '') + (m.location ? '<span>' + esc(m.location) + '</span>' : '') + '</div></div>' +
-        '<div class="next-actions"><a class="btn" href="' + calLink(m) + '" target="_blank" rel="noopener">Add to calendar →</a>' +
+        '<div class="next-actions">' +
           (isStaff ? '<button class="btn ghost-dark" data-act="edit-next">Edit</button>' : '') + '</div>';
       if (isStaff) el.querySelector('[data-act="edit-next"]').addEventListener('click', () => openEditor(m));
       return el;
