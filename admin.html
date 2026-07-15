@@ -58,6 +58,9 @@
   .mini-email { font: 400 12px/1 var(--font); border: 1px solid var(--border); border-radius: 7px; padding: 5px 8px; background: var(--surface-2); outline: none; }
   .mini-email:focus { border-color: var(--accent-line); }
   .set-email { font: 600 11.5px/1 var(--font); border: 1px solid var(--accent-line); background: var(--accent-soft); color: var(--accent); border-radius: 7px; padding: 5px 10px; cursor: pointer; }
+  .mini-drive { font: 400 12px/1 var(--font); border: 1px solid var(--border); border-radius: 7px; padding: 5px 8px; background: var(--surface-2); outline: none; width: 190px; }
+  .mini-drive:focus { border-color: var(--accent-line); }
+  .set-drive { font: 600 11.5px/1 var(--font); border: 1px solid var(--accent-line); background: var(--accent-soft); color: var(--accent); border-radius: 7px; padding: 5px 10px; cursor: pointer; }
   .client-link { font-size: 12.5px; color: var(--accent); text-decoration: none; word-break: break-all; }
   .client-link:hover { text-decoration: underline; }
   .empty { color: var(--text-dim); font-size: 13.5px; padding: 20px 0; text-align: center; }
@@ -93,6 +96,10 @@
         <label>Client login email</label>
         <input id="clientEmail" type="email" placeholder="contact@acme.com" autocomplete="off">
         <div class="hint">This person gets access to this client's portal via a magic-link sign-in.</div>
+
+        <label>Drive folder <span style="color:var(--text-dim);font-weight:400">(optional)</span></label>
+        <input id="driveFolder" type="text" placeholder="Paste the client's Google Drive folder link or ID" autocomplete="off">
+        <div class="hint">Powers the Proposals &amp; Media and Contract tabs — pulls files straight from this folder.</div>
 
         <div class="logo-preview">
           <div class="logo-box" id="logoBox"><span class="ph">Logo preview</span></div>
@@ -135,8 +142,18 @@
   }
 
   const $ = id => document.getElementById(id);
-  const nameEl = $('name'), domainEl = $('domain'), emailEl = $('clientEmail');
+  const nameEl = $('name'), domainEl = $('domain'), emailEl = $('clientEmail'), driveEl = $('driveFolder');
   const logoBox = $('logoBox'), logoMeta = $('logoMeta'), msg = $('msg'), createBtn = $('createBtn');
+
+  // Accept a raw folder ID or a full Drive URL (folders/<id> or ?id=<id>)
+  function parseDriveFolderId(v) {
+    v = (v || '').trim();
+    if (!v) return null;
+    let m = v.match(/folders\/([a-zA-Z0-9_-]{10,})/) || v.match(/[?&]id=([a-zA-Z0-9_-]{10,})/);
+    if (m) return m[1];
+    if (/^[a-zA-Z0-9_-]{10,}$/.test(v)) return v;
+    return null;
+  }
 
   // --- logo resolution via Brandfetch (transparent, high-quality) + favicon fallback ---
   const BRANDFETCH_CLIENT_ID = '1id0MMCBxRhX8u81xkT';
@@ -209,6 +226,9 @@
           <div class="client-email">${emailByClient[c.id]
             ? '✉ ' + emailByClient[c.id]
             : '<span class="warn-email">⚠ no login email</span> <input type="email" class="mini-email" placeholder="client@email.com"> <button class="set-email">Set</button>'}</div>
+          <div class="client-email">${c.drive_folder_id
+            ? '📁 Drive folder connected'
+            : '<span class="warn-email">⚠ no Drive folder</span> <input type="text" class="mini-drive" placeholder="Drive folder link or ID"> <button class="set-drive">Set</button>'}</div>
           <a class="client-link" href="${url}">${url}</a>
         </div>
         <button class="copy-btn" data-url="${url}">Copy link</button>`;
@@ -227,6 +247,16 @@
         if (e2) { setBtn.disabled = false; setBtn.textContent = 'Set'; alert('Could not save: ' + e2.message); return; }
         loadClients();
       });
+      const setDriveBtn = row.querySelector('.set-drive');
+      if (setDriveBtn) setDriveBtn.addEventListener('click', async () => {
+        const inp = row.querySelector('.mini-drive');
+        const folderId = parseDriveFolderId(inp.value);
+        if (!folderId) { inp.focus(); return; }
+        setDriveBtn.disabled = true; setDriveBtn.textContent = 'Saving…';
+        const { error: e3 } = await sb.from('clients').update({ drive_folder_id: folderId }).eq('id', c.id);
+        if (e3) { setDriveBtn.disabled = false; setDriveBtn.textContent = 'Set'; alert('Could not save: ' + e3.message); return; }
+        loadClients();
+      });
       list.appendChild(row);
     });
   }
@@ -238,9 +268,11 @@
     const domain = cleanDomain(domainEl.value);
     const email = emailEl.value.trim().toLowerCase();
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showMsg('Please enter the client’s login email — without it they can’t sign in or receive invites.', 'err'); return; }
+    const driveFolderId = parseDriveFolderId(driveEl.value);
+    if (driveEl.value.trim() && !driveFolderId) { showMsg('Couldn’t read a folder ID from that Drive link — paste the full folder URL or just the ID.', 'err'); return; }
     createBtn.disabled = true; createBtn.textContent = 'Saving…';
     const { data: created, error } = await sb.from('clients').upsert({
-      slug, name, domain: domain || null, logo_url: resolvedLogo || null, logo_on_light: resolvedOnLight
+      slug, name, domain: domain || null, logo_url: resolvedLogo || null, logo_on_light: resolvedOnLight, drive_folder_id: driveFolderId
     }, { onConflict: 'slug' }).select('id').single();
     if (error) {
       createBtn.disabled = false; createBtn.textContent = 'Create portal →';
@@ -254,7 +286,7 @@
     }
     createBtn.disabled = false; createBtn.textContent = 'Create portal →';
     showMsg(`Portal created for ${name}${email ? ' — ' + email + ' can now sign in' : ''}! Their link is in the list →`, 'ok');
-    nameEl.value = domainEl.value = emailEl.value = '';
+    nameEl.value = domainEl.value = emailEl.value = driveEl.value = '';
     logoBox.innerHTML = '<span class="ph">Logo preview</span>'; logoMeta.textContent = 'Enter a domain to preview the logo.'; resolvedLogo = '';
     loadClients();
   });

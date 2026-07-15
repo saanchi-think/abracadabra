@@ -279,6 +279,8 @@
   .item:hover .ficon.t-slides { background: linear-gradient(135deg,#E0611F,#C2410C); color: #fff; border-color: transparent; }
   .item:hover .ficon.t-video  { background: linear-gradient(135deg,#4E6DC2,#3B5BA5); color: #fff; border-color: transparent; }
   .item:hover .ficon.t-image  { background: linear-gradient(135deg,#835FC0,#6D4AA6); color: #fff; border-color: transparent; }
+  .item .ficon.t-doc    { color: #1F6B5C; background: rgba(31,107,92,0.09); border-color: rgba(31,107,92,0.22); }
+  .item:hover .ficon.t-doc    { background: linear-gradient(135deg,#2E8C79,#1F6B5C); color: #fff; border-color: transparent; }
 
   /* requested-from-client section */
   .reqfrom { background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 24px; }
@@ -309,6 +311,7 @@
   .fchip:hover { border-color: var(--accent-line); color: var(--text); }
   .fchip.on { background: var(--grad); color: #fff; border-color: transparent; }
   .lib-empty { color: var(--text-dim); font-size: 14px; padding: 18px 2px; }
+  .lib-loading { color: var(--text-dim); font-size: 14px; padding: 18px 2px; }
   .item .kind { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-dim); font-weight: 600; }
   .item h4 { font: 600 15.5px/1.3 var(--font); margin: 5px 0 6px; }
   .item .meta { font-size: 12.5px; color: var(--text-dim); flex: 1; }
@@ -651,17 +654,12 @@
           <button class="fchip" data-f="slides">Slides</button>
           <button class="fchip" data-f="video">Video</button>
           <button class="fchip" data-f="image">Image</button>
+          <button class="fchip" data-f="doc">Docs</button>
         </div>
       </div>
-      <div class="grid c3">
-        <div class="card item" data-type="pdf"><div class="ficon"><svg class="ic" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/></svg></div><div class="kind">Proposal</div><h4>Support Automation — 4-Week Pilot</h4><div class="meta">PDF · Jun 29, 2026</div><a class="go" href="#">Open →</a></div>
-        <div class="card item" data-type="pdf"><div class="ficon"><svg class="ic" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/></svg></div><div class="kind">Proposal</div><h4>Data Readiness Assessment</h4><div class="meta">PDF · Jun 05, 2026</div><a class="go" href="#">Open →</a></div>
-        <div class="card item" data-type="slides"><div class="ficon"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M9 21h6"/></svg></div><div class="kind">Deck</div><h4>AI Opportunity Map</h4><div class="meta">Slides · Jun 12, 2026</div><a class="go" href="#">Open →</a></div>
-        <div class="card item" data-type="video"><div class="ficon"><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z"/></svg></div><div class="kind">Video</div><h4>Assistant demo walkthrough</h4><div class="meta">6 min · Jun 24, 2026</div><a class="go" href="#">Watch →</a></div>
-        <div class="card item" data-type="pdf"><div class="ficon"><svg class="ic" viewBox="0 0 24 24"><path d="M4 19V5M4 15l4-4 3 3 6-7"/></svg></div><div class="kind">Report</div><h4>Data readiness findings</h4><div class="meta">PDF · Jun 08, 2026</div><a class="go" href="#">Open →</a></div>
-        <div class="card item" data-type="image"><div class="ficon"><svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M5 17l4-4 4 3 3-2 3 3"/></svg></div><div class="kind">Media</div><h4>Architecture diagram</h4><div class="meta">Image · Jun 20, 2026</div><a class="go" href="#">View →</a></div>
-      </div>
-      <div class="lib-empty" id="libEmpty" style="display:none">No files match your search.</div>
+      <div class="grid c3" id="libGrid"></div>
+      <div class="lib-empty" id="libEmpty" hidden>No files match your search.</div>
+      <div class="lib-loading" id="libLoading">Loading files…</div>
     </section>
 
     <!-- CLIENT ACTION CENTER -->
@@ -697,29 +695,9 @@
     <section class="panel" id="contract">
       <span class="eyebrow">Agreement</span>
       <h2 class="page-title">Contract</h2>
-      <div class="contract">
-        <div class="doc">
-          <div class="dh"><div class="m"></div><span>Think Technologies</span></div>
-          <h5>Master Services Agreement</h5>
-          <p>This agreement is entered into between Think Technologies and Acme Corp for the delivery of AI advisory and development services as scoped below.</p>
-          <div class="line"></div><div class="line"></div><div class="line s"></div>
-          <p>1. Scope of engagement. 2. Deliverables &amp; timeline. 3. Fees &amp; payment terms. 4. Confidentiality &amp; data handling.</p>
-          <div class="line"></div><div class="line"></div><div class="line s"></div>
-        </div>
-        <div class="side">
-          <h3>Master Services Agreement</h3>
-          <div class="sub">Signed · effective March 14, 2026</div>
-          <div class="meta-line">
-            <div class="b"><div class="k">Status</div><div class="v">Fully executed</div></div>
-            <div class="b"><div class="k">Term</div><div class="v">12 months</div></div>
-            <div class="b"><div class="k">Version</div><div class="v">v1.2</div></div>
-          </div>
-          <div class="row">
-            <button class="btn">Download PDF ↓</button>
-            <button class="btn ghost">Open full screen</button>
-          </div>
-        </div>
-      </div>
+      <div class="grid c3" id="contractGrid"></div>
+      <div class="lib-empty" id="contractEmpty" hidden>No contracts or agreements found in your folder yet.</div>
+      <div class="lib-loading" id="contractLoading">Loading…</div>
     </section>
 
     <!-- REQUEST WORK -->
@@ -909,38 +887,6 @@
     refresh();
   })();
 
-  // ===== PROPOSALS & MEDIA: search + type filter =====
-  (function () {
-    var panel = document.getElementById('proposals');
-    if (!panel) return;
-    var search = panel.querySelector('#libSearch');
-    var chips = panel.querySelectorAll('.fchip');
-    var items = panel.querySelectorAll('.item');
-    items.forEach(function (it) { var f = it.querySelector('.ficon'); if (f) f.classList.add('t-' + it.dataset.type); });
-    var empty = panel.querySelector('#libEmpty');
-    var filter = 'all';
-    function apply() {
-      var q = (search.value || '').toLowerCase().trim();
-      var shown = 0;
-      items.forEach(function (it) {
-        var okType = filter === 'all' || it.dataset.type === filter;
-        var okText = !q || it.textContent.toLowerCase().indexOf(q) > -1;
-        var show = okType && okText;
-        it.style.display = show ? '' : 'none';
-        if (show) shown++;
-      });
-      empty.style.display = shown ? 'none' : '';
-    }
-    search.addEventListener('input', apply);
-    chips.forEach(function (c) {
-      c.addEventListener('click', function () {
-        chips.forEach(function (x) { x.classList.remove('on'); });
-        c.classList.add('on');
-        filter = c.dataset.f;
-        apply();
-      });
-    });
-  })();
 
   // ===== PROPOSE NEW MEETING TIME =====
   (function () {
@@ -1341,6 +1287,105 @@
 
     renderMeetings();
     renderRequests();
+
+    // ===== DRIVE FILES: Proposals & Media + Contract (from the client's shared Drive folder) =====
+    const DRIVE_FILES_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-drive-files';
+    let driveFiles = null;
+
+    function mimeCategory(mt) {
+      if (!mt) return 'doc';
+      if (mt === 'application/pdf') return 'pdf';
+      if (mt.indexOf('video/') === 0) return 'video';
+      if (mt.indexOf('image/') === 0) return 'image';
+      if (mt === 'application/vnd.google-apps.presentation' || mt.indexOf('powerpoint') > -1 || mt.indexOf('presentation') > -1) return 'slides';
+      return 'doc';
+    }
+    function catLabel(cat) { return { pdf: 'PDF', slides: 'Slides', video: 'Video', image: 'Image', doc: 'Doc' }[cat] || 'File'; }
+    function catIcon(cat) {
+      const icons = {
+        pdf: '<svg class="ic" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/></svg>',
+        slides: '<svg class="ic" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M9 21h6"/></svg>',
+        video: '<svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M10 9l5 3-5 3z"/></svg>',
+        image: '<svg class="ic" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="M5 17l4-4 4 3 3-2 3 3"/></svg>',
+        doc: '<svg class="ic" viewBox="0 0 24 24"><path d="M7 3h10v18H7z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg>'
+      };
+      return icons[cat] || icons.doc;
+    }
+    function fmtFileDate(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      return MO[d.getMonth()] + ' ' + String(d.getDate()).padStart(2, '0') + ', ' + d.getFullYear();
+    }
+    function stripExt(n) { return (n || '').replace(/\.[a-zA-Z0-9]{2,5}$/, ''); }
+
+    async function loadDriveFiles() {
+      if (driveFiles) return driveFiles;
+      if (!data.drive_folder_id) { driveFiles = []; return driveFiles; }
+      try {
+        const r = await fetch(DRIVE_FILES_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folderId: data.drive_folder_id }) });
+        const j = await r.json();
+        driveFiles = Array.isArray(j.files) ? j.files : [];
+      } catch (e) { driveFiles = []; }
+      return driveFiles;
+    }
+    function fileCard(f) {
+      const cat = mimeCategory(f.mimeType);
+      const card = document.createElement('div'); card.className = 'card item'; card.dataset.type = cat;
+      card.innerHTML = '<div class="ficon t-' + cat + '">' + catIcon(cat) + '</div>' +
+        '<div class="kind">' + catLabel(cat) + '</div>' +
+        '<h4>' + esc(stripExt(f.name)) + '</h4>' +
+        '<div class="meta">' + catLabel(cat) + (f.modifiedTime ? ' · ' + fmtFileDate(f.modifiedTime) : '') + '</div>' +
+        '<a class="go" href="' + (f.webViewLink || '#') + '" target="_blank" rel="noopener">Open →</a>';
+      return card;
+    }
+    function wireLibraryFilter() {
+      const panel = document.getElementById('proposals');
+      const search = panel.querySelector('#libSearch');
+      const chips = panel.querySelectorAll('.fchip');
+      const items = panel.querySelectorAll('.item');
+      const empty = document.getElementById('libEmpty');
+      let filter = 'all';
+      function apply() {
+        const q = (search.value || '').toLowerCase().trim();
+        let shown = 0;
+        items.forEach(it => {
+          const okType = filter === 'all' || it.dataset.type === filter;
+          const okText = !q || it.textContent.toLowerCase().indexOf(q) > -1;
+          const show = okType && okText;
+          it.style.display = show ? '' : 'none';
+          if (show) shown++;
+        });
+        empty.hidden = !!shown; empty.textContent = 'No files match your search.';
+      }
+      search.oninput = apply;
+      chips.forEach(c => { c.onclick = () => { chips.forEach(x => x.classList.remove('on')); c.classList.add('on'); filter = c.dataset.f; apply(); }; });
+    }
+    async function renderLibrary() {
+      const grid = document.getElementById('libGrid');
+      const empty = document.getElementById('libEmpty');
+      const loading = document.getElementById('libLoading');
+      if (!grid) return;
+      loading.hidden = false; empty.hidden = true; grid.innerHTML = '';
+      const files = await loadDriveFiles();
+      loading.hidden = true;
+      if (!files.length) { empty.hidden = false; empty.textContent = data.drive_folder_id ? 'No files found in your folder yet.' : 'No file folder connected yet — check with your Think contact.'; return; }
+      files.forEach(f => grid.appendChild(fileCard(f)));
+      wireLibraryFilter();
+    }
+    async function renderContractTab() {
+      const grid = document.getElementById('contractGrid');
+      const empty = document.getElementById('contractEmpty');
+      const loading = document.getElementById('contractLoading');
+      if (!grid) return;
+      loading.hidden = false; empty.hidden = true; grid.innerHTML = '';
+      const files = await loadDriveFiles();
+      const matches = files.filter(f => /contract|agreement/i.test(f.name || ''));
+      loading.hidden = true;
+      if (!matches.length) { empty.hidden = false; return; }
+      matches.forEach(f => grid.appendChild(fileCard(f)));
+    }
+    renderLibrary();
+    renderContractTab();
   })();
 </script>
 </body>
