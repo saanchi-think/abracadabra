@@ -1322,7 +1322,7 @@
       if (driveFiles) return driveFiles;
       if (!data.drive_folder_id) { driveFiles = []; return driveFiles; }
       try {
-        const r = await fetch(DRIVE_FILES_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folderId: data.drive_folder_id }) });
+        const r = await fetch(DRIVE_FILES_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folderId: data.drive_folder_id, clientName: name }) });
         const j = await r.json();
         driveFiles = Array.isArray(j.files) ? j.files : [];
       } catch (e) { driveFiles = []; }
@@ -1333,7 +1333,7 @@
       const card = document.createElement('div'); card.className = 'card item'; card.dataset.type = cat;
       card.innerHTML = '<div class="ficon t-' + cat + '">' + catIcon(cat) + '</div>' +
         '<div class="kind">' + catLabel(cat) + '</div>' +
-        '<h4>' + esc(stripExt(f.name)) + '</h4>' +
+        '<h4>' + esc(f.displayName || stripExt(f.name)) + '</h4>' +
         '<div class="meta">' + catLabel(cat) + (f.modifiedTime ? ' · ' + fmtFileDate(f.modifiedTime) : '') + '</div>' +
         '<a class="go" href="' + (f.webViewLink || '#') + '" target="_blank" rel="noopener">Open →</a>';
       return card;
