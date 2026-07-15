@@ -683,22 +683,10 @@
           <div class="reqfrom-title">Requested from you</div>
           <span class="reqfrom-count" id="reqCount"></span>
         </div>
-        <div class="reqfrom-sub">A few items we’re still waiting on from your team to keep things moving.</div>
-        <div class="reqrow" data-state="pending">
-          <div class="reqrow-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg></div>
-          <div class="reqrow-main"><div class="reqrow-name">Signed pilot agreement</div><div class="reqrow-note">Needed to kick off the 4-week pilot</div></div>
-          <button class="btn small reqrow-up">Upload</button>
-        </div>
-        <div class="reqrow" data-state="pending">
-          <div class="reqrow-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg></div>
-          <div class="reqrow-main"><div class="reqrow-name">Zendesk export — 18 months</div><div class="reqrow-note">For grounding the support assistant</div></div>
-          <button class="btn small reqrow-up">Upload</button>
-        </div>
-        <div class="reqrow" data-state="done">
-          <div class="reqrow-ic"><svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5 9-11"/></svg></div>
-          <div class="reqrow-main"><div class="reqrow-name">Brand assets (logo + guidelines)</div><div class="reqrow-note">Received Jun 18, 2026</div></div>
-          <span class="reqrow-done">Received</span>
-        </div>
+        <div class="reqfrom-sub">Items we’re waiting on from your team, pulled automatically from our meetings together.</div>
+        <div id="actionsList"></div>
+        <div class="lib-loading" id="actionsLoading">Loading…</div>
+        <div class="lib-empty" id="actionsEmpty" hidden>Nothing needed from you right now — you’re all caught up.</div>
       </div>
     </section>
 
@@ -874,55 +862,6 @@
     // seed an example thread to show tagging + reply
     var seed = addComment('Support build', 'Will the assistant handle refunds automatically, or just flag them for us?');
     seed.querySelector('.dcomment-replies').appendChild(replyNode('Think Technologies', 'For the pilot it flags them for your team to approve — full auto-refund is a phase 2 option we can scope with you.'));
-  })();
-
-  // ===== PROPOSALS & MEDIA: requested-from-client list =====
-  (function () {
-    var box = document.getElementById('reqfrom');
-    if (!box) return;
-    var countEl = document.getElementById('reqCount');
-    function refresh() {
-      var pending = box.querySelectorAll('.reqrow[data-state="pending"]').length;
-      countEl.textContent = pending ? pending + ' pending' : 'All received';
-    }
-    box.querySelectorAll('.reqrow-up').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var row = btn.closest('.reqrow');
-        row.dataset.state = 'done';
-        row.querySelector('.reqrow-ic').innerHTML = '<svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5 9-11"/></svg>';
-        row.querySelector('.reqrow-note').textContent = 'Received just now';
-        btn.replaceWith(Object.assign(document.createElement('span'), { className: 'reqrow-done', textContent: 'Received' }));
-        refresh();
-      });
-    });
-    refresh();
-  })();
-
-
-  // ===== PROPOSE NEW MEETING TIME =====
-  (function () {
-    var toggle = document.getElementById('proposeToggle');
-    if (!toggle) return;
-    var box = document.getElementById('proposeBox');
-    var done = document.getElementById('proposeDone');
-    var cancel = document.getElementById('proposeCancel');
-    var send = document.getElementById('proposeSend');
-    var dateEl = document.getElementById('propDate');
-    var timeEl = document.getElementById('propTime');
-
-    function open() { done.hidden = true; box.hidden = false; toggle.textContent = 'Hide'; }
-    function close() { box.hidden = true; toggle.textContent = 'Propose new time'; }
-    toggle.addEventListener('click', function () { box.hidden ? open() : close(); });
-    cancel.addEventListener('click', close);
-    send.addEventListener('click', function () {
-      var d = dateEl.value, t = timeEl.value;
-      var when = d ? new Date(d + 'T00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'your suggested date';
-      if (t) { var hm = t.split(':'); var h = +hm[0], ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; when += ' at ' + h + ':' + hm[1] + ' ' + ap; }
-      box.hidden = true;
-      toggle.textContent = 'Propose new time';
-      done.innerHTML = '<span>✓</span> New time proposed for <b>' + when + '</b> — the Think team will confirm by email shortly.';
-      done.hidden = false;
-    });
   })();
 
   // ===== LIVE FEEDBACK: comment on the uploaded build preview =====
@@ -1522,6 +1461,42 @@
     }
     renderLibrary();
     renderContractTab();
+
+    // ===== CLIENT ACTION CENTER: items owed by the client, auto-extracted from transcripts =====
+    const UPLOAD_SVG = '<svg class="ic" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 20h16"/></svg>';
+    const CHECK_SVG = '<svg class="ic" viewBox="0 0 24 24"><path d="M5 12l5 5 9-11"/></svg>';
+    function actionRow(a) {
+      const row = document.createElement('div'); row.className = 'reqrow'; row.dataset.state = a.status === 'done' ? 'done' : 'pending';
+      row.innerHTML =
+        '<div class="reqrow-ic">' + (a.status === 'done' ? CHECK_SVG : UPLOAD_SVG) + '</div>' +
+        '<div class="reqrow-main"><div class="reqrow-name">' + esc(a.name) + '</div>' + (a.note ? '<div class="reqrow-note">' + esc(a.note) + '</div>' : '') + '</div>' +
+        (a.status === 'done' ? '<span class="reqrow-done">Done</span>' : '<button class="btn small reqrow-up">Mark as done</button>');
+      const btn = row.querySelector('.reqrow-up');
+      if (btn) btn.addEventListener('click', async () => {
+        btn.disabled = true; btn.textContent = 'Saving…';
+        const { error } = await sb.from('client_actions').update({ status: 'done' }).eq('id', a.id);
+        if (error) { btn.disabled = false; btn.textContent = 'Mark as done'; alert('Could not update: ' + error.message); return; }
+        renderActions();
+      });
+      return row;
+    }
+    async function renderActions() {
+      const list = document.getElementById('actionsList');
+      const loading = document.getElementById('actionsLoading');
+      const empty = document.getElementById('actionsEmpty');
+      const countEl = document.getElementById('reqCount');
+      if (!list) return;
+      loading.hidden = false; empty.hidden = true; list.innerHTML = '';
+      const { data: actions, error } = await sb.from('client_actions').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
+      loading.hidden = true;
+      if (error) { empty.hidden = false; empty.textContent = 'Couldn’t load items: ' + error.message; return; }
+      if (!actions || !actions.length) { empty.hidden = false; if (countEl) countEl.textContent = 'All clear'; return; }
+      const pending = actions.filter(a => a.status !== 'done');
+      const done = actions.filter(a => a.status === 'done');
+      pending.concat(done).forEach(a => list.appendChild(actionRow(a)));
+      if (countEl) countEl.textContent = pending.length ? pending.length + ' pending' : 'All clear';
+    }
+    renderActions();
   })();
 </script>
 </body>
