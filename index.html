@@ -428,6 +428,7 @@
   .req-actions { display: flex; gap: 8px; flex-shrink: 0; }
   .btn.small { padding: 8px 14px; font-size: 12.5px; }
   .req-badge { font: 600 11px/1 var(--font); text-transform: uppercase; letter-spacing: .04em; padding: 5px 10px; border-radius: 999px; align-self: center; }
+  .req-type-badge { display: inline-block; font: 600 10.5px/1 var(--font); text-transform: uppercase; letter-spacing: .04em; color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line); padding: 4px 9px; border-radius: 999px; margin-bottom: 6px; }
   .req-badge.pending { background: rgba(178,106,0,.12); color: var(--warn); }
   .req-badge.accepted { background: rgba(31,122,77,.12); color: var(--good); }
   .req-badge.declined { background: var(--surface-2); color: var(--text-dim); }
@@ -565,6 +566,7 @@
       <div id="mtgToast" class="mtg-toast" hidden></div>
       <div id="requestsWrap"></div>
       <div id="nextMeetingWrap"></div>
+      <div id="rescheduleFormWrap"></div>
       <div id="meetingsList"></div>
       <div class="mtg-empty" id="meetingsEmpty" hidden>No meeting notes yet.</div>
     </section>
@@ -1106,8 +1108,7 @@
       const card = document.createElement('div'); card.className = 'mtg'; card.dataset.id = m.id;
       card.innerHTML =
         '<div class="mdate"><span class="mo">' + f.mo + '</span><span class="dy">' + f.dy + '</span><span class="yr">' + f.yr + '</span></div>' +
-        '<div class="mtg-body"><div class="mtg-titlerow"><h4>' + esc(m.title) + '</h4>' +
-          (isStaff ? '<span class="mtg-tools"><button data-act="edit">Edit</button><button data-act="del">Delete</button></span>' : '') + '</div>' +
+        '<div class="mtg-body">' + (isStaff ? '<div class="mtg-titlerow"><span></span><span class="mtg-tools"><button data-act="edit">Edit</button><button data-act="del">Delete</button></span></div>' : '') +
           (pts ? '<ul class="mtg-notes-list">' + pts + '</ul>' : '') +
           '<div class="mtg-bottom"><div class="comments"></div></div></div>' +
         '<div class="mtg-actions">' + (isStaff ? '' : '<button class="mtg-comment-btn" title="Comment">' + COMMENT_SVG + '<span>Comment</span></button>') + '</div>';
@@ -1135,11 +1136,12 @@
       const el = document.createElement('div'); el.className = 'card next';
       el.innerHTML =
         '<div class="cal"><div class="m">' + f.mo + '</div><div class="d">' + f.dy + '</div><div class="wd">' + f.wd + '</div></div>' +
-        '<div class="info"><div class="lbl">Next Meeting</div><h3>' + esc(m.title) + '</h3>' +
+        '<div class="info"><div class="lbl">Next Meeting</div>' +
           '<div class="meta">' + (m.time_label ? '<span>' + esc(m.time_label) + '</span>' : '') + (m.location ? '<span>' + esc(m.location) + '</span>' : '') + '</div></div>' +
         '<div class="next-actions">' +
-          (isStaff ? '<button class="btn ghost-dark" data-act="edit-next">Edit</button>' : '') + '</div>';
+          (isStaff ? '<button class="btn ghost-dark" data-act="edit-next">Edit</button>' : '<button class="btn ghost-dark" data-act="propose-time">Propose new time</button>') + '</div>';
       if (isStaff) el.querySelector('[data-act="edit-next"]').addEventListener('click', () => openEditor(m));
+      else el.querySelector('[data-act="propose-time"]').addEventListener('click', () => openRescheduleForm(m));
       return el;
     }
     async function renderMeetings() {
@@ -1185,7 +1187,6 @@
       const curTz = (m && m.tz) || 'America/Detroit';
       wrap.innerHTML =
         '<div class="mtg-editor"><h3>' + (m ? 'Edit meeting' : 'New meeting') + '</h3>' +
-        '<label>Title<input id="ed-title" type="text" value="' + esc(m && m.title) + '"></label>' +
         '<div class="ed-row"><label>Date<input id="ed-date" type="date" value="' + defDate + '"></label>' +
         '<label>Start<input id="ed-start" type="time" value="' + defStart + '"></label>' +
         '<label>End<input id="ed-end" type="time" value="' + defEnd + '"></label></div>' +
@@ -1229,13 +1230,16 @@
       if (!attendeeEmail) return { sent: false, reason: 'this client has no login email set (add one in the admin panel)' };
       const startISO = zonedTimeToUtcISO(mtg.meeting_date, mtg.start_time, tz);
       const endISO = mtg.end_time ? zonedTimeToUtcISO(mtg.meeting_date, mtg.end_time, tz) : new Date(new Date(startISO).getTime() + 3600000).toISOString();
-      const payload = { title: mtg.title, description: (mtg.points || []).join('\n'), location: mtg.location || '', start: startISO, end: endISO, timezone: tz, attendeeEmail: attendeeEmail, clientName: name, organizer: 'Think Technologies' };
-      try { const r = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); return { sent: r.ok, reason: r.ok ? attendeeEmail : ('the invite service returned ' + r.status) }; }
-      catch (e) { return { sent: false, reason: 'the invite request failed to reach the service' }; }
+      const payload = { title: mtg.title, description: (mtg.points || []).join('\n'), location: mtg.location || '', start: startISO, end: endISO, timezone: tz, attendeeEmail: attendeeEmail, clientName: name, organizer: 'Think Technologies', eventId: mtg.calendar_event_id || null };
+      try {
+        const r = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        let eventId = null; try { const body = await r.json(); eventId = body && body.id ? body.id : null; } catch (e) {}
+        return { sent: r.ok, reason: r.ok ? attendeeEmail : ('the invite service returned ' + r.status), eventId };
+      }
+      catch (e) { return { sent: false, reason: 'the invite request failed to reach the service', eventId: null }; }
     }
     async function saveMeeting(m) {
-      const title = document.getElementById('ed-title').value.trim();
-      if (!title) { alert('Please enter a title.'); return; }
+      const title = (m && m.title) || '';
       const points = document.getElementById('ed-points').value.split('\n').map(s => s.trim()).filter(Boolean);
       const startT = document.getElementById('ed-start').value || null;
       const endT = document.getElementById('ed-end').value || null;
@@ -1252,6 +1256,7 @@
       const inviteEl = document.getElementById('ed-invite');
       if (!m && inviteEl && inviteEl.checked) {
         const res = await sendInvite(saved, tz);
+        if (res.eventId) await sb.from('meetings').update({ calendar_event_id: res.eventId }).eq('id', saved.id);
         mtgToast(res.sent ? ('Meeting saved — calendar invite sent to ' + res.reason) : ('Meeting saved, but no invite: ' + res.reason), res.sent);
       } else {
         mtgToast('Meeting saved.', true);
@@ -1274,13 +1279,13 @@
 
     function openRequestForm() {
       const wrap = document.getElementById('requestFormWrap');
-      const tz = tzInfo();
+      const defDate = todayStr(); const defStart = nowTimeStr(); const defEnd = plusOneHour(defStart);
       wrap.innerHTML =
         '<div class="mtg-editor"><h3>Request a meeting</h3>' +
-        '<div class="ed-row"><label>Preferred date<input id="rq-date" type="date"></label>' +
-        '<label>Start<input id="rq-start" type="time"></label>' +
-        '<label>End<input id="rq-end" type="time"></label></div>' +
-        '<div class="tz-note">Times are in your timezone — <strong>' + esc(tz.zone) + '</strong>' + (tz.abbr ? ' (' + esc(tz.abbr) + ')' : '') + '.</div>' +
+        '<div class="ed-row"><label>Preferred date<input id="rq-date" type="date" value="' + defDate + '"></label>' +
+        '<label>Start<input id="rq-start" type="time" value="' + defStart + '"></label>' +
+        '<label>End<input id="rq-end" type="time" value="' + defEnd + '"></label></div>' +
+        '<label>Timezone<select id="rq-tz">' + TZ_OPTIONS.map(o => '<option value="' + o.value + '"' + (o.value === 'America/Detroit' ? ' selected' : '') + '>' + o.label + '</option>').join('') + '</select></label>' +
         '<label>What’s it about?<textarea id="rq-note" rows="3" placeholder="A note for the Think team…"></textarea></label>' +
         '<div class="ed-actions"><button class="btn" id="rq-send">Send request</button><button class="btn ghost" id="rq-cancel">Cancel</button></div></div>';
       document.getElementById('rq-cancel').addEventListener('click', () => { wrap.innerHTML = ''; });
@@ -1291,15 +1296,49 @@
       const start = document.getElementById('rq-start').value || null;
       if (!date || !start) { alert('Please pick a preferred date and start time.'); return; }
       const end = document.getElementById('rq-end').value || null;
+      const tz = document.getElementById('rq-tz').value || 'America/Detroit';
       const note = document.getElementById('rq-note').value.trim() || null;
       const btn = document.getElementById('rq-send'); btn.disabled = true; btn.textContent = 'Sending…';
-      const { error } = await sb.from('meeting_requests').insert({ client_id: clientId, requester_name: name, preferred_date: date, preferred_start: start, preferred_end: end, note, status: 'pending' });
+      const { error } = await sb.from('meeting_requests').insert({ client_id: clientId, requester_name: name, preferred_date: date, preferred_start: start, preferred_end: end, preferred_tz: tz, note, status: 'pending' });
       if (error) { btn.disabled = false; btn.textContent = 'Send request'; alert('Could not send: ' + error.message); return; }
       const f = fmtDate(date);
-      const when = f.mo + ' ' + f.dy + ', ' + f.yr + ' at ' + fmtTime(start) + (end ? ' – ' + fmtTime(end) : '');
+      const when = f.mo + ' ' + f.dy + ', ' + f.yr + ' at ' + fmtTime(start) + (end ? ' – ' + fmtTime(end) : '') + ' ' + tzAbbr(tz);
       try { await fetch(REQUEST_NOTIFY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientName: name, when: when, note: note || '', portalLink: location.origin + '/index.html?client=' + (data.slug || '') }) }); } catch (e) {}
       document.getElementById('requestFormWrap').innerHTML = '';
       mtgToast('Request sent — the Think team will confirm by email.', true);
+      renderRequests();
+    }
+    function openRescheduleForm(m) {
+      const wrap = document.getElementById('rescheduleFormWrap');
+      if (wrap.innerHTML) { wrap.innerHTML = ''; return; }
+      const defDate = todayStr(); const defStart = nowTimeStr(); const defEnd = plusOneHour(defStart);
+      wrap.innerHTML =
+        '<div class="mtg-editor"><h3>Propose a new time</h3>' +
+        '<div class="ed-row"><label>New date<input id="rs-date" type="date" value="' + defDate + '"></label>' +
+        '<label>Start<input id="rs-start" type="time" value="' + defStart + '"></label>' +
+        '<label>End<input id="rs-end" type="time" value="' + defEnd + '"></label></div>' +
+        '<label>Timezone<select id="rs-tz">' + TZ_OPTIONS.map(o => '<option value="' + o.value + '"' + (o.value === 'America/Detroit' ? ' selected' : '') + '>' + o.label + '</option>').join('') + '</select></label>' +
+        '<label>Note (optional)<textarea id="rs-note" rows="2" placeholder="Why you need to move it…"></textarea></label>' +
+        '<div class="ed-actions"><button class="btn" id="rs-send">Send request</button><button class="btn ghost" id="rs-cancel">Cancel</button></div></div>';
+      document.getElementById('rs-cancel').addEventListener('click', () => { wrap.innerHTML = ''; });
+      document.getElementById('rs-send').addEventListener('click', () => submitReschedule(m));
+    }
+    async function submitReschedule(m) {
+      const date = document.getElementById('rs-date').value || null;
+      const start = document.getElementById('rs-start').value || null;
+      if (!date || !start) { alert('Please pick a new date and start time.'); return; }
+      const end = document.getElementById('rs-end').value || null;
+      const tz = document.getElementById('rs-tz').value || 'America/Detroit';
+      const note = document.getElementById('rs-note').value.trim() || null;
+      const btn = document.getElementById('rs-send'); btn.disabled = true; btn.textContent = 'Sending…';
+      const { error } = await sb.from('meeting_requests').insert({ client_id: clientId, requester_name: name, target_meeting_id: m.id, preferred_date: date, preferred_start: start, preferred_end: end, preferred_tz: tz, note, status: 'pending' });
+      if (error) { btn.disabled = false; btn.textContent = 'Send request'; alert('Could not send: ' + error.message); return; }
+      const f = fmtDate(date);
+      const newWhen = f.mo + ' ' + f.dy + ', ' + f.yr + ' at ' + fmtTime(start) + (end ? ' – ' + fmtTime(end) : '') + ' ' + tzAbbr(tz);
+      const noteWithContext = 'Requesting to move "' + (m.title || 'the meeting') + '" (currently ' + (m.time_label || 'unscheduled') + ') to ' + newWhen + '.' + (note ? ' Note: ' + note : '');
+      try { await fetch(REQUEST_NOTIFY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientName: name, when: newWhen, note: noteWithContext, portalLink: location.origin + '/index.html?client=' + (data.slug || '') }) }); } catch (e) {}
+      document.getElementById('rescheduleFormWrap').innerHTML = '';
+      mtgToast('Reschedule request sent — the Think team will confirm by email.', true);
       renderRequests();
     }
     function requestRow(r) {
@@ -1309,7 +1348,7 @@
       const right = (isStaff && r.status === 'pending')
         ? '<div class="req-actions"><button class="btn small req-accept">Accept</button><button class="btn small ghost req-decline">Decline</button></div>'
         : '<span class="req-badge ' + r.status + '">' + r.status + '</span>';
-      el.innerHTML = '<div class="req-main"><div class="req-when">' + esc(when) + '</div>' +
+      el.innerHTML = '<div class="req-main">' + (r.target_meeting_id ? '<span class="req-type-badge">Reschedule request</span>' : '') + '<div class="req-when">' + esc(when) + '</div>' +
         '<div class="req-who">' + esc(r.requester_name || 'Client') + (r.note ? ': ' + esc(r.note) : '') + '</div>' +
         (r.status === 'declined' && r.staff_message ? '<div class="req-msg">Think replied: ' + esc(r.staff_message) + '</div>' : '') +
         '</div>' + right;
@@ -1331,12 +1370,30 @@
       wrap.appendChild(box);
     }
     async function acceptRequest(r) {
-      const tz = 'America/Detroit';
+      const tz = r.preferred_tz || 'America/Detroit';
       const abbr = tzAbbr(tz);
-      const payload = { client_id: clientId, title: 'Meeting with ' + (r.requester_name || name), meeting_date: r.preferred_date, start_time: r.preferred_start, end_time: r.preferred_end, time_label: r.preferred_start ? fmtTime(r.preferred_start) + (r.preferred_end ? ' – ' + fmtTime(r.preferred_end) : '') + (abbr ? ' ' + abbr : '') : null, location: 'Google Meet', tz, points: r.note ? [r.note] : [] };
+      const time_label = r.preferred_start ? fmtTime(r.preferred_start) + (r.preferred_end ? ' – ' + fmtTime(r.preferred_end) : '') + (abbr ? ' ' + abbr : '') : null;
+
+      if (r.target_meeting_id) {
+        // reschedule: update the EXISTING meeting in place, and patch the same calendar event
+        const { data: target } = await sb.from('meetings').select('*').eq('id', r.target_meeting_id).maybeSingle();
+        const payload = { meeting_date: r.preferred_date, start_time: r.preferred_start, end_time: r.preferred_end, time_label, tz };
+        const { data: saved, error } = await sb.from('meetings').update(payload).eq('id', r.target_meeting_id).select().single();
+        if (error) { alert('Could not reschedule: ' + error.message); return; }
+        const mergedForInvite = Object.assign({}, saved, { calendar_event_id: target && target.calendar_event_id });
+        const res = await sendInvite(mergedForInvite, tz);
+        if (res.eventId && !mergedForInvite.calendar_event_id) await sb.from('meetings').update({ calendar_event_id: res.eventId }).eq('id', r.target_meeting_id);
+        await sb.from('meeting_requests').update({ status: 'accepted' }).eq('id', r.id);
+        mtgToast(res.sent ? ('Rescheduled — updated invite sent to ' + res.reason) : ('Rescheduled, but no invite: ' + res.reason), res.sent);
+        renderRequests(); renderMeetings();
+        return;
+      }
+
+      const payload = { client_id: clientId, title: 'Meeting with ' + (r.requester_name || name), meeting_date: r.preferred_date, start_time: r.preferred_start, end_time: r.preferred_end, time_label, location: 'Google Meet', tz, points: r.note ? [r.note] : [] };
       const { data: saved, error } = await sb.from('meetings').insert(payload).select().single();
       if (error) { alert('Could not accept: ' + error.message); return; }
       const res = await sendInvite(saved, tz);
+      if (res.eventId) await sb.from('meetings').update({ calendar_event_id: res.eventId }).eq('id', saved.id);
       await sb.from('meeting_requests').update({ status: 'accepted' }).eq('id', r.id);
       mtgToast(res.sent ? ('Accepted — invite sent to ' + res.reason) : ('Accepted & booked — no invite: ' + res.reason), res.sent);
       renderRequests(); renderMeetings();
@@ -1458,7 +1515,7 @@
       if (!grid) return;
       loading.hidden = false; empty.hidden = true; grid.innerHTML = '';
       const files = await loadDriveFiles();
-      const matches = files.filter(f => /contract|agreement/i.test(f.name || ''));
+      const matches = files.filter(f => /contract|agreement|\bmsa\b|statement of work|\bsow\b|engagement letter|\bnda\b|non-disclosure|terms of service/i.test(f.name || ''));
       loading.hidden = true;
       if (!matches.length) { empty.hidden = false; return; }
       matches.forEach(f => grid.appendChild(fileCard(f)));
