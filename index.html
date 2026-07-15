@@ -967,38 +967,45 @@
   const showNotFound = () => { document.getElementById('portalNotFound').hidden = false; };
 
   (async () => {
-    // 1. must be signed in
+    // Clients browse with no login at all. Staff still sign in (for edit
+    // controls + admin); if a staff session exists, we use it — otherwise
+    // this is a public visitor and we just look up the client by the URL slug.
     const { data: { session } } = await sb.auth.getSession();
-    if (!session) { location.replace('login.html'); return; }
+    let profile = null, role = 'none';
+    if (session) {
+      const { data: p } = await sb.from('profiles').select('role, client_id').eq('id', session.user.id).maybeSingle();
+      profile = p; role = profile ? profile.role : 'none';
+    }
 
-    // 2. who is this user?
-    const { data: profile } = await sb.from('profiles').select('role, client_id').eq('id', session.user.id).maybeSingle();
-    const role = profile ? profile.role : 'none';
-
-    // 3. decide which client portal to show
     const urlSlug = new URLSearchParams(location.search).get('client');
     let q = sb.from('clients').select('*');
     if (role === 'staff') {
       if (!urlSlug) { location.replace('admin.html'); return; }   // staff with no client → admin
       q = q.eq('slug', urlSlug);
-    } else {
-      // clients are locked to their own portal — the URL slug is ignored
-      if (!profile || !profile.client_id) { showNotFound(); return; }
+    } else if (role === 'client' && profile && profile.client_id) {
+      // a client who happens to be signed in stays locked to their own portal
       q = q.eq('id', profile.client_id);
+    } else {
+      // public visitor — no login required, just look up by the link's slug
+      if (!urlSlug) { showNotFound(); return; }
+      q = q.eq('slug', urlSlug);
     }
 
     let data, error;
     try { ({ data, error } = await q.maybeSingle()); } catch (e) { error = e; }
     if (error || !data) { showNotFound(); return; }
 
-    // keep the client's URL honest
-    if (role !== 'staff' && data.slug && urlSlug !== data.slug) {
+    // keep a signed-in client's URL honest (not relevant for public visitors)
+    if (role === 'client' && profile && data.slug && urlSlug !== data.slug) {
       history.replaceState(null, '', 'index.html?client=' + data.slug);
     }
 
-    // wire sign-out
+    // wire sign-out (only meaningful if actually signed in)
     const so = document.getElementById('signOut');
-    if (so) so.addEventListener('click', async (e) => { e.preventDefault(); await sb.auth.signOut(); location.replace('login.html'); });
+    if (so) {
+      if (session) so.addEventListener('click', async (e) => { e.preventDefault(); await sb.auth.signOut(); location.reload(); });
+      else so.style.display = 'none';
+    }
 
     const name = data.name || 'Client';
     document.title = name + ' · Think Technologies';
