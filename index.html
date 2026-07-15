@@ -214,6 +214,11 @@
   .cmt-av { width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: #fff; font: 600 10.5px/28px var(--font); text-align: center; flex-shrink: 0; }
   .cmt-b { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px; font-size: 13.5px; color: var(--text); line-height: 1.5; }
   .cmt-b .cmt-who { font-weight: 600; font-size: 12px; margin-bottom: 2px; }
+  .cmt-reply-btn { display: block; margin-top: 6px; font: 600 11.5px/1 var(--font); color: var(--text-dim); background: none; border: none; cursor: pointer; padding: 0; }
+  .cmt-reply-btn:hover { color: var(--accent); }
+  .cmt-replies { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-left: 14px; border-left: 2px solid var(--border); }
+  .cmt-replies:empty { display: none; margin: 0; padding: 0; border: none; }
+  .cmt.cmt-reply { margin: 0; }
 
   /* ===== STATUS ===== */
   .prog-card { margin-bottom: 30px; }
@@ -439,7 +444,10 @@
   .mtg-editor h3 { font: 700 16px/1.2 var(--font); margin-bottom: 16px; }
   .mtg-editor label { display: block; font: 600 12.5px/1 var(--font); margin-bottom: 14px; color: var(--text); }
   .mtg-editor input[type=text], .mtg-editor input[type=date], .mtg-editor input[type=time], .mtg-editor select, .mtg-editor textarea { display: block; width: 100%; margin-top: 7px; border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px; font: 400 14px/1.5 var(--font); color: var(--text); background: var(--surface-2); outline: none; font-family: var(--font); resize: vertical; }
-  .mtg-notes { color: var(--text); font-size: 14px; line-height: 1.6; margin: 10px 0 0; white-space: pre-wrap; }
+  .mtg-notes-list { margin: 10px 0 0; padding: 0; list-style: none; }
+  .mtg-notes-list li { position: relative; padding-left: 18px; margin-bottom: 8px; font-size: 14px; line-height: 1.55; color: var(--text); }
+  .mtg-notes-list li:last-child { margin-bottom: 0; }
+  .mtg-notes-list li::before { content: ""; position: absolute; left: 0; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
   .mtg-editor input:focus, .mtg-editor textarea:focus { border-color: var(--accent-line); }
   .mtg-editor .ed-row { display: flex; gap: 12px; }
   .mtg-editor .ed-row label { flex: 1; }
@@ -552,13 +560,13 @@
         <button class="btn staff-only" id="addMeetingBtn" hidden>+ Add meeting</button>
         <button class="btn client-only" id="requestMeetingBtn" hidden>Request a meeting</button>
       </div>
-      <div id="mtgToast" class="mtg-toast" hidden></div>
+      <div id="meetingEditorWrap"></div>
       <div id="requestFormWrap"></div>
+      <div id="mtgToast" class="mtg-toast" hidden></div>
       <div id="requestsWrap"></div>
       <div id="nextMeetingWrap"></div>
       <div id="meetingsList"></div>
       <div class="mtg-empty" id="meetingsEmpty" hidden>No meeting notes yet.</div>
-      <div id="meetingEditorWrap"></div>
     </section>
 
     <!-- STATUS -->
@@ -1044,12 +1052,35 @@
       const [y, m, d] = ds.split('-').map(Number);
       return { mo: MO[m - 1] || '', dy: String(d).padStart(2, '0'), yr: String(y), wd: WD[new Date(y, m - 1, d).getDay()] || '' };
     }
-    function commentEl(c) {
+    function commentEl(c, isReply) {
       const think = c.author_role === 'think';
       const av = think ? 'T' : (c.author_name ? c.author_name.trim().charAt(0).toUpperCase() : 'C');
-      const el = document.createElement('div'); el.className = 'cmt';
-      el.innerHTML = '<div class="cmt-av' + (think ? ' think' : '') + '">' + av + '</div><div class="cmt-b"><div class="cmt-who">' + esc(c.author_name) + '</div>' + esc(c.body) + '</div>';
+      const el = document.createElement('div'); el.className = 'cmt' + (isReply ? ' cmt-reply' : ''); el.dataset.id = c.id;
+      el.innerHTML = '<div class="cmt-av' + (think ? ' think' : '') + '">' + av + '</div><div class="cmt-b"><div class="cmt-who">' + esc(c.author_name) + '</div>' + esc(c.body) +
+        (!isReply && isStaff ? '<button class="cmt-reply-btn">Reply</button>' : '') +
+        (!isReply ? '<div class="cmt-replies"></div>' : '') + '</div>';
       return el;
+    }
+    function wireCommentReply(el, meetingId, parentId) {
+      const btn = el.querySelector('.cmt-reply-btn'); if (!btn) return;
+      const repliesBox = el.querySelector('.cmt-replies');
+      btn.addEventListener('click', () => {
+        const ex = el.querySelector('.mini-input'); if (ex) { ex.remove(); return; }
+        const wrap = document.createElement('div'); wrap.className = 'mini-input';
+        wrap.innerHTML = '<input type="text" placeholder="Reply as Think…"><button class="mini go">Reply</button>';
+        repliesBox.appendChild(wrap);
+        const inp = wrap.querySelector('input'); inp.focus();
+        const submit = async () => {
+          const v = inp.value.trim(); if (!v) return;
+          wrap.querySelector('.go').disabled = true;
+          const payload = { meeting_id: meetingId, client_id: clientId, parent_id: parentId, author_name: 'Think Technologies', author_role: 'think', body: v };
+          const { data: ins, error } = await sb.from('meeting_comments').insert(payload).select().single();
+          if (error) { wrap.querySelector('.go').disabled = false; alert('Could not post reply: ' + error.message); return; }
+          repliesBox.appendChild(commentEl(ins, true)); wrap.remove();
+        };
+        wrap.querySelector('.go').addEventListener('click', submit);
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+      });
     }
     function toggleCommentInput(bottom, box, meetingId) {
       const ex = bottom.querySelector('.mini-input'); if (ex) { ex.remove(); return; }
@@ -1063,7 +1094,7 @@
         const payload = { meeting_id: meetingId, client_id: clientId, author_name: isStaff ? 'Think Technologies' : name, author_role: isStaff ? 'think' : 'client', body: v };
         const { data: ins, error } = await sb.from('meeting_comments').insert(payload).select().single();
         if (error) { wrap.querySelector('.go').disabled = false; alert('Could not post comment: ' + error.message); return; }
-        box.appendChild(commentEl(ins)); wrap.remove();
+        const el = commentEl(ins, false); box.appendChild(el); wireCommentReply(el, meetingId, ins.id); wrap.remove();
       };
       wrap.querySelector('.go').addEventListener('click', submit);
       inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
@@ -1071,18 +1102,28 @@
     const COMMENT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
     function meetingCard(m, comments) {
       const f = fmtDate(m.meeting_date);
-      const notesText = (Array.isArray(m.points) ? m.points : []).join('\n');
+      const pts = (Array.isArray(m.points) ? m.points : []).map(p => '<li>' + esc(p) + '</li>').join('');
       const card = document.createElement('div'); card.className = 'mtg'; card.dataset.id = m.id;
       card.innerHTML =
         '<div class="mdate"><span class="mo">' + f.mo + '</span><span class="dy">' + f.dy + '</span><span class="yr">' + f.yr + '</span></div>' +
         '<div class="mtg-body"><div class="mtg-titlerow"><h4>' + esc(m.title) + '</h4>' +
           (isStaff ? '<span class="mtg-tools"><button data-act="edit">Edit</button><button data-act="del">Delete</button></span>' : '') + '</div>' +
-          (notesText ? '<p class="mtg-notes">' + esc(notesText) + '</p>' : '') +
+          (pts ? '<ul class="mtg-notes-list">' + pts + '</ul>' : '') +
           '<div class="mtg-bottom"><div class="comments"></div></div></div>' +
-        '<div class="mtg-actions"><button class="mtg-comment-btn" title="Comment">' + COMMENT_SVG + '<span>Comment</span></button></div>';
+        '<div class="mtg-actions">' + (isStaff ? '' : '<button class="mtg-comment-btn" title="Comment">' + COMMENT_SVG + '<span>Comment</span></button>') + '</div>';
       const box = card.querySelector('.comments');
-      comments.forEach(c => box.appendChild(commentEl(c)));
-      card.querySelector('.mtg-comment-btn').addEventListener('click', () => toggleCommentInput(card.querySelector('.mtg-bottom'), box, m.id));
+      const topLevel = comments.filter(c => !c.parent_id);
+      const repliesByParent = {};
+      comments.filter(c => c.parent_id).forEach(c => { (repliesByParent[c.parent_id] = repliesByParent[c.parent_id] || []).push(c); });
+      topLevel.forEach(c => {
+        const el = commentEl(c, false);
+        box.appendChild(el);
+        wireCommentReply(el, m.id, c.id);
+        const repliesBox = el.querySelector('.cmt-replies');
+        (repliesByParent[c.id] || []).forEach(r => repliesBox.appendChild(commentEl(r, true)));
+      });
+      const commentBtn = card.querySelector('.mtg-comment-btn');
+      if (commentBtn) commentBtn.addEventListener('click', () => toggleCommentInput(card.querySelector('.mtg-bottom'), box, m.id));
       if (isStaff) {
         card.querySelector('[data-act="edit"]').addEventListener('click', () => openEditor(m));
         card.querySelector('[data-act="del"]').addEventListener('click', () => deleteMeeting(m));
@@ -1150,9 +1191,8 @@
         '<label>End<input id="ed-end" type="time" value="' + defEnd + '"></label></div>' +
         '<label>Timezone<select id="ed-tz">' + TZ_OPTIONS.map(o => '<option value="' + o.value + '"' + (o.value === curTz ? ' selected' : '') + '>' + o.label + '</option>').join('') + '</select></label>' +
         (m ? '' : '<label class="ed-check"><input id="ed-invite" type="checkbox" checked> Email the client a calendar invite</label>') +
-        '<label>Notes<textarea id="ed-points" rows="5" placeholder="Add any notes for this meeting…">' + esc((m && m.points || []).join('\n')) + '</textarea></label>' +
+        '<label>Notes (one point per line)<textarea id="ed-points" rows="5" placeholder="Add any notes for this meeting…">' + esc((m && m.points || []).join('\n')) + '</textarea></label>' +
         '<div class="ed-actions"><button class="btn" id="ed-save">Save</button><button class="btn ghost" id="ed-cancel">Cancel</button></div></div>';
-      wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
       document.getElementById('ed-cancel').addEventListener('click', () => { wrap.innerHTML = ''; });
       document.getElementById('ed-save').addEventListener('click', () => saveMeeting(m));
     }
@@ -1196,8 +1236,7 @@
     async function saveMeeting(m) {
       const title = document.getElementById('ed-title').value.trim();
       if (!title) { alert('Please enter a title.'); return; }
-      const notesText = document.getElementById('ed-points').value.trim();
-      const points = notesText ? [notesText] : [];
+      const points = document.getElementById('ed-points').value.split('\n').map(s => s.trim()).filter(Boolean);
       const startT = document.getElementById('ed-start').value || null;
       const endT = document.getElementById('ed-end').value || null;
       const tz = document.getElementById('ed-tz').value || 'America/Detroit';
@@ -1244,7 +1283,6 @@
         '<div class="tz-note">Times are in your timezone — <strong>' + esc(tz.zone) + '</strong>' + (tz.abbr ? ' (' + esc(tz.abbr) + ')' : '') + '.</div>' +
         '<label>What’s it about?<textarea id="rq-note" rows="3" placeholder="A note for the Think team…"></textarea></label>' +
         '<div class="ed-actions"><button class="btn" id="rq-send">Send request</button><button class="btn ghost" id="rq-cancel">Cancel</button></div></div>';
-      wrap.scrollIntoView({ behavior: 'smooth', block: 'center' });
       document.getElementById('rq-cancel').addEventListener('click', () => { wrap.innerHTML = ''; });
       document.getElementById('rq-send').addEventListener('click', submitRequest);
     }
