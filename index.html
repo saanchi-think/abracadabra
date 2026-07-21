@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
 <title>Think Technologies — Client Portal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -66,10 +69,14 @@
     content: ""; position: absolute; top: -80px; right: -80px; width: 220px; height: 220px;
     background: radial-gradient(circle, rgba(166,28,5,0.5), transparent 70%); pointer-events: none;
   }
-  .side-brand { display: flex; align-items: center; gap: 11px; padding: 4px 8px 26px; position: relative; z-index: 1; }
+  .side-brand { display: flex; flex-wrap: wrap; align-items: center; gap: 11px; padding: 4px 8px 26px; position: relative; z-index: 1; }
   .think-mark { display: block; -webkit-mask: var(--think-logo) no-repeat center / contain; mask: var(--think-logo) no-repeat center / contain; }
   .side-brand .brand-logo { height: 23px; aspect-ratio: 376 / 139; background: linear-gradient(180deg, #F3A06E, #D8481B); }
   .side-brand .nm { font: 600 11px/1 var(--font); letter-spacing: .1em; text-transform: uppercase; color: #8A827C; }
+  .admin-badge { display: block; width: fit-content; margin: -14px auto 30px; font: 700 11px/1 var(--font); letter-spacing: .1em; text-transform: uppercase; color: #FBD2B0; background: rgba(20,10,7,.82); backdrop-filter: blur(6px); border: 1px solid rgba(232,129,79,.55); border-radius: 999px; padding: 6px 14px; position: relative; z-index: 2; box-shadow: 0 4px 14px -4px rgba(0,0,0,.5); }
+  .back-to-admin { display: flex; align-items: center; gap: 10px; width: 100%; margin: 0 0 14px; padding: 10px 10px; font: 600 13px/1 var(--font); color: #CFC9C4; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; text-decoration: none; box-sizing: border-box; transition: all .15s; }
+  .back-to-admin svg { width: 15px; height: 15px; flex-shrink: 0; stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .back-to-admin:hover { background: rgba(232,129,79,.1); border-color: rgba(232,129,79,.4); color: #F0975E; }
   .nav { display: flex; flex-direction: column; gap: 3px; position: relative; z-index: 1; }
   .nav-item {
     display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 11px;
@@ -146,6 +153,8 @@
   .btn:hover { transform: translateY(-1px); }
   .btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--border); box-shadow: none; }
   .btn.ghost:hover { border-color: var(--accent-line); color: var(--accent); }
+  .btn.ghost-danger { background: transparent; color: #B3261E; border: 1px solid rgba(179,38,30,.35); box-shadow: none; margin-left: auto; }
+  .btn.ghost-danger:hover { background: rgba(179,38,30,.08); border-color: rgba(179,38,30,.6); }
 
   /* ===== CARD / GRID ===== */
   .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); transition: border-color .2s, box-shadow .2s, transform .2s; }
@@ -214,8 +223,11 @@
   .cmt-av { width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: #fff; font: 600 10.5px/28px var(--font); text-align: center; flex-shrink: 0; }
   .cmt-b { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px; font-size: 13.5px; color: var(--text); line-height: 1.5; }
   .cmt-b .cmt-who { font-weight: 600; font-size: 12px; margin-bottom: 2px; }
-  .cmt-reply-btn { display: block; margin-top: 6px; font: 600 11.5px/1 var(--font); color: var(--text-dim); background: none; border: none; cursor: pointer; padding: 0; }
-  .cmt-reply-btn:hover { color: var(--accent); }
+  .cmt-reply-btn { font: 600 11.5px/1 var(--font); color: var(--text-muted); background: var(--panel); border: 1px solid var(--border); border-radius: 7px; padding: 6px 11px; cursor: pointer; transition: all .15s; }
+  .cmt-reply-btn:hover { color: var(--accent); border-color: var(--accent-line); }
+  .cmt-footer { display: flex; gap: 8px; margin-top: 8px; }
+  .cmt-edit-form textarea { width: 100%; border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px; font: 400 13.5px/1.5 var(--font); color: var(--text); background: var(--panel); outline: none; resize: vertical; font-family: var(--font); }
+  .cmt-edit-form textarea:focus { border-color: var(--accent-line); }
   .cmt-replies { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-left: 14px; border-left: 2px solid var(--border); }
   .cmt-replies:empty { display: none; margin: 0; padding: 0; border: none; }
   .cmt.cmt-reply { margin: 0; }
@@ -422,6 +434,7 @@
   .req-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 12px 0; border-top: 1px solid var(--accent-line); flex-wrap: wrap; }
   .req-row:first-of-type { border-top: none; }
   .req-main { flex: 1; min-width: 200px; }
+  .req-original { font-size: 13px; color: var(--text-dim); text-decoration: line-through; margin-bottom: 2px; }
   .req-when { font-weight: 600; font-size: 14px; }
   .req-who { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
   .req-msg { font-size: 12.5px; color: var(--text-dim); margin-top: 6px; font-style: italic; }
@@ -440,6 +453,8 @@
   .mtg-tools { display: flex; gap: 6px; flex-shrink: 0; }
   .mtg-tools button { font: 600 11.5px/1 var(--font); border: 1px solid var(--border); background: var(--surface-2); color: var(--text-muted); border-radius: 8px; padding: 6px 10px; cursor: pointer; transition: all .15s; }
   .mtg-tools button:hover { border-color: var(--accent-line); color: var(--accent); }
+  .mtg-hidden { opacity: .55; }
+  .mtg-hidden-tag { font: 600 11px/1 var(--font); letter-spacing: .04em; text-transform: uppercase; color: var(--accent); background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: 7px; padding: 5px 9px; }
   .next-actions a.btn { text-decoration: none; display: inline-flex; align-items: center; }
   .mtg-editor { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); margin: 16px 0; }
   .mtg-editor h3 { font: 700 16px/1.2 var(--font); margin-bottom: 16px; }
@@ -454,10 +469,14 @@
   .mtg-editor .ed-row label { flex: 1; }
   .mtg-editor .tz-note { font-size: 12px; color: var(--text-dim); margin: -6px 0 14px; line-height: 1.5; }
   .mtg-editor .tz-note strong { color: var(--text-muted); font-weight: 600; }
-  .mtg-editor .ed-check { display: flex; align-items: center; gap: 9px; }
+  .mtg-editor .ed-check { display: flex; align-items: center; gap: 9px; margin-bottom: 24px; }
   .mtg-editor .ed-check input { width: auto; margin: 0; }
   .mtg-editor .ed-actions { display: flex; gap: 10px; }
   @media (max-width: 640px) { .mtg-editor .ed-row { flex-direction: column; gap: 0; } }
+  .mtg-notes-edit { margin-top: 10px; }
+  .mtg-notes-edit textarea { display: block; width: 100%; border: 1px solid var(--border); border-radius: 9px; padding: 10px 12px; font: 400 14px/1.5 var(--font); color: var(--text); background: var(--surface-2); outline: none; font-family: var(--font); resize: vertical; }
+  .mtg-notes-edit textarea:focus { border-color: var(--accent-line); }
+  .mtg-notes-edit .ed-actions { display: flex; gap: 10px; margin-top: 10px; }
 </style>
 </head>
 <body class="loading">
@@ -503,8 +522,11 @@
       </button>
     </nav>
     <div class="side-foot">
+      <a href="admin.html" id="backToAdminLink" class="staff-only back-to-admin" hidden>
+        <svg viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+        <span>All client portals</span>
+      </a>
       <div class="client"><span class="dot"></span> <span id="clientNameFoot">Acme Corp</span></div>
-      <div class="tag" id="clientTagFoot">Navigating the present, creating the future.</div>
       <a href="#" id="signOut" class="sign-out">Sign out</a>
     </div>
   </aside>
@@ -544,6 +566,7 @@
             <div class="x">✕</div>
             <div><div class="mk client" id="clientMark">A</div><div class="lbl" id="clientNameHero">Acme Corp</div></div>
           </div>
+          <span class="staff-only admin-badge" hidden>Admin</span>
           <h1>Welcome to your <span class="accent">Think</span> workspace.</h1>
           <p>We invite you to work with Think Technologies, your trusted AI expert team. We built this platform to collaborate with you directly and keep every workflow tailored to your goals.</p>
           <button class="btn-lg" data-goto="notes">Enter portal →</button>
@@ -926,6 +949,11 @@
       profile = p; role = profile ? profile.role : 'none';
     }
 
+    // TEMP: preview as staff via ?staffPreview=1 while magic-link email is
+    // rate-limited, so we can keep building/testing without a real sign-in.
+    // Remove this block once SMTP is fixed (see temp_admin_public_write migration).
+    if (new URLSearchParams(location.search).get('staffPreview') === '1') role = 'staff';
+
     const urlSlug = new URLSearchParams(location.search).get('client');
     let q = sb.from('clients').select('*');
     if (role === 'staff') {
@@ -956,7 +984,10 @@
       else so.style.display = 'none';
     }
 
-    const name = data.name || 'Client';
+    // display only — capitalizes each word (e.g. "lafayette" -> "Lafayette") without
+    // touching the stored value, slug, or any matching logic elsewhere.
+    const toDisplayName = s => (s || '').replace(/\S+/g, w => w.charAt(0).toUpperCase() + w.slice(1));
+    const name = toDisplayName(data.name) || 'Client';
     document.title = name + ' · Think Technologies';
     const setText = (id, val) => { const el = document.getElementById(id); if (el && val) el.textContent = val; };
     setText('clientNameHero', name);
@@ -974,16 +1005,21 @@
     }
     if (data.tagline) {
       setText('clientTagline', '“' + data.tagline + '”');
-      setText('clientTagFoot', data.tagline);
     }
 
     // ===== MEETING NOTES (per-client, from Supabase) =====
     // n8n webhook that creates a Google Calendar invite (see setup notes). Paste the URL here.
     const WEBHOOK_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-meeting';
+    const CANCEL_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-meeting-cancel';
     const isStaff = role === 'staff';
     const clientId = data.id;
     const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     if (isStaff) { document.body.classList.add('is-staff'); document.querySelectorAll('.staff-only').forEach(e => e.hidden = false); }
+    const backToAdminLink = document.getElementById('backToAdminLink');
+    if (backToAdminLink) backToAdminLink.addEventListener('click', e => {
+      e.preventDefault();
+      location.href = 'admin.html?_=' + Date.now();
+    });
 
     const MO = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -992,28 +1028,68 @@
       const [y, m, d] = ds.split('-').map(Number);
       return { mo: MO[m - 1] || '', dy: String(d).padStart(2, '0'), yr: String(y), wd: WD[new Date(y, m - 1, d).getDay()] || '' };
     }
+    const EDIT_WINDOW_MS = 2 * 60 * 1000;
+    function canEditComment(c) {
+      const myRole = isStaff ? 'think' : 'client';
+      if (c.author_role !== myRole) return false;
+      return (Date.now() - new Date(c.created_at).getTime()) < EDIT_WINDOW_MS;
+    }
     function commentEl(c, isReply) {
       const think = c.author_role === 'think';
       const av = think ? 'T' : (c.author_name ? c.author_name.trim().charAt(0).toUpperCase() : 'C');
       const el = document.createElement('div'); el.className = 'cmt' + (isReply ? ' cmt-reply' : ''); el.dataset.id = c.id;
-      el.innerHTML = '<div class="cmt-av' + (think ? ' think' : '') + '">' + av + '</div><div class="cmt-b"><div class="cmt-who">' + esc(c.author_name) + '</div>' + esc(c.body) +
-        (!isReply && isStaff ? '<button class="cmt-reply-btn">Reply</button>' : '') +
+      el.innerHTML = '<div class="cmt-av' + (think ? ' think' : '') + '">' + av + '</div><div class="cmt-b"><div class="cmt-who">' + esc(c.author_name) + '</div>' +
+        '<div class="cmt-body">' + esc(c.body) + '</div>' +
+        '<div class="cmt-footer">' +
+          (canEditComment(c) ? '<button class="cmt-reply-btn cmt-edit-btn">Edit</button>' : '') +
+          (!isReply ? '<button class="cmt-reply-btn cmt-reply-action">Reply</button>' : '') +
+        '</div>' +
         (!isReply ? '<div class="cmt-replies"></div>' : '') + '</div>';
+      wireCommentEdit(el, c);
       return el;
     }
+    function wireCommentEdit(el, c) {
+      const editBtn = el.querySelector('.cmt-edit-btn');
+      if (!editBtn) return;
+      const remaining = EDIT_WINDOW_MS - (Date.now() - new Date(c.created_at).getTime());
+      if (remaining > 0) setTimeout(() => editBtn.remove(), remaining);
+      editBtn.addEventListener('click', () => {
+        if (el.querySelector('.cmt-edit-form')) return;
+        const bodyEl = el.querySelector('.cmt-body');
+        const footerEl = el.querySelector('.cmt-footer');
+        bodyEl.style.display = 'none';
+        footerEl.style.display = 'none';
+        const form = document.createElement('div');
+        form.className = 'cmt-edit-form';
+        form.innerHTML = '<textarea rows="2">' + esc(c.body) + '</textarea><div class="mini-input" style="margin-top:8px"><button class="mini go">Save</button><button class="mini">Cancel</button></div>';
+        bodyEl.insertAdjacentElement('afterend', form);
+        const ta = form.querySelector('textarea'); ta.focus();
+        const restore = () => { form.remove(); bodyEl.style.display = ''; footerEl.style.display = ''; };
+        form.querySelectorAll('.mini')[1].addEventListener('click', restore);
+        const saveBtn = form.querySelector('.mini.go');
+        saveBtn.addEventListener('click', async () => {
+          const v = ta.value.trim(); if (!v) return;
+          if (!canEditComment(c)) { alert('The 2-minute edit window for this comment has passed.'); restore(); editBtn.remove(); return; }
+          saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+          const { error } = await sb.from('meeting_comments').update({ body: v }).eq('id', c.id);
+          if (error) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; alert('Could not save: ' + error.message); return; }
+          c.body = v; bodyEl.textContent = v; restore();
+        });
+      });
+    }
     function wireCommentReply(el, meetingId, parentId) {
-      const btn = el.querySelector('.cmt-reply-btn'); if (!btn) return;
+      const btn = el.querySelector('.cmt-reply-action'); if (!btn) return;
       const repliesBox = el.querySelector('.cmt-replies');
       btn.addEventListener('click', () => {
         const ex = el.querySelector('.mini-input'); if (ex) { ex.remove(); return; }
         const wrap = document.createElement('div'); wrap.className = 'mini-input';
-        wrap.innerHTML = '<input type="text" placeholder="Reply as Think…"><button class="mini go">Reply</button>';
+        wrap.innerHTML = '<input type="text" placeholder="' + (isStaff ? 'Reply as Think…' : 'Reply…') + '"><button class="mini go">Reply</button>';
         repliesBox.appendChild(wrap);
         const inp = wrap.querySelector('input'); inp.focus();
         const submit = async () => {
           const v = inp.value.trim(); if (!v) return;
           wrap.querySelector('.go').disabled = true;
-          const payload = { meeting_id: meetingId, client_id: clientId, parent_id: parentId, author_name: 'Think Technologies', author_role: 'think', body: v };
+          const payload = { meeting_id: meetingId, client_id: clientId, parent_id: parentId, author_name: isStaff ? 'Think Technologies' : name, author_role: isStaff ? 'think' : 'client', body: v };
           const { data: ins, error } = await sb.from('meeting_comments').insert(payload).select().single();
           if (error) { wrap.querySelector('.go').disabled = false; alert('Could not post reply: ' + error.message); return; }
           repliesBox.appendChild(commentEl(ins, true)); wrap.remove();
@@ -1043,10 +1119,10 @@
     function meetingCard(m, comments) {
       const f = fmtDate(m.meeting_date);
       const pts = (Array.isArray(m.points) ? m.points : []).map(p => '<li>' + esc(p) + '</li>').join('');
-      const card = document.createElement('div'); card.className = 'mtg'; card.dataset.id = m.id;
+      const card = document.createElement('div'); card.className = 'mtg' + (m.hidden ? ' mtg-hidden' : ''); card.dataset.id = m.id;
       card.innerHTML =
         '<div class="mdate"><span class="mo">' + f.mo + '</span><span class="dy">' + f.dy + '</span><span class="yr">' + f.yr + '</span></div>' +
-        '<div class="mtg-body">' + (isStaff ? '<div class="mtg-titlerow"><span></span><span class="mtg-tools"><button data-act="edit">Edit</button><button data-act="del">Delete</button></span></div>' : '') +
+        '<div class="mtg-body">' + (isStaff ? '<div class="mtg-titlerow"><span>' + (m.hidden ? '<span class="mtg-hidden-tag">Hidden from client</span>' : '') + '</span><span class="mtg-tools"><button data-act="edit">Edit</button><button data-act="del">' + (m.hidden ? 'Unhide' : 'Hide') + '</button></span></div>' : '') +
           (pts ? '<ul class="mtg-notes-list">' + pts + '</ul>' : '') +
           '<div class="mtg-bottom"><div class="comments"></div></div></div>' +
         '<div class="mtg-actions">' + (isStaff ? '' : '<button class="mtg-comment-btn" title="Comment">' + COMMENT_SVG + '<span>Comment</span></button>') + '</div>';
@@ -1064,17 +1140,39 @@
       const commentBtn = card.querySelector('.mtg-comment-btn');
       if (commentBtn) commentBtn.addEventListener('click', () => toggleCommentInput(card.querySelector('.mtg-bottom'), box, m.id));
       if (isStaff) {
-        card.querySelector('[data-act="edit"]').addEventListener('click', () => openEditor(m));
-        card.querySelector('[data-act="del"]').addEventListener('click', () => deleteMeeting(m));
+        card.querySelector('[data-act="edit"]').addEventListener('click', () => editNotesInline(card, m));
+        card.querySelector('[data-act="del"]').addEventListener('click', () => toggleMeetingHidden(m));
       }
       return card;
     }
-    function bannerEl(m) {
+    function editNotesInline(card, m) {
+      const bodyEl = card.querySelector('.mtg-body');
+      const notesList = card.querySelector('.mtg-notes-list');
+      const existingText = (Array.isArray(m.points) ? m.points : []).join('\n');
+      const editWrap = document.createElement('div');
+      editWrap.className = 'mtg-notes-edit';
+      editWrap.innerHTML =
+        '<textarea rows="5" placeholder="Meeting notes…">' + esc(existingText) + '</textarea>' +
+        '<div class="ed-actions"><button class="btn" data-act="save-notes">Save</button><button class="btn ghost" data-act="cancel-notes">Cancel</button></div>';
+      if (notesList) notesList.replaceWith(editWrap);
+      else bodyEl.insertBefore(editWrap, bodyEl.querySelector('.mtg-bottom'));
+      editWrap.querySelector('textarea').focus();
+      editWrap.querySelector('[data-act="cancel-notes"]').addEventListener('click', () => renderMeetings());
+      editWrap.querySelector('[data-act="save-notes"]').addEventListener('click', async () => {
+        const lines = editWrap.querySelector('textarea').value.split('\n').map(s => s.trim()).filter(Boolean);
+        const btn = editWrap.querySelector('[data-act="save-notes"]');
+        btn.disabled = true; btn.textContent = 'Saving…';
+        const { error } = await sb.from('meetings').update({ points: lines }).eq('id', m.id);
+        if (error) { btn.disabled = false; btn.textContent = 'Save'; alert('Could not save notes: ' + error.message); return; }
+        renderMeetings();
+      });
+    }
+    function bannerEl(m, label) {
       const f = fmtDate(m.meeting_date);
       const el = document.createElement('div'); el.className = 'card next';
       el.innerHTML =
         '<div class="cal"><div class="m">' + f.mo + '</div><div class="d">' + f.dy + '</div><div class="wd">' + f.wd + '</div></div>' +
-        '<div class="info"><div class="lbl">Next Meeting</div>' +
+        '<div class="info"><div class="lbl">' + esc(label || 'Next Meeting') + '</div>' +
           '<div class="meta">' + (m.time_label ? '<span>' + esc(m.time_label) + '</span>' : '') + (m.location ? '<span>' + esc(m.location) + '</span>' : '') + '</div></div>' +
         '<div class="next-actions">' +
           (isStaff ? '<button class="btn ghost-dark" data-act="edit-next">Edit</button>' : '<button class="btn ghost-dark" data-act="propose-time">Propose new time</button>') + '</div>';
@@ -1087,24 +1185,40 @@
       const bannerWrap = document.getElementById('nextMeetingWrap');
       const empty = document.getElementById('meetingsEmpty');
       list.innerHTML = ''; bannerWrap.innerHTML = '';
-      const { data: ms, error } = await sb.from('meetings').select('*').eq('client_id', clientId);
+      // clients never see hidden meetings; staff see everything so they can unhide.
+      let mq = sb.from('meetings').select('*').eq('client_id', clientId);
+      if (!isStaff) mq = mq.eq('hidden', false);
+      const { data: ms, error } = await mq;
       if (error) { list.innerHTML = '<div class="mtg-empty">Couldn’t load meetings: ' + esc(error.message) + '</div>'; empty.hidden = true; return; }
       const { data: cs } = await sb.from('meeting_comments').select('*').eq('client_id', clientId).order('created_at', { ascending: true });
       const byMeeting = {}; (cs || []).forEach(c => { (byMeeting[c.meeting_id] = byMeeting[c.meeting_id] || []).push(c); });
-      // the latest meeting (by date + start time) automatically becomes the "Next meeting" banner
+      // A meeting only becomes a real "meeting note" card once real minutes have
+      // landed from the Drive transcript/minutes doc pipeline (minutes_ready).
+      // Any manually-typed notes on the meeting itself (e.g. from the scheduling
+      // form, or a client's request note) do NOT count — only the transcript
+      // pipeline flips minutes_ready. Until then, the meeting lives ONLY in the
+      // Next Meeting banner, even past its own start time.
+      const hasMinutes = m => !!m.minutes_ready;
       const sorted = (ms || []).slice().sort((a, b) => {
         const ak = (a.meeting_date || '0000-00-00') + 'T' + (a.start_time || '00:00');
         const bk = (b.meeting_date || '0000-00-00') + 'T' + (b.start_time || '00:00');
         return bk.localeCompare(ak);
       });
-      const nextMeeting = sorted.length ? sorted[0] : null;
-      const rest = sorted.slice(1);
-      if (nextMeeting) bannerWrap.appendChild(bannerEl(nextMeeting));
+      const pending = sorted.filter(m => !m.hidden && !hasMinutes(m)).sort((a, b) => {
+        const ak = (a.meeting_date || '0000-00-00') + 'T' + (a.start_time || '00:00');
+        const bk = (b.meeting_date || '0000-00-00') + 'T' + (b.start_time || '00:00');
+        return ak.localeCompare(bk);
+      });
+      const rest = sorted.filter(m => hasMinutes(m));
+      // every pending (no-minutes-yet) meeting gets its own banner, soonest first —
+      // staff adding a second meeting while one's already scheduled no longer
+      // silently orphans the first one.
+      pending.forEach((m, i) => bannerWrap.appendChild(bannerEl(m, i === 0 ? 'Next Meeting' : 'Also Scheduled')));
       rest.forEach(m => list.appendChild(meetingCard(m, byMeeting[m.id] || [])));
-      empty.hidden = !!(ms && ms.length);
+      empty.hidden = rest.length > 0;
       // clients can only request a meeting when one isn't already scheduled
       const reqBtn = document.getElementById('requestMeetingBtn');
-      if (reqBtn && !isStaff) reqBtn.hidden = !!nextMeeting;
+      if (reqBtn && !isStaff) reqBtn.hidden = pending.length > 0;
     }
     const TZ_OPTIONS = [
       { value: 'America/Detroit', label: 'Eastern Time (Detroit)' },
@@ -1114,8 +1228,17 @@
     ];
     function pad2(n) { return String(n).padStart(2, '0'); }
     function todayStr() { const d = new Date(); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
-    function nowTimeStr() { const d = new Date(); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
-    function plusOneHour(t) { const [h, mi] = t.split(':').map(Number); const d = new Date(2000, 0, 1, h, mi); d.setHours(d.getHours() + 1); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
+    function nowTimeStr() {
+      const d = new Date();
+      let hrs = d.getHours();
+      const mins = d.getMinutes();
+      let roundedMins;
+      if (mins < 15) roundedMins = 0;
+      else if (mins < 45) roundedMins = 30;
+      else { roundedMins = 0; hrs = (hrs + 1) % 24; }
+      return pad2(hrs) + ':' + pad2(roundedMins);
+    }
+    function plusMinutes(t, mins) { const [h, mi] = t.split(':').map(Number); const d = new Date(2000, 0, 1, h, mi); d.setMinutes(d.getMinutes() + mins); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); }
     function tzAbbr(zone) {
       try { const p = new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName: 'short' }).formatToParts(new Date()).find(x => x.type === 'timeZoneName'); return p ? p.value : ''; }
       catch (e) { return ''; }
@@ -1124,19 +1247,26 @@
       const wrap = document.getElementById('meetingEditorWrap');
       const defDate = (m && m.meeting_date) || todayStr();
       const defStart = (m && m.start_time) || nowTimeStr();
-      const defEnd = (m && m.end_time) || plusOneHour(defStart);
+      const defEnd = (m && m.end_time) || plusMinutes(defStart, 30);
       const curTz = (m && m.tz) || 'America/Detroit';
+      const defTitle = (m && m.title) || ('Think x ' + name);
       wrap.innerHTML =
         '<div class="mtg-editor"><h3>' + (m ? 'Edit meeting' : 'New meeting') + '</h3>' +
+        '<label>Title<input id="ed-title" type="text" value="' + esc(defTitle) + '"></label>' +
         '<div class="ed-row"><label>Date<input id="ed-date" type="date" value="' + defDate + '"></label>' +
         '<label>Start<input id="ed-start" type="time" value="' + defStart + '"></label>' +
         '<label>End<input id="ed-end" type="time" value="' + defEnd + '"></label></div>' +
         '<label>Timezone<select id="ed-tz">' + TZ_OPTIONS.map(o => '<option value="' + o.value + '"' + (o.value === curTz ? ' selected' : '') + '>' + o.label + '</option>').join('') + '</select></label>' +
-        (m ? '' : '<label class="ed-check"><input id="ed-invite" type="checkbox" checked> Email the client a calendar invite</label>') +
-        '<label>Notes (one point per line)<textarea id="ed-points" rows="5" placeholder="Add any notes for this meeting…">' + esc((m && m.points || []).join('\n')) + '</textarea></label>' +
-        '<div class="ed-actions"><button class="btn" id="ed-save">Save</button><button class="btn ghost" id="ed-cancel">Cancel</button></div></div>';
+        '<label class="ed-check"><input id="ed-invite" type="checkbox" checked> ' + (m ? 'Email the client an updated calendar invite' : 'Email the client a calendar invite') + '</label>' +
+        '<label>Notes<textarea id="ed-points" rows="3" placeholder="Add any notes for this meeting…">' + esc((m && m.points || []).join('\n')) + '</textarea></label>' +
+        '<div class="ed-actions">' +
+          '<button class="btn" id="ed-save">Save</button>' +
+          '<button class="btn ghost" id="ed-cancel">Cancel</button>' +
+          (m ? '<button class="btn ghost-danger" id="ed-cancel-meeting">Cancel meeting</button>' : '') +
+        '</div></div>';
       document.getElementById('ed-cancel').addEventListener('click', () => { wrap.innerHTML = ''; });
       document.getElementById('ed-save').addEventListener('click', () => saveMeeting(m));
+      if (m) document.getElementById('ed-cancel-meeting').addEventListener('click', () => cancelMeeting(m));
     }
     function fmtTime(t) { if (!t) return ''; let [h, mm] = t.split(':').map(Number); const ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12; return h + ':' + String(mm).padStart(2, '0') + ' ' + ap; }
     function tzInfo() {
@@ -1180,7 +1310,7 @@
       catch (e) { return { sent: false, reason: 'the invite request failed to reach the service', eventId: null }; }
     }
     async function saveMeeting(m) {
-      const title = (m && m.title) || '';
+      const title = document.getElementById('ed-title').value.trim() || ('Think x ' + name);
       const points = document.getElementById('ed-points').value.split('\n').map(s => s.trim()).filter(Boolean);
       const startT = document.getElementById('ed-start').value || null;
       const endT = document.getElementById('ed-end').value || null;
@@ -1193,9 +1323,11 @@
       if (m) ({ data: saved, error } = await sb.from('meetings').update(payload).eq('id', m.id).select().single());
       else ({ data: saved, error } = await sb.from('meetings').insert(payload).select().single());
       if (error) { btn.disabled = false; btn.textContent = 'Save'; alert('Could not save: ' + error.message); return; }
-      // on a NEW meeting, if staff opted in, fire the calendar invite
+      // if staff opted in, fire the calendar invite — for a new meeting this creates
+      // the event; for an edit, sendInvite() reuses saved.calendar_event_id so the
+      // SAME event gets updated instead of a duplicate being created.
       const inviteEl = document.getElementById('ed-invite');
-      if (!m && inviteEl && inviteEl.checked) {
+      if (inviteEl && inviteEl.checked) {
         const res = await sendInvite(saved, tz);
         if (res.eventId) await sb.from('meetings').update({ calendar_event_id: res.eventId }).eq('id', saved.id);
         mtgToast(res.sent ? ('Meeting saved — calendar invite sent to ' + res.reason) : ('Meeting saved, but no invite: ' + res.reason), res.sent);
@@ -1205,10 +1337,21 @@
       document.getElementById('meetingEditorWrap').innerHTML = '';
       renderMeetings();
     }
-    async function deleteMeeting(m) {
-      if (!confirm('Delete “' + (m.title || 'this meeting') + '” and its comments?')) return;
+    async function cancelMeeting(m) {
+      if (!confirm('Cancel this meeting? The calendar invite will be cancelled and the client notified.')) return;
+      if (m.calendar_event_id) {
+        try { await fetch(CANCEL_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventId: m.calendar_event_id }) }); }
+        catch (e) {}
+      }
       const { error } = await sb.from('meetings').delete().eq('id', m.id);
-      if (error) { alert('Could not delete: ' + error.message); return; }
+      if (error) { alert('Could not cancel: ' + error.message); return; }
+      document.getElementById('meetingEditorWrap').innerHTML = '';
+      mtgToast('Meeting cancelled.', true);
+      renderMeetings();
+    }
+    async function toggleMeetingHidden(m) {
+      const { error } = await sb.from('meetings').update({ hidden: !m.hidden }).eq('id', m.id);
+      if (error) { alert('Could not update: ' + error.message); return; }
       renderMeetings();
     }
     const addBtn = document.getElementById('addMeetingBtn');
@@ -1220,7 +1363,7 @@
 
     function openRequestForm() {
       const wrap = document.getElementById('requestFormWrap');
-      const defDate = todayStr(); const defStart = nowTimeStr(); const defEnd = plusOneHour(defStart);
+      const defDate = todayStr(); const defStart = nowTimeStr(); const defEnd = plusMinutes(defStart, 30);
       wrap.innerHTML =
         '<div class="mtg-editor"><h3>Request a meeting</h3>' +
         '<div class="ed-row"><label>Preferred date<input id="rq-date" type="date" value="' + defDate + '"></label>' +
@@ -1252,7 +1395,7 @@
     function openRescheduleForm(m) {
       const wrap = document.getElementById('rescheduleFormWrap');
       if (wrap.innerHTML) { wrap.innerHTML = ''; return; }
-      const defDate = todayStr(); const defStart = nowTimeStr(); const defEnd = plusOneHour(defStart);
+      const defDate = todayStr(); const defStart = nowTimeStr(); const defEnd = plusMinutes(defStart, 30);
       wrap.innerHTML =
         '<div class="mtg-editor"><h3>Propose a new time</h3>' +
         '<div class="ed-row"><label>New date<input id="rs-date" type="date" value="' + defDate + '"></label>' +
@@ -1282,14 +1425,23 @@
       mtgToast('Reschedule request sent — the Think team will confirm by email.', true);
       renderRequests();
     }
-    function requestRow(r) {
+    function requestRow(r, targetMeeting) {
       const f = fmtDate(r.preferred_date);
       const when = f.mo + ' ' + f.dy + ', ' + f.yr + (r.preferred_start ? ' · ' + fmtTime(r.preferred_start) + (r.preferred_end ? ' – ' + fmtTime(r.preferred_end) : '') : '');
+      let originally = '';
+      if (r.target_meeting_id && targetMeeting) {
+        const of = fmtDate(targetMeeting.meeting_date);
+        originally = targetMeeting.meeting_date
+          ? of.mo + ' ' + of.dy + ', ' + of.yr + (targetMeeting.time_label ? ' · ' + targetMeeting.time_label : '')
+          : (targetMeeting.time_label || '');
+      }
       const el = document.createElement('div'); el.className = 'req-row';
       const right = (isStaff && r.status === 'pending')
         ? '<div class="req-actions"><button class="btn small req-accept">Accept</button><button class="btn small ghost req-decline">Decline</button></div>'
         : '<span class="req-badge ' + r.status + '">' + r.status + '</span>';
-      el.innerHTML = '<div class="req-main">' + (r.target_meeting_id ? '<span class="req-type-badge">Reschedule request</span>' : '') + '<div class="req-when">' + esc(when) + '</div>' +
+      el.innerHTML = '<div class="req-main">' + (r.target_meeting_id ? '<span class="req-type-badge">Reschedule request</span>' : '') +
+        (originally ? '<div class="req-original">Originally: ' + esc(originally) + '</div>' : '') +
+        '<div class="req-when">' + (originally ? 'New time: ' : '') + esc(when) + '</div>' +
         '<div class="req-who">' + esc(r.requester_name || 'Client') + (r.note ? ': ' + esc(r.note) : '') + '</div>' +
         (r.status === 'declined' && r.staff_message ? '<div class="req-msg">Think replied: ' + esc(r.staff_message) + '</div>' : '') +
         '</div>' + right;
@@ -1301,13 +1453,22 @@
     }
     async function renderRequests() {
       const wrap = document.getElementById('requestsWrap'); if (!wrap) return;
-      const { data: reqs } = await sb.from('meeting_requests').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
+      const { data: allReqs } = await sb.from('meeting_requests').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
       wrap.innerHTML = '';
-      if (!reqs || !reqs.length) return;
+      // accepted requests are already reflected in the meeting/banner itself — showing
+      // them here forever is just clutter, so only pending and declined stick around.
+      const reqs = (allReqs || []).filter(r => r.status !== 'accepted');
+      if (!reqs.length) return;
+      const targetIds = [...new Set(reqs.filter(r => r.target_meeting_id).map(r => r.target_meeting_id))];
+      const targetsById = {};
+      if (targetIds.length) {
+        const { data: targets } = await sb.from('meetings').select('id, meeting_date, time_label').in('id', targetIds);
+        (targets || []).forEach(t => { targetsById[t.id] = t; });
+      }
       const box = document.createElement('div'); box.className = 'reqs-box';
       const t = document.createElement('div'); t.className = 'reqs-title'; t.textContent = isStaff ? 'Meeting requests' : 'Your meeting requests';
       box.appendChild(t);
-      reqs.forEach(r => box.appendChild(requestRow(r)));
+      reqs.forEach(r => box.appendChild(requestRow(r, targetsById[r.target_meeting_id])));
       wrap.appendChild(box);
     }
     async function acceptRequest(r) {

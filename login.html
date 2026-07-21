@@ -40,9 +40,9 @@
   <div class="card">
     <div class="logo"><div class="mark">[<b>think</b>]</div></div>
     <h1>Sign in to your portal</h1>
-    <p class="sub">Enter your email and we’ll send you a secure sign-in link. No password needed.</p>
+    <p class="sub">Staff sign-in — enter your Think Technologies email and we’ll send you a secure sign-in link. No password needed.</p>
     <form id="loginForm">
-      <input id="email" type="email" placeholder="you@company.com" autocomplete="email" required>
+      <input id="email" type="email" placeholder="you@think-technologies.com" autocomplete="email" required>
       <label class="keep"><input type="checkbox" id="keep" checked> Keep me signed in</label>
       <button type="submit" id="sendBtn">Send sign-in link</button>
     </form>
@@ -63,6 +63,7 @@
   const btn = document.getElementById('sendBtn');
   const msg = document.getElementById('msg');
   const show = (t, c) => { msg.textContent = t; msg.className = 'msg ' + c; };
+  const STAFF_DOMAIN = 'think-technologies.com';
 
   // Already signed in? Send them into the portal.
   const { data: { session } } = await sb.auth.getSession();
@@ -70,8 +71,12 @@
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = emailEl.value.trim();
+    const email = emailEl.value.trim().toLowerCase();
     if (!email) return;
+    if (!email.endsWith('@' + STAFF_DOMAIN)) {
+      show(`This sign-in is for Think Technologies staff only — use your @${STAFF_DOMAIN} email.`, 'err');
+      return;
+    }
     localStorage.setItem('tt_persist', keepEl.checked ? '1' : '0'); // remembered for when the magic link lands
     btn.disabled = true; btn.textContent = 'Sending…';
     const { error } = await sb.auth.signInWithOtp({
