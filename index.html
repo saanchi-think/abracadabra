@@ -889,45 +889,9 @@
     seed.querySelector('.dcomment-replies').appendChild(replyNode('Think Technologies', 'For the pilot it flags them for your team to approve — full auto-refund is a phase 2 option we can scope with you.'));
   })();
 
-  // ===== LIVE FEEDBACK: comment on the uploaded build preview =====
-  (function () {
-    var thread = document.getElementById('pvThread');
-    if (!thread) return;
-    var text = document.getElementById('pvText');
-    var post = document.getElementById('pvPost');
-    function esc(s) { return s.replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-
-    function replyNode(txt) {
-      var r = document.createElement('div'); r.className = 'dcomment';
-      r.innerHTML = '<div class="cmt-av think">T</div><div class="dcomment-main"><div class="dcomment-head"><span class="dcomment-who">Think Technologies</span></div><div class="dcomment-text">' + esc(txt) + '</div></div>';
-      return r;
-    }
-    function wireReply(replies) {
-      return function () {
-        var ex = replies.querySelector('.mini-input'); if (ex) { ex.remove(); return; }
-        var wrap = document.createElement('div'); wrap.className = 'mini-input';
-        wrap.innerHTML = '<input type="text" placeholder="Reply as Think…"><button class="mini go">Reply</button>';
-        replies.appendChild(wrap);
-        var inp = wrap.querySelector('input'); inp.focus();
-        function submit() { var v = inp.value.trim(); if (!v) return; replies.insertBefore(replyNode(v), wrap); wrap.remove(); }
-        wrap.querySelector('.go').addEventListener('click', submit);
-        inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
-      };
-    }
-    function addComment(txt) {
-      var c = document.createElement('div'); c.className = 'dcomment';
-      c.innerHTML = '<div class="cmt-av">You</div><div class="dcomment-main"><div class="dcomment-head"><span class="dcomment-who">Acme Corp</span></div><div class="dcomment-text">' + esc(txt) + '</div><button class="dc-reply">Reply</button><div class="dcomment-replies"></div></div>';
-      thread.appendChild(c);
-      c.querySelector('.dc-reply').addEventListener('click', wireReply(c.querySelector('.dcomment-replies')));
-      return c;
-    }
-    post.addEventListener('click', function () { var v = text.value.trim(); if (!v) return; addComment(v); text.value = ''; });
-    text.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); post.click(); } });
-
-    // seed an example so the flow is clear
-    var seed = addComment('Love it! Can the assistant show the refund amount in the reply, not just confirm it?');
-    seed.querySelector('.dcomment-replies').appendChild(replyNode('Great call — we’ll include the exact amount and date in v0.4. Thanks for the feedback!'));
-  })();
+  // Live Feedback comments are handled in the client loader module below —
+  // they persist to Supabase (status_comments, tag 'live-feedback') and
+  // notify the Think team by email via n8n.
 
 </script>
 
@@ -1670,6 +1634,43 @@
       document.getElementById('demoOpen').href = demo.url;
       card.hidden = false;
     })();
+
+    // ===== LIVE FEEDBACK: persisted comment thread =====
+    // Comments save to status_comments (tag 'live-feedback') and the Think
+    // team is emailed via the portal-feedback-notify n8n webhook.
+    const FEEDBACK_NOTIFY_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-feedback-notify';
+    const pvThread = document.getElementById('pvThread');
+    const pvText = document.getElementById('pvText');
+    const pvPost = document.getElementById('pvPost');
+    function feedbackNode(c) {
+      const isThink = c.author_role === 'think';
+      const el = document.createElement('div'); el.className = 'dcomment';
+      el.innerHTML = '<div class="cmt-av' + (isThink ? ' think' : '') + '">' + (isThink ? 'T' : esc((c.author_name || name).charAt(0))) + '</div>' +
+        '<div class="dcomment-main"><div class="dcomment-head"><span class="dcomment-who">' + esc(c.author_name || (isThink ? 'Think Technologies' : name)) + '</span></div>' +
+        '<div class="dcomment-text">' + esc(c.body) + '</div></div>';
+      return el;
+    }
+    async function loadFeedback() {
+      if (!pvThread) return;
+      pvThread.innerHTML = '';
+      const { data: rows, error } = await sb.from('status_comments').select('*').eq('client_id', clientId).eq('tag', 'live-feedback').order('created_at');
+      if (error) { pvThread.innerHTML = '<div class="lib-empty">Feedback thread isn’t connected yet — run status.sql in Supabase to enable it.</div>'; return; }
+      (rows || []).forEach(c => pvThread.appendChild(feedbackNode(c)));
+    }
+    if (pvPost) pvPost.addEventListener('click', async () => {
+      const v = pvText.value.trim(); if (!v) return;
+      pvPost.disabled = true; pvPost.textContent = 'Posting…';
+      const authorRole = isStaff ? 'think' : 'client';
+      const authorName = isStaff ? 'Think Technologies' : name;
+      const { error } = await sb.from('status_comments').insert({ client_id: clientId, tag: 'live-feedback', author_name: authorName, author_role: authorRole, body: v });
+      pvPost.disabled = false; pvPost.textContent = 'Comment';
+      if (error) { alert('Could not post: ' + error.message); return; }
+      pvText.value = '';
+      loadFeedback();
+      try { await fetch(FEEDBACK_NOTIFY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientName: name, author: authorName, role: authorRole, comment: v, portalLink: location.origin + location.pathname + '?client=' + (data.slug || '') }) }); } catch (e) {}
+    });
+    if (pvText) pvText.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); pvPost.click(); } });
+    loadFeedback();
 
     async function renderActions() {
       const list = document.getElementById('actionsList');

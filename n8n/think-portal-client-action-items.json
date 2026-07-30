@@ -1,0 +1,448 @@
+{
+  "name": "Think Portal \u2014 Client Action Items",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 1,
+              "triggerAtMinute": 23
+            }
+          ]
+        }
+      },
+      "id": "ef00336d-1a55-477e-be00-d564b2657a37",
+      "name": "Every Hour",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "portal-actions-scan",
+        "responseMode": "onReceived",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "abf80caa-5e31-4dc3-9c29-0658109fded0",
+      "name": "Manual Scan Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        200,
+        400
+      ],
+      "webhookId": "252a9efa-2e68-4e0d-b82c-121c96e1a235"
+    },
+    {
+      "parameters": {
+        "url": "https://gnhuwffzttgriyjjbfyf.supabase.co/rest/v1/clients?select=id,name,drive_folder_id&drive_folder_id=not.is.null",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "4cb3d45d-aae3-4c63-80f3-09db5e9f3a8d",
+      "name": "Fetch Clients",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "={{ \"'\" + $json.drive_folder_id + \"' in parents and mimeType = 'application/vnd.google-apps.document' and trashed = false\" }}",
+        "returnAll": true,
+        "filter": {},
+        "options": {}
+      },
+      "id": "2579dcc3-f43b-44e1-aac5-da79798ad149",
+      "name": "Search Docs",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        660,
+        300
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "J8R1T4qji9cqh498",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nconst doc = $json;\nconst client = $('Fetch Clients').item.json;\nconst isTranscript = /notes by gemini/i.test(doc.name || '');\nreturn { json: { keep: isTranscript, doc_id: doc.id, doc_name: doc.name, client_id: client.id, client_name: client.name } };\n"
+      },
+      "id": "1ee0cdcc-df3d-4c68-9a53-426ec12ac8d5",
+      "name": "Tag & Filter",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "46b047e3-92ec-434f-af77-68488be446f5",
+              "leftValue": "={{ $json.keep }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "498e00c2-c761-416c-a030-d0c0c3af7389",
+      "name": "Is Transcript?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gnhuwffzttgriyjjbfyf.supabase.co/rest/v1/processed_transcripts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=ignore-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({doc_id: $json.doc_id, client_id: $json.client_id}) }}",
+        "options": {}
+      },
+      "id": "91687a07-280c-455e-81ca-1c7e3cf4dc93",
+      "name": "Claim Doc (dedupe)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.doc_id }}/export?mimeType=text%2Fplain",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "id": "a0766b14-f973-4a06-9c6a-b9884898d09e",
+      "name": "Export Doc Text",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1540,
+        280
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "J8R1T4qji9cqh498",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are reviewing an internal meeting transcript between Think Technologies (an AI consultancy) and their client, {{ $('Tag & Filter').item.json.client_name }}.\n\nYour job: extract action items that someone on the CLIENT side committed to deliver or provide \u2014 documents, decks, files, data, access, demos, decisions, or information.\n\nHow to decide who is client-side vs Think-side:\n- The top of the transcript usually lists the invitees. People whose email addresses use the client's domain, or who are introduced as working at the client, are CLIENT-side.\n- Think Technologies staff (Think-side) may appear by name or by garbled transcriptions of the company name (e.g. \"Junction\"). People introduced with Think roles (Chief Product Officer of Think, etc.) are Think-side.\n- Action items in \"Next steps\" style sections usually name their owner in brackets, e.g. \"[Jackie] Send Deck\". Use that owner to decide.\n\nRules:\n- INCLUDE only items owned by a client-side person. Example: \"[Jackie] Send Deck\" \u2192 include if Jackie is client-side.\n- EXCLUDE every item owned by Think-side people (proposals, case studies, use cases they promised the client). Example: \"[Shaun] Send Proposal\" \u2192 exclude if Shaun is Think staff.\n- Do not invent items. If ownership is genuinely unclear, exclude it.\n- Include preparation commitments too (e.g. the client agreeing to prepare a demo, gather documentation, or share materials for a next session).\n\nReturn STRICT JSON only \u2014 an array like:\n[{\"name\":\"Short item name (3-6 words)\",\"note\":\"one line: what it is and why Think needs it\"}]\nReturn [] if the client owes nothing. No markdown, no code fences, no commentary.\n\nTranscript:\n{{ $json.data }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "59741d03-6ce5-4e2b-befe-a484d5bff508",
+      "name": "Extract Client Actions",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1760,
+        280
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "kO6O68ENcVtPHcIC",
+          "name": "OpenAI account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "\nlet text = '';\ntry { text = $json.output[0].content[0].text; } catch (e) { text = '[]'; }\ntext = text.trim().replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();\nlet items = [];\ntry { items = JSON.parse(text); } catch (e) { items = []; }\nif (!Array.isArray(items)) items = [];\nconst src = $('Tag & Filter').item.json;\nconst rows = items.filter(a => a && a.name).map(a => ({ client_id: src.client_id, name: String(a.name).slice(0, 120), note: a.note ? String(a.note).slice(0, 300) : null, source_doc_id: src.doc_id, status: 'pending' }));\nreturn { json: { rows, count: rows.length } };\n"
+      },
+      "id": "650e2d10-1c6a-4a37-8642-cfab2e78bf6d",
+      "name": "Parse Actions",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1980,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "16ce4ac6-7f19-4298-b06e-ceb24c9a6ee4",
+              "leftValue": "={{ $json.count }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c6026959-ee87-4fc5-a426-1747a3332a77",
+      "name": "Has Actions?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2200,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gnhuwffzttgriyjjbfyf.supabase.co/rest/v1/client_actions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.rows) }}",
+        "options": {}
+      },
+      "id": "57013b17-2aea-432d-b41e-dd65cc969bd7",
+      "name": "Insert Actions",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2420,
+        260
+      ]
+    }
+  ],
+  "connections": {
+    "Every Hour": {
+      "main": [
+        [
+          {
+            "node": "Fetch Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Scan Webhook": {
+      "main": [
+        [
+          {
+            "node": "Fetch Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Clients": {
+      "main": [
+        [
+          {
+            "node": "Search Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Docs": {
+      "main": [
+        [
+          {
+            "node": "Tag & Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag & Filter": {
+      "main": [
+        [
+          {
+            "node": "Is Transcript?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Transcript?": {
+      "main": [
+        [
+          {
+            "node": "Claim Doc (dedupe)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Claim Doc (dedupe)": {
+      "main": [
+        [
+          {
+            "node": "Export Doc Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Export Doc Text": {
+      "main": [
+        [
+          {
+            "node": "Extract Client Actions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Client Actions": {
+      "main": [
+        [
+          {
+            "node": "Parse Actions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Actions": {
+      "main": [
+        [
+          {
+            "node": "Has Actions?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Actions?": {
+      "main": [
+        [
+          {
+            "node": "Insert Actions",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
