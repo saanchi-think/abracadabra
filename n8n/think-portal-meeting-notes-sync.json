@@ -1,0 +1,466 @@
+{
+  "name": "Think Portal \u2014 Meeting Notes Sync",
+  "nodes": [
+    {
+      "id": "mn-notes",
+      "name": "Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        -340
+      ],
+      "parameters": {
+        "width": 460,
+        "height": 300,
+        "content": "## Meeting Notes Sync\nEvery 30 min (+ on-demand webhook meeting-notes-sync-run):\nfor each client with a linked Drive folder, finds Gemini\nnotes docs modified in the last 7 days, writes a CLIENT-SAFE\nsummary (gpt-4o-mini), publishes it to the portal Meeting\nNotes tab, and emails the team to review (Edit/Hide in portal).\n\nDedupe: workflow staticData (processed doc ids) + skips any\nclient+date already in the meetings table. Internal Think-only\nmeetings are skipped by the model."
+      }
+    },
+    {
+      "id": "mn-sched",
+      "name": "Every 30 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        -700,
+        40
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "mn-hook",
+      "name": "On-Demand Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -700,
+        240
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "meeting-notes-sync-run",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "f545b65c-d82d-4a97-ac32-1916b5533671"
+    },
+    {
+      "id": "mn-clients",
+      "name": "Fetch Clients",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -460,
+        140
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://gnhuwffzttgriyjjbfyf.supabase.co/rest/v1/clients?select=id,name,slug,drive_folder_id&drive_folder_id=not.is.null",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "mn-split",
+      "name": "Split Into Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        140
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return items.flatMap(item => {\n  const body = item.json;\n  const rows = Array.isArray(body) ? body : [body];\n  return rows.map(r => ({ json: r }));\n});"
+      }
+    },
+    {
+      "id": "mn-find",
+      "name": "Find Recent Gemini Docs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -20,
+        140
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ \"'\" + $json.drive_folder_id + \"' in parents and mimeType = 'application/vnd.google-apps.document' and name contains 'Notes by Gemini' and trashed = false and modifiedTime > '\" + $now.minus({ days: 7 }).toISO() + \"'\" }}"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name,modifiedTime)"
+            },
+            {
+              "name": "supportsAllDrives",
+              "value": "true"
+            },
+            {
+              "name": "includeItemsFromAllDrives",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "J8R1T4qji9cqh498",
+          "name": "Saanchi-Think-Google Drive A/C"
+        }
+      }
+    },
+    {
+      "id": "mn-flat",
+      "name": "Flatten Docs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        200,
+        140
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nsd.processed = sd.processed || [];\nconst out = [];\nfor (let i = 0; i < items.length; i++) {\n  const client = $('Split Into Items').itemMatching(i).json;\n  const files = items[i].json.files || [];\n  for (const f of files) {\n    if (sd.processed.includes(f.id)) continue;\n    out.push({ json: { docId: f.id, docName: f.name, client_id: client.id, client_name: client.name, slug: client.slug } });\n  }\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "mn-export",
+      "name": "Export Doc Text",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        420,
+        140
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://www.googleapis.com/drive/v3/files/' + $json.docId + '/export?mimeType=text/plain' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "transcript"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "J8R1T4qji9cqh498",
+          "name": "Saanchi-Think-Google Drive A/C"
+        }
+      }
+    },
+    {
+      "id": "mn-llm",
+      "name": "Summarize (gpt-4o-mini)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        640,
+        140
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'gpt-4o-mini', response_format: { type: 'json_object' }, messages: [ { role: 'system', content: \"\\\"You write CLIENT-FACING meeting summaries for the Think Technologies client portal. You receive raw Gemini meeting notes involving one client. If the document is not a real meeting that client-side attendees participated in (for example an internal Think Technologies team meeting or prep notes), treat it as skip. Never include internal Think Technologies business, other client names, pricing strategy for other work, staffing or revenue talk. The clients own agreed pricing and deliverables are fine to mention. Bullets are written TO the client: warm, concise, plain language. Return STRICT JSON with keys: skip (boolean), title (string, short, no dates, no Notes by Gemini), meeting_date (string, YYYY-MM-DD), points (array of 3 to 6 concise strings covering what was covered, decided, and next steps).\\\"\" }, { role: 'user', content: 'Client: ' + $('Flatten Docs').item.json.client_name + '\\nDoc name: ' + $('Flatten Docs').item.json.docName + '\\n\\nMeeting notes:\\n' + String($json.transcript || '').slice(0, 24000) } ] }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "openAiApi": {
+          "id": "kO6O68ENcVtPHcIC",
+          "name": "OpenAI account 2"
+        }
+      }
+    },
+    {
+      "id": "mn-parse",
+      "name": "Parse Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        860,
+        140
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const sd = $getWorkflowStaticData('global');\nsd.processed = sd.processed || [];\nconst src = $('Flatten Docs').item.json;\nlet out = { action: 'skip', client_id: src.client_id, client_name: src.client_name, meeting_date: '1900-01-01' };\ntry {\n  const r = JSON.parse($json.choices[0].message.content);\n  if (!r.skip && r.title && /^\\d{4}-\\d{2}-\\d{2}$/.test(r.meeting_date || '') && Array.isArray(r.points) && r.points.length) {\n    out = { action: 'insert', client_id: src.client_id, client_name: src.client_name, slug: src.slug, title: String(r.title).slice(0, 120), meeting_date: r.meeting_date, points: r.points.map(p => String(p)) };\n  }\n} catch (e) {}\nif (!sd.processed.includes(src.docId)) sd.processed.push(src.docId);\nreturn { json: out };"
+      }
+    },
+    {
+      "id": "mn-exist",
+      "name": "Check Existing Meeting",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1080,
+        140
+      ],
+      "alwaysOutputData": true,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://gnhuwffzttgriyjjbfyf.supabase.co/rest/v1/meetings?client_id=eq.' + $json.client_id + '&meeting_date=eq.' + $json.meeting_date + '&select=id&limit=1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "mn-filter",
+      "name": "Filter New",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        140
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const parsed = $('Parse Summary').all();\nconst checks = $input.all();\nconst out = [];\nfor (let i = 0; i < checks.length; i++) {\n  const p = (parsed[i] || {}).json || {};\n  const alreadyExists = !!(checks[i].json && checks[i].json.id);\n  if (p.action === 'insert' && !alreadyExists) out.push({ json: p });\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "mn-insert",
+      "name": "Publish To Portal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        1520,
+        140
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://gnhuwffzttgriyjjbfyf.supabase.co/rest/v1/meetings",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ client_id: $json.client_id, title: $json.title, meeting_date: $json.meeting_date, upcoming: false, hidden: false, minutes_ready: true, points: $json.points }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "mn-email",
+      "name": "Notify Team",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1740,
+        140
+      ],
+      "parameters": {
+        "sendTo": "kavya@think-technologies.com, saanchi@think-technologies.com",
+        "subject": "=Auto-published to {{ $('Filter New').item.json.client_name }}'s portal: {{ $('Filter New').item.json.title }}",
+        "emailType": "text",
+        "message": "=A client-safe summary of \"{{ $('Filter New').item.json.title }}\" ({{ $('Filter New').item.json.meeting_date }}) was just published to {{ $('Filter New').item.json.client_name }}'s Meeting Notes tab.\n\nBullets:\n\u2022 {{ $('Filter New').item.json.points.join('\\n\u2022 ') }}\n\nReview it (staff can Edit or Hide any meeting card in the portal). If something internal slipped through, hide it first, then edit.",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "H1xPx71L1s7gJpno",
+          "name": "Think Gmail A/C"
+        }
+      },
+      "webhookId": "e1cb31f4-6c15-45ce-9368-021e5ab93abb"
+    }
+  ],
+  "connections": {
+    "Every 30 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Fetch Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On-Demand Webhook": {
+      "main": [
+        [
+          {
+            "node": "Fetch Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Clients": {
+      "main": [
+        [
+          {
+            "node": "Split Into Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Into Items": {
+      "main": [
+        [
+          {
+            "node": "Find Recent Gemini Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find Recent Gemini Docs": {
+      "main": [
+        [
+          {
+            "node": "Flatten Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten Docs": {
+      "main": [
+        [
+          {
+            "node": "Export Doc Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Export Doc Text": {
+      "main": [
+        [
+          {
+            "node": "Summarize (gpt-4o-mini)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize (gpt-4o-mini)": {
+      "main": [
+        [
+          {
+            "node": "Parse Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Summary": {
+      "main": [
+        [
+          {
+            "node": "Check Existing Meeting",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Existing Meeting": {
+      "main": [
+        [
+          {
+            "node": "Filter New",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter New": {
+      "main": [
+        [
+          {
+            "node": "Publish To Portal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Publish To Portal": {
+      "main": [
+        [
+          {
+            "node": "Notify Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

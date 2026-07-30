@@ -1,0 +1,64 @@
+{
+  "name": "Think Portal \u2014 Feedback Notify",
+  "nodes": [
+    {
+      "id": "fb-webhook",
+      "name": "Feedback Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "portal-feedback-notify",
+        "responseMode": "onReceived",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "webhookId": "e48cdd8f-0bf0-4815-a3b3-1517ac936947"
+    },
+    {
+      "id": "fb-email",
+      "name": "Email Team",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "sendTo": "kavya@think-technologies.com, saanchi@think-technologies.com",
+        "subject": "=Portal feedback from {{ $json.body.clientName || 'a client' }}",
+        "emailType": "text",
+        "message": "={{ $json.body.author }} ({{ $json.body.role }}) posted on the Live Feedback tab:\n\n\"{{ $json.body.comment }}\"\n\nReply in the portal:\n{{ $json.body.portalLink }}",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "H1xPx71L1s7gJpno",
+          "name": "Think Gmail A/C"
+        }
+      },
+      "webhookId": "a072e3da-e949-4dfb-8750-04f1ac03ae7b"
+    }
+  ],
+  "connections": {
+    "Feedback Webhook": {
+      "main": [
+        [
+          {
+            "node": "Email Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
