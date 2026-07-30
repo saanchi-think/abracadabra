@@ -8,12 +8,12 @@
       "typeVersion": 1,
       "position": [
         -200,
-        -260
+        -280
       ],
       "parameters": {
-        "width": 420,
-        "height": 260,
-        "content": "## Intake Form (prototype)\nReceives submissions from intake.html (repo) and emails\nthe team. New-client intake ahead of the discovery\nmeeting: contact info, teammates to CC, company +\nwebsite + socials, industry (for tagging), and the one\nmain pain point they plan to raise.\n\nRecipient is fixed (kavya@ + saanchi@) \u2014 change here\nwhen the team decides where intake should route."
+        "width": 440,
+        "height": 280,
+        "content": "## Intake Form (prototype)\nReceives submissions from intake.html and emails the team.\nNew-client intake ahead of the discovery meeting: contact\ninfo, teammates to CC, company + website + socials,\nindustry (for tagging), and the one main pain point \u2014\ntyped, or recorded as a voice note (attached to the email\nas an audio file), or both.\n\nRecipients fixed (kavya@ + saanchi@)."
       }
     },
     {
@@ -33,22 +33,99 @@
           "allowedOrigins": "*"
         }
       },
-      "webhookId": "f38974b4-2ca4-4d10-8ad0-bf48ad345f1b"
+      "webhookId": "a54ccff5-3243-4cff-9959-988afa312dd3"
     },
     {
-      "id": "intake-email",
+      "id": "intake-prep",
+      "name": "Prepare Submission",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const b = $json.body || {};\nconst out = { name: b.name, email: b.email, teamEmails: b.teamEmails || '', company: b.company, site: b.site || '', social: b.social || '', industry: b.industry || '', painPoint: b.painPoint || '', audioSeconds: b.audioSeconds || 0, hasAudio: !!b.audioBase64 };\nif (b.audioBase64) {\n  const mime = b.audioMime || 'audio/webm';\n  const ext = mime.includes('wav') ? 'wav' : mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm';\n  const bin = await this.helpers.prepareBinaryData(Buffer.from(b.audioBase64, 'base64'), 'pain-point-voice-note.' + ext, mime);\n  return { json: out, binary: { voiceNote: bin } };\n}\nreturn { json: out };"
+      }
+    },
+    {
+      "id": "intake-if",
+      "name": "Has Voice Note?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.hasAudio }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "intake-email-audio",
+      "name": "Email Team (voice note attached)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        680,
+        -110
+      ],
+      "parameters": {
+        "sendTo": "kavya@think-technologies.com, saanchi@think-technologies.com",
+        "subject": "=New intake [{{ $json.industry || 'no industry' }}] \u2014 {{ $json.company || $json.name || 'unknown' }} (voice note)",
+        "emailType": "text",
+        "message": "=New client intake submission:\n\nName: {{ $json.name }}\nCompany email: {{ $json.email }}\nTeammates to keep updated: {{ $json.teamEmails || '\u2014' }}\n\nCompany: {{ $json.company }}\nWebsite: {{ $json.site || '\u2014' }}\nSocial media: {{ $json.social || '\u2014' }}\nIndustry: {{ $json.industry }}\n\nMain pain point (typed): {{ $json.painPoint || '\u2014 (voice note only)' }}\n\n\ud83c\udfa4 Voice note attached ({{ $json.audioSeconds }}s).\n\n\u2014 sent by the intake form prototype",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {
+                "property": "voiceNote"
+              }
+            ]
+          }
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "H1xPx71L1s7gJpno",
+          "name": "Think Gmail A/C"
+        }
+      },
+      "webhookId": "0ac5dd0b-307b-4b12-8b8e-f16c10668b2c"
+    },
+    {
+      "id": "intake-email-plain",
       "name": "Email Team",
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        240,
-        0
+        680,
+        140
       ],
       "parameters": {
         "sendTo": "kavya@think-technologies.com, saanchi@think-technologies.com",
-        "subject": "=New intake [{{ $json.body.industry || 'no industry' }}] \u2014 {{ $json.body.company || $json.body.name || 'unknown' }}",
+        "subject": "=New intake [{{ $json.industry || 'no industry' }}] \u2014 {{ $json.company || $json.name || 'unknown' }}",
         "emailType": "text",
-        "message": "=New client intake submission:\n\nName: {{ $json.body.name }}\nCompany email: {{ $json.body.email }}\nTeammates to keep updated: {{ $json.body.teamEmails || '\u2014' }}\n\nCompany: {{ $json.body.company }}\nWebsite: {{ $json.body.site || '\u2014' }}\nSocial media: {{ $json.body.social || '\u2014' }}\nIndustry: {{ $json.body.industry }}\n\nMain pain point (for the discovery meeting):\n{{ $json.body.painPoint }}\n\n\u2014 sent by the intake form prototype",
+        "message": "=New client intake submission:\n\nName: {{ $json.name }}\nCompany email: {{ $json.email }}\nTeammates to keep updated: {{ $json.teamEmails || '\u2014' }}\n\nCompany: {{ $json.company }}\nWebsite: {{ $json.site || '\u2014' }}\nSocial media: {{ $json.social || '\u2014' }}\nIndustry: {{ $json.industry }}\n\nMain pain point (for the discovery meeting):\n{{ $json.painPoint }}\n\n\u2014 sent by the intake form prototype",
         "options": {}
       },
       "credentials": {
@@ -57,12 +134,41 @@
           "name": "Think Gmail A/C"
         }
       },
-      "webhookId": "084cfdfd-0644-4f58-b5f7-727bd44bc384"
+      "webhookId": "9a33cb24-929d-4103-9f49-62d4c78cc6ee"
     }
   ],
   "connections": {
     "Intake Webhook": {
       "main": [
+        [
+          {
+            "node": "Prepare Submission",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Submission": {
+      "main": [
+        [
+          {
+            "node": "Has Voice Note?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Voice Note?": {
+      "main": [
+        [
+          {
+            "node": "Email Team (voice note attached)",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Email Team",

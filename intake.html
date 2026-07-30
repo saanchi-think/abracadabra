@@ -41,6 +41,14 @@
   .msg.ok { display: block; color: #2c6e49; }
   .msg.err { display: block; color: var(--accent); }
   .done { text-align: center; padding: 30px 10px; }
+  .rec-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .rec-btn { border: 1px solid var(--border); background: var(--surface-2); color: var(--text); border-radius: 11px; padding: 10px 14px; font: 600 13.5px var(--font); cursor: pointer; }
+  .rec-btn.recording { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .rec-time { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .rec-player { display: none; align-items: center; gap: 10px; margin-top: 10px; }
+  .rec-player.show { display: flex; flex-wrap: wrap; }
+  .rec-player audio { height: 40px; max-width: 100%; }
+  .rec-remove { border: 0; background: none; color: var(--accent); font: 600 13px var(--font); cursor: pointer; text-decoration: underline; }
   .done h2 { margin: 0 0 8px; font-size: 24px; }
   .done p { color: var(--muted); margin: 0; }
 </style>
@@ -92,8 +100,16 @@
       </datalist>
 
       <div class="sect">The main thing</div>
-      <label for="fPain">If you had to pick one, what's the main pain point you plan to bring up in the discovery meeting? <span class="req">*</span></label>
+      <label for="fPain">If you had to pick one, what's the main pain point you plan to bring up in the discovery meeting? <span class="req">*</span> <span class="hint">(type it, record it, or both)</span></label>
       <textarea id="fPain" placeholder="e.g. Every deal lives in a different spreadsheet and nobody knows the latest status…"></textarea>
+      <div class="rec-row">
+        <button type="button" class="rec-btn" id="recBtn">🎤 Record it instead</button>
+        <span class="rec-time" id="recTime" hidden>0:00 / 2:00 max</span>
+      </div>
+      <div class="rec-player" id="recPlayer">
+        <audio id="recAudio" controls></audio>
+        <button type="button" class="rec-remove" id="recRemove">Remove recording</button>
+      </div>
 
       <!-- honeypot: bots fill this, humans never see it -->
       <input class="hp" id="fWebsite" type="text" tabindex="-1" autocomplete="off">
@@ -114,6 +130,42 @@
   const msg = $('fMsg');
   function showMsg(text, cls) { msg.textContent = text; msg.className = 'msg ' + cls; }
 
+  // --- voice note recorder (MediaRecorder) ---
+  let audioBlob = null, mediaRecorder = null, recChunks = [], recTimer = null, recSeconds = 0;
+  const recBtn = $('recBtn'), recTime = $('recTime'), recPlayer = $('recPlayer'), recAudio = $('recAudio'), recRemove = $('recRemove');
+  function fmtT(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    clearInterval(recTimer);
+    recBtn.classList.remove('recording'); recBtn.textContent = '🎤 Re-record'; recTime.hidden = true;
+  }
+  recBtn.addEventListener('click', async () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') { stopRecording(); return; }
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch (e) { showMsg('Microphone access was blocked — type your answer instead, or allow the mic in your browser.', 'err'); return; }
+    recChunks = []; audioBlob = null; recPlayer.classList.remove('show');
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      audioBlob = new Blob(recChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+      recAudio.src = URL.createObjectURL(audioBlob);
+      recPlayer.classList.add('show');
+    };
+    mediaRecorder.start();
+    recSeconds = 0; recTime.hidden = false; recTime.textContent = '0:00 / 2:00 max';
+    recBtn.classList.add('recording'); recBtn.textContent = '■ Stop recording';
+    recTimer = setInterval(() => {
+      recSeconds++; recTime.textContent = fmtT(recSeconds) + ' / 2:00 max';
+      if (recSeconds >= 120) stopRecording();
+    }, 1000);
+  });
+  recRemove.addEventListener('click', () => { audioBlob = null; recAudio.src = ''; recPlayer.classList.remove('show'); recBtn.textContent = '🎤 Record it instead'; });
+  function blobToBase64(blob) {
+    return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); });
+  }
+
   $('fSubmit').addEventListener('click', async () => {
     const name = $('fName').value.trim();
     const email = $('fEmail').value.trim();
@@ -124,7 +176,7 @@
     const industry = $('fIndustry').value.trim();
     const painPoint = $('fPain').value.trim();
     if ($('fWebsite').value) return; // honeypot tripped — silently drop
-    if (!name || !email || !company || !industry || !painPoint) { showMsg('Please fill in your name, company email, company name, industry, and the pain point.', 'err'); return; }
+    if (!name || !email || !company || !industry || (!painPoint && !audioBlob)) { showMsg('Please fill in your name, company email, company name, industry, and the pain point (typed or recorded).', 'err'); return; }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showMsg('That email doesn’t look right.', 'err'); return; }
     const btn = $('fSubmit');
     btn.disabled = true; btn.textContent = 'Sending…';
@@ -132,7 +184,10 @@
       await fetch(INTAKE_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, teamEmails, company, site, social, industry, painPoint })
+        body: JSON.stringify({ name, email, teamEmails, company, site, social, industry, painPoint,
+          audioBase64: audioBlob ? await blobToBase64(audioBlob) : null,
+          audioMime: audioBlob ? (audioBlob.type || 'audio/webm') : null,
+          audioSeconds: audioBlob ? recSeconds : null })
       });
       $('formCard').hidden = true;
       $('doneCard').hidden = false;
