@@ -1,0 +1,79 @@
+{
+  "name": "Think \u2014 Intake Form (prototype)",
+  "nodes": [
+    {
+      "id": "intake-notes",
+      "name": "Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        -220
+      ],
+      "parameters": {
+        "width": 420,
+        "height": 220,
+        "content": "## Intake Form (prototype)\nReceives submissions from intake.html (repo) and emails\nthe team. One general pain-point question, per the\nJul 23 team meeting's 'Create Intake Form' next step.\n\nRecipient is fixed (kavya@) \u2014 change here when the\nteam decides where intake should route."
+      }
+    },
+    {
+      "id": "intake-webhook",
+      "name": "Intake Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "think-intake",
+        "responseMode": "onReceived",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "webhookId": "e410dac8-393d-4731-a1c4-276d0732dca1"
+    },
+    {
+      "id": "intake-email",
+      "name": "Email Team",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "sendTo": "kavya@think-technologies.com",
+        "subject": "=New intake form submission \u2014 {{ $json.body.company || $json.body.name || 'unknown' }}",
+        "emailType": "text",
+        "message": "=New client intake submission:\n\nName: {{ $json.body.name }}\nCompany: {{ $json.body.company }}\nEmail: {{ $json.body.email }}\n\nBiggest pain point:\n{{ $json.body.painPoint }}\n\n\u2014 sent by the intake form prototype",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "H1xPx71L1s7gJpno",
+          "name": "Think Gmail A/C"
+        }
+      },
+      "webhookId": "9df6e929-5935-4c00-8354-c7738017da27"
+    }
+  ],
+  "connections": {
+    "Intake Webhook": {
+      "main": [
+        [
+          {
+            "node": "Email Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

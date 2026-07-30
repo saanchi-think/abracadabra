@@ -645,24 +645,27 @@
       <span class="eyebrow">Live feedback</span>
       <h2 class="page-title">Review the latest build</h2>
 
-      <div class="card preview-card">
+      <div class="card preview-card" id="demoCard" hidden>
         <div class="preview-head">
           <div>
-            <div class="preview-title">Support Assistant — v0.3</div>
-            <div class="preview-sub">Uploaded by Think Technologies · Jul 1, 2026</div>
+            <div class="preview-title" id="demoTitle"></div>
+            <div class="preview-sub" id="demoSub"></div>
           </div>
           <span class="pill accent">New preview</span>
         </div>
         <div class="preview-frame">
-          <div class="pf-bar"><i></i><i></i><i></i><span class="pf-url">support-assistant.acme.dev</span></div>
-          <div class="pf-body">
-            <div class="mock-msg bot">Hi! I’m Acme’s support assistant. How can I help?</div>
-            <div class="mock-msg user">I was charged twice this month.</div>
-            <div class="mock-msg bot">I’m sorry about that — I can see the duplicate charge on order #4821 and I’ve issued a full refund. It’ll land in 3–5 business days. Anything else?</div>
-            <div class="mock-input"><span>Type a message…</span><div class="mock-send"></div></div>
+          <div class="pf-bar"><i></i><i></i><i></i><span class="pf-url" id="demoUrlLabel"></span></div>
+          <iframe id="demoFrame" title="Latest build preview" style="display:block;width:100%;height:620px;border:0;background:#fff"></iframe>
+        </div>
+        <div class="preview-actions"><a class="work-link" id="demoOpen" href="#" target="_blank" rel="noopener">Open full preview →</a></div>
+      </div>
+      <div class="card preview-card" id="demoEmptyCard" hidden>
+        <div class="preview-head">
+          <div>
+            <div class="preview-title">No build to review yet</div>
+            <div class="preview-sub">Your Think team will post the next interactive build here.</div>
           </div>
         </div>
-        <div class="preview-actions"><a class="work-link" href="#">Open full preview →</a></div>
       </div>
 
       <div class="fb-compose">
@@ -1643,6 +1646,31 @@
       });
       return row;
     }
+    // ===== LIVE FEEDBACK: per-client interactive build previews =====
+    // Add a client's latest build here (keyed by slug) and it shows in their
+    // Live Feedback tab. Files live in demos/ alongside the portal.
+    const DEMOS = {
+      tribe: {
+        url: 'demos/tribe-neighborhood-intelligence.html',
+        title: 'Neighborhood Intelligence Board',
+        sub: 'Uploaded by Think Technologies · Jul 2026',
+        label: 'neighborhood-intelligence.tribe.dev'
+      }
+    };
+    (function renderDemo() {
+      const card = document.getElementById('demoCard');
+      const emptyCard = document.getElementById('demoEmptyCard');
+      if (!card || !emptyCard) return;
+      const demo = DEMOS[data.slug];
+      if (!demo) { emptyCard.hidden = false; return; }
+      document.getElementById('demoTitle').textContent = demo.title;
+      document.getElementById('demoSub').textContent = demo.sub;
+      document.getElementById('demoUrlLabel').textContent = demo.label || '';
+      document.getElementById('demoFrame').src = demo.url;
+      document.getElementById('demoOpen').href = demo.url;
+      card.hidden = false;
+    })();
+
     async function renderActions() {
       const list = document.getElementById('actionsList');
       const loading = document.getElementById('actionsLoading');
@@ -1654,8 +1682,13 @@
       loading.hidden = true;
       if (error) { empty.hidden = false; empty.textContent = 'Couldn’t load items: ' + error.message; return; }
       if (!actions || !actions.length) { empty.hidden = false; if (countEl) countEl.textContent = 'All clear'; return; }
-      const pending = actions.filter(a => a.status !== 'done');
-      const done = actions.filter(a => a.status === 'done');
+      // Only surface the MOST RECENT meeting's items — actions arrive in batches
+      // (one batch per processed transcript), and older meetings' items are
+      // superseded rather than accumulated.
+      const newest = new Date(actions[0].created_at).getTime();
+      const recent = actions.filter(a => newest - new Date(a.created_at).getTime() < 3600000);
+      const pending = recent.filter(a => a.status !== 'done');
+      const done = recent.filter(a => a.status === 'done');
       pending.concat(done).forEach(a => list.appendChild(actionRow(a)));
       if (countEl) countEl.textContent = pending.length ? pending.length + ' pending' : 'All clear';
     }

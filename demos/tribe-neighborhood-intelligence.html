@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-sans: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --color-text-primary: #141210;
+    --color-text-secondary: #5B5651;
+    --color-background-primary: #FFFFFF;
+    --color-background-secondary: #F4F1EF;
+    --color-border-secondary: #ECE7E4;
+    --color-border-tertiary: #F1ECE9;
+    --border-radius-lg: 16px;
+    --border-radius-md: 10px;
+  }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+</style>
+</head>
+<body>
+<h2 class="sr-only">Tribe Development Neighborhood Intelligence Platform — interactive demo with real project data</h2>
+
+<style>
+  * { box-sizing: border-box; }
+  .wrap { font-family: var(--font-sans); padding: 1rem 0; }
+  .hdr { margin-bottom: 1.25rem; }
+  .hdr-top { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .hdr-title { font-size: 19px; font-weight: 500; color: var(--color-text-primary); margin: 0; }
+  .hdr-badge { font-size: 11px; padding: 3px 10px; border-radius: 12px; background: #fbe9e7; color: #B5451B; font-weight: 500; }
+  .hdr-sub { font-size: 13px; color: var(--color-text-secondary); }
+  .tabs { display: flex; gap: 6px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .tab { padding: 6px 14px; border-radius: 20px; border: 0.5px solid var(--color-border-secondary); background: transparent; font-size: 13px; cursor: pointer; color: var(--color-text-secondary); }
+  .tab.on { background: #1E1A16; border-color: #1E1A16; color: #F5EFE0; font-weight: 500; }
+  .tab:hover:not(.on) { background: var(--color-background-secondary); }
+  .panel { display: none; }
+  .panel.on { display: block; }
+
+  .map-wrap { position: relative; background: var(--color-background-secondary); border-radius: var(--border-radius-lg); border: 0.5px solid var(--color-border-tertiary); padding: 1rem; margin-bottom: 1rem; }
+  .detroit-svg { width: 100%; height: 220px; display: block; }
+
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; margin-bottom: 1rem; }
+  .card { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px 14px; }
+  .card-label { font-size: 11px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .card-val { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+  .card-note { font-size: 11px; color: #C8902A; margin-top: 2px; }
+
+  .proj-list { display: flex; flex-direction: column; gap: 10px; }
+  .proj { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); background: var(--color-background-primary); overflow: hidden; cursor: pointer; }
+  .proj-head { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+  .proj-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .proj-name { font-size: 14px; font-weight: 500; color: var(--color-text-primary); flex: 1; }
+  .proj-nbhd { font-size: 11px; color: var(--color-text-secondary); }
+  .proj-badge { font-size: 11px; padding: 3px 9px; border-radius: 10px; flex-shrink: 0; }
+  .proj-body { padding: 0 14px 12px; display: none; border-top: 0.5px solid var(--color-border-tertiary); margin-top: 0; padding-top: 10px; }
+  .proj-body.open { display: block; }
+  .proj-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+  .proj-stat { font-size: 12px; }
+  .proj-stat-label { color: var(--color-text-secondary); margin-bottom: 1px; }
+  .proj-stat-val { font-weight: 500; color: var(--color-text-primary); }
+  .proj-note { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; padding-top: 6px; border-top: 0.5px solid var(--color-border-tertiary); }
+
+  .impact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+  .ic { border-radius: var(--border-radius-md); padding: 12px 14px; border-left: 3px solid #E8615A; background: var(--color-background-secondary); }
+  .ic h4 { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 5px; }
+  .ic p { font-size: 12px; color: var(--color-text-secondary); margin: 0; line-height: 1.55; }
+
+  .report-wrap { border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); overflow: hidden; }
+  .report-hdr { background: #1E1A16; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; }
+  .report-hdr-title { font-size: 14px; font-weight: 500; color: #F5EFE0; }
+  .report-hdr-sub { font-size: 11px; color: #8B8580; }
+  .report-live { font-size: 11px; color: #E8615A; border: 0.5px solid #E8615A; border-radius: 4px; padding: 3px 9px; }
+  .report-body { padding: 14px 16px; }
+  .report-section { margin-bottom: 14px; }
+  .report-section-title { font-size: 11px; font-weight: 500; color: var(--color-text-secondary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .report-row { display: flex; justify-content: space-between; align-items: baseline; padding: 5px 0; border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px; }
+  .report-row:last-child { border-bottom: none; }
+  .report-row-label { color: var(--color-text-secondary); }
+  .report-row-val { font-weight: 500; color: var(--color-text-primary); }
+  .narrative { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 12px; font-size: 12px; color: var(--color-text-secondary); line-height: 1.7; margin-bottom: 10px; }
+  .auto-note { font-size: 11px; color: var(--color-text-secondary); display: flex; align-items: center; gap: 6px; }
+  .dot-green { width: 7px; height: 7px; border-radius: 50%; background: #5A7A5C; flex-shrink: 0; }
+
+  .tooltip { position: absolute; background: var(--color-background-primary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 8px 10px; font-size: 12px; pointer-events: none; z-index: 10; min-width: 160px; }
+  .tooltip strong { display: block; font-weight: 500; color: var(--color-text-primary); margin-bottom: 3px; font-size: 13px; }
+  .tooltip span { color: var(--color-text-secondary); font-size: 11px; line-height: 1.6; display: block; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; }
+  .leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--color-text-secondary); }
+  .leg-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+</style>
+
+<div class="wrap">
+  <div class="hdr">
+    <div class="hdr-top">
+      <p class="hdr-title">Neighborhood Intelligence Platform</p>
+      <span class="hdr-badge">Tribe Development · Detroit</span>
+    </div>
+    <p class="hdr-sub">What this looks like with Tribe's real projects — click each tab, click each project to expand</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab on"  onclick="tab('map',this)">Detroit map</button>
+    <button class="tab"     onclick="tab('projects',this)">Active projects</button>
+    <button class="tab"     onclick="tab('impact',this)">Community impact</button>
+    <button class="tab"     onclick="tab('report',this)">Auto-report</button>
+  </div>
+
+  <!-- MAP -->
+  <div id="p-map" class="panel on">
+    <div class="map-wrap" style="position:relative;">
+      <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:8px;">Hover a project to see details — real Tribe locations in Detroit</div>
+      <svg class="detroit-svg" viewBox="0 0 640 220" id="map-svg">
+        <!-- Street grid - simplified Detroit grid feel -->
+        <line x1="0" y1="110" x2="640" y2="110" stroke="var(--color-border-tertiary)" stroke-width="1"/>
+        <line x1="0" y1="55"  x2="640" y2="55"  stroke="var(--color-border-tertiary)" stroke-width="1"/>
+        <line x1="0" y1="165" x2="640" y2="165" stroke="var(--color-border-tertiary)" stroke-width="1"/>
+        <line x1="120" y1="0" x2="120" y2="220" stroke="var(--color-border-tertiary)" stroke-width="1"/>
+        <line x1="260" y1="0" x2="260" y2="220" stroke="var(--color-border-tertiary)" stroke-width="1"/>
+        <line x1="400" y1="0" x2="400" y2="220" stroke="var(--color-border-tertiary)" stroke-width="1"/>
+        <line x1="520" y1="0" x2="520" y2="220" stroke="var(--color-border-tertiary)" stroke-width="1"/>
+
+        <!-- Neighborhood labels (muted) -->
+        <text x="8"   y="18" font-size="9" fill="#aaa">East English Village</text>
+        <text x="130" y="18" font-size="9" fill="#aaa">Jefferson Chalmers</text>
+        <text x="268" y="18" font-size="9" fill="#aaa">Corktown</text>
+        <text x="408" y="18" font-size="9" fill="#aaa">Bagley</text>
+        <text x="528" y="18" font-size="9" fill="#aaa">New Center</text>
+
+        <!-- THE DECO — East English Village -->
+        <rect id="deco" x="30" y="60" width="72" height="48" rx="4" fill="#E8615A" fill-opacity="0.18" stroke="#E8615A" stroke-width="2" cursor="pointer"
+          onmouseenter="tip('deco',30,60)" onmouseleave="hidetip()"/>
+        <circle cx="66" cy="84" r="7" fill="#E8615A" pointer-events="none"/>
+        <text x="66" y="106" text-anchor="middle" font-size="9" fill="#E8615A" font-weight="500" pointer-events="none">The Deco</text>
+
+        <!-- JEFFERSON AVE APARTMENTS — Jefferson Chalmers -->
+        <rect id="jeff" x="140" y="72" width="90" height="60" rx="4" fill="#5A7A5C" fill-opacity="0.18" stroke="#5A7A5C" stroke-width="2" cursor="pointer"
+          onmouseenter="tip('jeff',140,72)" onmouseleave="hidetip()"/>
+        <circle cx="185" cy="102" r="9" fill="#5A7A5C" pointer-events="none"/>
+        <text x="185" y="146" text-anchor="middle" font-size="9" fill="#5A7A5C" font-weight="500" pointer-events="none">Jefferson Ave</text>
+
+        <!-- ARTISAN'S MARKET — Bagley -->
+        <rect id="artisan" x="408" y="58" width="88" height="55" rx="4" fill="#C8902A" fill-opacity="0.18" stroke="#C8902A" stroke-width="2" cursor="pointer"
+          onmouseenter="tip('artisan',408,58)" onmouseleave="hidetip()"/>
+        <circle cx="452" cy="85" r="8" fill="#C8902A" pointer-events="none"/>
+        <text x="452" y="127" text-anchor="middle" font-size="9" fill="#C8902A" font-weight="500" pointer-events="none">Artisan's Market</text>
+
+        <!-- Detroit River suggestion at bottom -->
+        <rect x="0" y="200" width="640" height="20" rx="0" fill="var(--color-background-secondary)" fill-opacity="0.6"/>
+        <text x="300" y="214" text-anchor="middle" font-size="9" fill="#aaa">Detroit River / SE Michigan corridor</text>
+
+        <!-- Tooltip -->
+        <g id="svg-tip" display="none">
+          <rect id="tip-bg" x="0" y="0" width="180" height="76" rx="4" fill="var(--color-background-primary)" stroke="var(--color-border-secondary)" stroke-width="0.5"/>
+          <text id="tip-name" x="8" y="18" font-size="12" font-weight="500" fill="var(--color-text-primary)"/>
+          <text id="tip-line1" x="8" y="34" font-size="11" fill="var(--color-text-secondary)"/>
+          <text id="tip-line2" x="8" y="48" font-size="11" fill="var(--color-text-secondary)"/>
+          <text id="tip-line3" x="8" y="62" font-size="11" fill="var(--color-text-secondary)"/>
+        </g>
+      </svg>
+
+      <div class="legend">
+        <div class="leg"><div class="leg-dot" style="background:#5A7A5C;"></div>Affordable housing</div>
+        <div class="leg"><div class="leg-dot" style="background:#E8615A;"></div>Mixed-use residential</div>
+        <div class="leg"><div class="leg-dot" style="background:#C8902A;"></div>Commercial / entrepreneurial</div>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="card-label">Active project investment</div><div class="card-val">$33.3M</div><div class="card-note">across 3 projects</div></div>
+      <div class="card"><div class="card-label">Affordable units created</div><div class="card-val">52+</div><div class="card-note">Jefferson Ave alone</div></div>
+      <div class="card"><div class="card-label">Commercial space activated</div><div class="card-val">15,000 sf</div><div class="card-note">Bagley · entrepreneur-focused</div></div>
+      <div class="card"><div class="card-label">Neighborhoods served</div><div class="card-val">6+</div><div class="card-note">Detroit & SE Michigan</div></div>
+    </div>
+  </div>
+
+  <!-- PROJECTS -->
+  <div id="p-projects" class="panel">
+    <div class="proj-list">
+
+      <div class="proj" onclick="toggle('proj-deco')">
+        <div class="proj-head">
+          <div class="proj-dot" style="background:#E8615A;"></div>
+          <div>
+            <div class="proj-name">The Deco — 16703 E. Warren</div>
+            <div class="proj-nbhd">East English Village</div>
+          </div>
+          <span class="proj-badge" style="background:#fbe9e7;color:#B5451B;">Mixed-use</span>
+        </div>
+        <div id="proj-deco" class="proj-body">
+          <div class="proj-stats">
+            <div class="proj-stat"><div class="proj-stat-label">Units created</div><div class="proj-stat-val">6 apartments + 3 commercial bays</div></div>
+            <div class="proj-stat"><div class="proj-stat-label">Total development cost</div><div class="proj-stat-val">$5.27 million</div></div>
+            <div class="proj-stat"><div class="proj-stat-label">Construction financing closed</div><div class="proj-stat-val">December 2024</div></div>
+            <div class="proj-stat"><div class="proj-stat-label">Anchor tenant</div><div class="proj-stat-val">La Jalisciense Taqueria</div></div>
+          </div>
+          <div class="proj-note">Mixed-use project bringing new apartments and local business space to East English Village. Anchor tenant is a neighborhood-rooted restaurant — exactly the kind of local entrepreneur Tribe exists to support.</div>
+        </div>
+      </div>
+
+      <div class="proj" onclick="toggle('proj-jeff')">
+        <div class="proj-head">
+          <div class="proj-dot" style="background:#5A7A5C;"></div>
+          <div>
+            <div class="proj-name">Jefferson Avenue Apartments — 13041 E. Jefferson</div>
+            <div class="proj-nbhd">Jefferson Chalmers</div>
+          </div>
+          <span class="proj-badge" style="background:#eaf3de;color:#3B6D11;">Affordable housing</span>
+        </div>
+        <div id="proj-jeff" class="proj-body">
+          <div class="proj-stats">
+            <div class="proj-stat"><div class="proj-stat-label">Units created</div><div class="proj-stat-val">52 affordable housing units</div></div>
+            <div class="proj-stat"><div class="proj-stat-label">Total development cost</div><div class="proj-stat-val">$19 million</div></div>
+            <div class="proj-stat"><div class="proj-stat-label">Key funding</div><div class="proj-stat-val">9% LIHTC from MSHDA</div></div>
+            <div class="proj-stat"><div class="proj-stat-label">Development partner</div><div class="proj-stat-val">CHN Housing Partners</div></div>
+          </div>
+          <div class="proj-note">52 affordable units in Jefferson Chalmers — Tribe's largest project to date. Secured a 9% LIHTC allocation from MSHDA, one of the most competitive affordable housing financing tools available. Built in partnership with CHN Housing Partners.</div>
+        </div>
+      </div>
+
+      <div class="proj" onclick="toggle('proj-art')">
+        <div class="proj-head">
+          <div class="proj-dot" style="background:#C8902A;"></div>
+          <div>
+            <div class="proj-name">Artisan's Market — 7326 W. McNichols</div>
+            <div class="proj-nbhd">Bagley</div>
+          </div>
+          <span class="proj-badge" style="background:#faeeda;color:#854F0B;">Entrepreneurial</span>
+        </div>
+        <div id="proj-art" class="proj-body">
+          <div class="proj-stats">
+            <div class="proj-stat"><div class="proj-stat-label">Commercial space</div><div class="proj-stat-val">15,000 sq ft activated</div></div>
+            <div class="proj-stat"><div class="proj-stat-label">Total development cost</div><div class="proj-stat-val">$9 million</div></div>
+            <div class="proj-stat"><div class="proj-stat-label">Program</div><div class="proj-stat-val">Artisan Market, Office, Event, Retail</div></div>
+            <div class="proj-stat"><div class="proj-stat-label">Focus</div><div class="proj-stat-val">Incubator retail for emerging entrepreneurs</div></div>
+          </div>
+          <div class="proj-note">Innovative incubator retail space designed to lower the barrier to brick-and-mortar for Detroit entrepreneurs. Small-format stalls let emerging businesses test the market without the risk of a full lease. Pure Tribe mission in built form.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- IMPACT -->
+  <div id="p-impact" class="panel">
+    <div class="impact-grid" style="margin-bottom:1rem;">
+      <div class="ic"><h4>Affordable housing</h4><p>52 affordable units in Jefferson Chalmers via 9% LIHTC. This is the hardest money to get in Michigan — Tribe secured it.</p></div>
+      <div class="ic"><h4>Entrepreneurial access</h4><p>15,000 sq ft of incubator commercial space in Bagley lowering the barrier to brick-and-mortar for Detroit business owners.</p></div>
+      <div class="ic"><h4>Neighborhood anchoring</h4><p>Local anchor tenants (La Jalisciense, Bagley entrepreneurs) keep economic activity within the community, not extracted from it.</p></div>
+      <div class="ic"><h4>Public-private partnerships</h4><p>MSHDA, CHN Housing Partners, city stakeholders — Tribe brings institutional partners into neighborhoods that need investment.</p></div>
+    </div>
+    <div style="background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px;">
+      <div style="font-size:12px;font-weight:500;color:var(--color-text-primary);margin-bottom:6px;">What the platform tracks — aligned to Tribe's mission</div>
+      <div style="font-size:12px;color:var(--color-text-secondary);line-height:1.8;">
+        ✦ Units created by type (affordable, market-rate, commercial)<br>
+        ✦ Local entrepreneur tenants supported per project<br>
+        ✦ Community engagement sessions held + attendance<br>
+        ✦ Tax credits secured (LIHTC, NMTC, historic) by project<br>
+        ✦ Neighborhood vacancy rate before / after Tribe projects<br>
+        ✦ Public and private capital leveraged per dollar of Tribe equity
+      </div>
+    </div>
+  </div>
+
+  <!-- REPORT -->
+  <div id="p-report" class="panel">
+    <div class="report-wrap">
+      <div class="report-hdr">
+        <div>
+          <div class="report-hdr-title">Tribe Development — Community Impact Summary</div>
+          <div class="report-hdr-sub">Auto-generated · Q2 2025 · For MSHDA / city partners / community stakeholders</div>
+        </div>
+        <div class="report-live">Live data</div>
+      </div>
+      <div class="report-body">
+        <div class="report-section">
+          <div class="report-section-title">Projects at a glance</div>
+          <div class="report-row"><span class="report-row-label">The Deco — East English Village</span><span class="report-row-val">$5.27M · 6 units + 3 commercial</span></div>
+          <div class="report-row"><span class="report-row-label">Jefferson Ave — Jefferson Chalmers</span><span class="report-row-val">$19M · 52 affordable units</span></div>
+          <div class="report-row"><span class="report-row-label">Artisan's Market — Bagley</span><span class="report-row-val">$9M · 15,000 sf entrepreneur space</span></div>
+        </div>
+        <div class="report-section">
+          <div class="report-section-title">Impact outcomes</div>
+          <div class="report-row"><span class="report-row-label">Affordable units created</span><span class="report-row-val">52</span></div>
+          <div class="report-row"><span class="report-row-label">Commercial / entrepreneur spaces</span><span class="report-row-val">18 bays + 15,000 sf</span></div>
+          <div class="report-row"><span class="report-row-label">Tax credits secured</span><span class="report-row-val">9% LIHTC · MSHDA</span></div>
+          <div class="report-row"><span class="report-row-label">Total capital deployed</span><span class="report-row-val">$33.27M</span></div>
+        </div>
+        <div class="narrative">
+          TRIBE Development has deployed $33.27M across three active projects in Detroit, creating 52 affordable housing units, activating 15,000 sq ft of entrepreneur-focused commercial space, and anchoring local businesses in East English Village, Jefferson Chalmers, and Bagley. Each project reflects Tribe's commitment to dignified, community-centered development — balancing financial sustainability with lasting neighborhood impact.
+        </div>
+        <div class="auto-note">
+          <div class="dot-green"></div>
+          This report would be generated automatically from your Monday.com data — no manual compilation.
+        </div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--color-text-secondary);margin-top:10px;padding:0 2px;">
+      Instead of compiling this manually for every MSHDA report, city partner meeting, or community update — the platform pulls it automatically from your deal data. Every project, always current.
+    </div>
+  </div>
+</div>
+
+<script>
+function tab(id, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('p-' + id).classList.add('on');
+}
+function toggle(id) {
+  const el = document.getElementById(id);
+  el.classList.toggle('open');
+}
+const tipData = {
+  deco:    { name:'The Deco', l1:'East English Village', l2:'6 apts + 3 commercial bays', l3:'$5.27M · Closed Dec 2024' },
+  jeff:    { name:'Jefferson Ave Apts', l1:'Jefferson Chalmers', l2:'52 affordable units · $19M', l3:'9% LIHTC from MSHDA' },
+  artisan: { name:"Artisan's Market", l1:'Bagley neighborhood', l2:'15,000 sf entrepreneur retail', l3:'$9M · incubator format' },
+};
+function tip(id, x, y) {
+  const d = tipData[id];
+  const g = document.getElementById('svg-tip');
+  const bg = document.getElementById('tip-bg');
+  document.getElementById('tip-name').textContent = d.name;
+  document.getElementById('tip-line1').textContent = d.l1;
+  document.getElementById('tip-line2').textContent = d.l2;
+  document.getElementById('tip-line3').textContent = d.l3;
+  let tx = x + 10, ty = y - 90;
+  if (tx + 185 > 640) tx = x - 195;
+  if (ty < 0) ty = y + 60;
+  bg.setAttribute('x', tx); bg.setAttribute('y', ty);
+  ['tip-name','tip-line1','tip-line2','tip-line3'].forEach((tid, i) => {
+    document.getElementById(tid).setAttribute('x', tx + 8);
+    document.getElementById(tid).setAttribute('y', ty + 18 + i * 14);
+  });
+  g.setAttribute('display', 'block');
+}
+function hidetip() { document.getElementById('svg-tip').setAttribute('display','none'); }
+</script>
+
+</body>
+</html>
