@@ -1,22 +1,47 @@
 # n8n workflows (exports)
 
-These are exports of the n8n workflows that power the portal's file features, kept here so the repo stays the source of truth. The live copies run on `https://n8n.srv1000837.hstgr.cloud`.
+Exports of the n8n workflows that power the portal, kept here so the repo stays the source of truth. Live copies run on `https://n8n.srv1000837.hstgr.cloud`.
 
-## How client files flow into the portal
+## The full client lifecycle (Jul 30, 2026)
 
 ```
-Client's Google Drive folder
-└── External/          ← ONLY this is visible in the portal
-│     proposals, contracts, client-safe meeting summaries, media
-└── Internal/          ← never shown to the client
-      raw meeting notes, drafts, internal docs
+1. Company fills out intake.html
+      → portal AUTO-CREATED in the admin panel (clients + login invitation)
+      → team emailed the submission (voice note attached if recorded)
+      → NOTHING sent to the client
+2. Staff link the client's Drive folder (admin.html — Add-client field, or "Set" on the row)
+      → Internal/ + External/ subfolders auto-created within 30 min
+3. Staff file client-facing docs in External/ (signed contracts, proposals, media)
+      → they appear in the client's Proposals & Media / Contract tabs
+      → signed-PDF rule: unsigned versions of an agreement are auto-hidden
+4. New Gemini meeting notes land in the client's folder
+      → client-safe summary auto-published to Meeting Notes (team emailed to review; Edit/Hide in portal)
+      → client action items extracted to the Action Center (latest meeting only)
+5. When ready to hand over: email ai@think-technologies.com
+      subject: send portal <company name>
+      → client gets their portal link from ai@, staff gets confirmation
+      ⚠ workflow is INACTIVE until hosting is live — see checklist below
 ```
 
-1. Staff link a client's Drive folder in **admin.html** (Add-client form, or the "Set" control on an existing client row). This saves `drive_folder_id` on the client's row in Supabase.
-2. **`client-folder-provisioning.json`** (runs every 30 min, or on demand via `POST /webhook/provision-client-folders`) creates the `Internal`/`External` subfolders for any linked client that's missing them. Idempotent — safe to run any time.
-3. Staff put client-facing files in `External` (proposals, contracts, media). Internal material stays in `Internal` or the folder root — neither is ever shown.
-4. When a client opens **Proposals & Media** or **Contract** in the portal, index.html POSTs their `drive_folder_id` to `POST /webhook/portal-drive-files` — **`think-portal-drive-files.json`** looks up the `External` subfolder inside it and returns only those files. The Contract tab is the same list filtered by filename (contract/agreement/SOW/NDA…).
+## Workflow exports in this folder
+
+| File | Live status | Purpose |
+|---|---|---|
+| think-intake-form.json | ACTIVE | intake.html → auto-create portal + email team |
+| client-folder-provisioning.json | ACTIVE | auto-create Internal/External for every linked client (30 min) |
+| think-portal-drive-files.json | ACTIVE | Proposals & Media / Contract tabs (External-only + signed-contract rule) |
+| think-portal-meeting-notes-sync.json | ACTIVE | Gemini notes → client-safe Meeting Notes entries (30 min) |
+| think-portal-client-action-items.json | ACTIVE (re-enabled Jul 30 by Kavya) | transcripts → Action Center items |
+| think-portal-feedback-notify.json | ACTIVE | Live Feedback comment → team email |
+| think-portal-send-on-request.json | **INACTIVE — do not activate until hosting is live** | "send portal <company>" email → client delivery |
+
+## Launch checklist (for Saanchi)
+
+1. Enable hosting (Settings → Pages → main / root) — the send-portal workflow assumes `https://saanchi-think.github.io/abracadabra/`
+2. Run `status.sql` in Supabase SQL Editor (enables Live Feedback comments; consider prototype-open policies to match other tables until auth is finalized)
+3. Cleanup: delete "ZZ Intake Pipeline Test Co" (admin panel) and purge pre-Jul-30 Tribe rows from client_actions (SQL in commit 72ce6e1's message)
+4. Then activate "Send Portal On Request" in n8n — test with a dummy client first
 
 ## Re-importing
 
-n8n → Workflows → ⋯ → Import from File. Re-attach the Google Drive credential on any node showing a warning, then Activate. The Supabase key inside is the public (anon/publishable) key — same one embedded in the portal HTML.
+n8n → Workflows → ⋯ → Import from File. Re-attach the Google Drive / Gmail / OpenAI credentials on any node showing a warning, then Activate. Supabase keys inside are the public (anon) key — same as the portal HTML embeds.
