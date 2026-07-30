@@ -1565,13 +1565,16 @@
       search.oninput = apply;
       chips.forEach(c => { c.onclick = () => { chips.forEach(x => x.classList.remove('on')); c.classList.add('on'); filter = c.dataset.f; apply(); }; });
     }
+    // Contract-type files live ONLY in the Contract tab — never duplicated
+    // into Proposals & Media. Same matcher both places.
+    const CONTRACT_RE = /contract|agreement|\bmsa\b|statement of work|\bsow\b|engagement letter|\bnda\b|non-disclosure|terms of service/i;
     async function renderLibrary() {
       const grid = document.getElementById('libGrid');
       const empty = document.getElementById('libEmpty');
       const loading = document.getElementById('libLoading');
       if (!grid) return;
       loading.hidden = false; empty.hidden = true; grid.innerHTML = '';
-      const files = await loadDriveFiles();
+      const files = (await loadDriveFiles()).filter(f => !CONTRACT_RE.test(f.name || ''));
       loading.hidden = true;
       if (!files.length) { empty.hidden = false; empty.textContent = data.drive_folder_id ? 'No files found in your folder yet.' : 'No file folder connected yet — check with your Think contact.'; return; }
       files.forEach(f => grid.appendChild(fileCard(f)));
@@ -1584,7 +1587,7 @@
       if (!grid) return;
       loading.hidden = false; empty.hidden = true; grid.innerHTML = '';
       const files = await loadDriveFiles();
-      const matches = files.filter(f => /contract|agreement|\bmsa\b|statement of work|\bsow\b|engagement letter|\bnda\b|non-disclosure|terms of service/i.test(f.name || ''));
+      const matches = files.filter(f => CONTRACT_RE.test(f.name || ''));
       loading.hidden = true;
       if (!matches.length) { empty.hidden = false; return; }
       matches.forEach(f => grid.appendChild(fileCard(f)));
