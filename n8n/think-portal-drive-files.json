@@ -1,0 +1,138 @@
+{
+  "name": "Think Portal \u2014 Drive Files",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "portal-drive-files",
+        "responseMode": "lastNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "id": "b0a51491-d460-4d94-ae15-11bd48c216dd",
+      "name": "Portal Drive Files Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "webhookId": "f7a40038-7aa4-4fc9-bc68-efd317c2dbc8"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "={{ \"'\" + ($json.id || 'no-external-folder') + \"' in parents and mimeType != 'application/vnd.google-apps.folder' and trashed = false\" }}",
+        "returnAll": true,
+        "filter": {},
+        "options": {
+          "fields": [
+            "id",
+            "name",
+            "mimeType",
+            "webViewLink",
+            "webContentLink",
+            "iconLink",
+            "thumbnailLink",
+            "modifiedTime",
+            "size"
+          ]
+        }
+      },
+      "id": "5e9e69f2-d788-4313-8297-4c78de63534d",
+      "name": "Search Files In Client Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        720,
+        300
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ChFxbTKEBKTAvthV",
+          "name": "Think Admin Google Drive A/C"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\nconst OVERRIDES = {\n  '174kgJ_nJLraVG4bBTD_DPpBR9tLvG62w': 'Creative & Social Operating Model'\n};\nconst EXCLUDE_RE = /notes by gemini|weekly meeting|notes for call|meeting notes|call notes|recap notes|^think technologies\\s*\\|/i;\n\nfunction cleanName(raw, clientName) {\n  let s = String(raw || '').replace(/\\.[a-zA-Z0-9]{2,5}$/, '');\n  s = s.replace(/_/g, ' ');\n  if (clientName) {\n    const esc = clientName.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\n    s = s.replace(new RegExp(esc, 'ig'), '');\n  }\n  s = s.replace(/\\bthink technologies\\b/ig, '');\n  s = s.replace(/\\b(final|draft|copy of|v\\d+)\\b/ig, '');\n  s = s.replace(/\\s{2,}/g, ' ').trim();\n  s = s.replace(/^[-|:\\s]+|[-|:\\s]+$/g, '').trim();\n  if (!s) s = String(raw || '').replace(/\\.[a-zA-Z0-9]{2,5}$/, '');\n  return s;\n}\n\nconst clientName = ($('Portal Drive Files Webhook').first().json.body || {}).clientName || '';\nconst items = $input.all().map(i => i.json).filter(f => !EXCLUDE_RE.test(f.name || ''));\nconst files = items.map(f => ({\n  ...f,\n  displayName: OVERRIDES[f.id] || cleanName(f.name, clientName)\n}));\nreturn [{ json: { files } }];\n"
+      },
+      "id": "30f8d4c0-05bd-417a-af6a-af46b3982a94",
+      "name": "Shape Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        300
+      ]
+    },
+    {
+      "id": "find-external-folder",
+      "name": "Find External Folder",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -90,
+        60
+      ],
+      "alwaysOutputData": true,
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "={{ \"name = 'External' and '\" + $json.body.folderId + \"' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false\" }}",
+        "returnAll": true,
+        "filter": {},
+        "options": {}
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "ChFxbTKEBKTAvthV",
+          "name": "Think Admin Google Drive A/C"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Portal Drive Files Webhook": {
+      "main": [
+        [
+          {
+            "node": "Find External Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Files In Client Folder": {
+      "main": [
+        [
+          {
+            "node": "Shape Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Find External Folder": {
+      "main": [
+        [
+          {
+            "node": "Search Files In Client Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

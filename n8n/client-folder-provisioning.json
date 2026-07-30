@@ -1,0 +1,279 @@
+{
+  "name": "Client Folder Provisioning (Internal/External)",
+  "nodes": [
+    {
+      "id": "notes-orch",
+      "name": "Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -660,
+        -320
+      ],
+      "parameters": {
+        "width": 480,
+        "height": 360,
+        "content": "## Client Folder Provisioning (single workflow)\nEnsures every client with a `drive_folder_id` in Supabase\nhas `Internal` and `External` subfolders in their Drive folder.\nThe portal's Proposals & Media + Contract tabs only show\nwhat's inside `External` (enforced by 'Think Portal \u2014 Drive Files').\n\n**Triggers:** every 30 min + on-demand webhook\n`POST /webhook/provision-client-folders` (responds immediately).\n\n**Idempotent:** only creates whichever folder is missing.\nClients without a drive_folder_id are skipped.\n\nRebuilt 2026-07-26 as one workflow (no subworkflow call \u2014\navoids the publish-lookup error the split version hit)."
+      }
+    },
+    {
+      "id": "schedule-trig",
+      "name": "Every 30 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        -660,
+        60
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "webhook-trig",
+      "name": "Manual/On-Demand Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -660,
+        260
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "provision-client-folders",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "018be508-c943-455d-b84e-1ebc8e8f9cd0"
+    },
+    {
+      "id": "fetch-clients",
+      "name": "Fetch Clients With Drive Folder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -420,
+        160
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://gnhuwffzttgriyjjbfyf.supabase.co/rest/v1/clients?select=id,name,drive_folder_id&drive_folder_id=not.is.null",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "split-clients",
+      "name": "Split Into Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        160
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return items.flatMap(item => {\n  const body = item.json;\n  const rows = Array.isArray(body) ? body : [body];\n  return rows.map(r => ({ json: r }));\n});"
+      }
+    },
+    {
+      "id": "list-subfolders",
+      "name": "List Internal/External Subfolders",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        20,
+        160
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ \"(name = 'Internal' or name = 'External') and '\" + $json.drive_folder_id + \"' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false\" }}"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name)"
+            },
+            {
+              "name": "supportsAllDrives",
+              "value": "true"
+            },
+            {
+              "name": "includeItemsFromAllDrives",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "J8R1T4qji9cqh498",
+          "name": "Saanchi-Think-Google Drive A/C"
+        }
+      }
+    },
+    {
+      "id": "compute-missing",
+      "name": "Compute Missing Per Client",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        160
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const client = $('Split Into Items').item.json;\nconst found = ($json.files || []).map(f => f.name);\nconst missing = ['Internal', 'External'].filter(n => !found.includes(n));\nreturn { json: { client_name: client.name, parentId: client.drive_folder_id, missing } };"
+      }
+    },
+    {
+      "id": "explode-missing",
+      "name": "One Item Per Missing Folder",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        160
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const out = [];\nfor (const i of $input.all()) {\n  for (const name of (i.json.missing || [])) {\n    out.push({ json: { name, parentId: i.json.parentId, client_name: i.json.client_name } });\n  }\n}\nreturn out;"
+      }
+    },
+    {
+      "id": "create-folder",
+      "name": "Create Missing Folder",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        680,
+        160
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/drive/v3/files?supportsAllDrives=true",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $json.name, mimeType: 'application/vnd.google-apps.folder', parents: [$json.parentId] }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "J8R1T4qji9cqh498",
+          "name": "Saanchi-Think-Google Drive A/C"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Every 30 Minutes": {
+      "main": [
+        [
+          {
+            "node": "Fetch Clients With Drive Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual/On-Demand Webhook": {
+      "main": [
+        [
+          {
+            "node": "Fetch Clients With Drive Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Clients With Drive Folder": {
+      "main": [
+        [
+          {
+            "node": "Split Into Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Into Items": {
+      "main": [
+        [
+          {
+            "node": "List Internal/External Subfolders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Internal/External Subfolders": {
+      "main": [
+        [
+          {
+            "node": "Compute Missing Per Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Missing Per Client": {
+      "main": [
+        [
+          {
+            "node": "One Item Per Missing Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "One Item Per Missing Folder": {
+      "main": [
+        [
+          {
+            "node": "Create Missing Folder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
