@@ -1600,12 +1600,21 @@
       row.innerHTML =
         '<div class="reqrow-ic">' + (a.status === 'done' ? CHECK_SVG : UPLOAD_SVG) + '</div>' +
         '<div class="reqrow-main"><div class="reqrow-name">' + esc(a.name) + '</div>' + (a.note ? '<div class="reqrow-note">' + esc(a.note) + '</div>' : '') + '</div>' +
-        (a.status === 'done' ? '<span class="reqrow-done">Done</span>' : '<button class="btn small reqrow-up">Mark as done</button>');
+        (a.status === 'done'
+          ? '<span class="reqrow-done">Done</span> <button class="btn small reqrow-undo" title="Move back to pending">Undo</button>'
+          : '<button class="btn small reqrow-up">Mark as done</button>');
       const btn = row.querySelector('.reqrow-up');
       if (btn) btn.addEventListener('click', async () => {
         btn.disabled = true; btn.textContent = 'Saving…';
         const { error } = await sb.from('client_actions').update({ status: 'done' }).eq('id', a.id);
         if (error) { btn.disabled = false; btn.textContent = 'Mark as done'; alert('Could not update: ' + error.message); return; }
+        renderActions();
+      });
+      const undoBtn = row.querySelector('.reqrow-undo');
+      if (undoBtn) undoBtn.addEventListener('click', async () => {
+        undoBtn.disabled = true; undoBtn.textContent = 'Undoing…';
+        const { error } = await sb.from('client_actions').update({ status: 'pending' }).eq('id', a.id);
+        if (error) { undoBtn.disabled = false; undoBtn.textContent = 'Undo'; alert('Could not update: ' + error.message); return; }
         renderActions();
       });
       return row;
