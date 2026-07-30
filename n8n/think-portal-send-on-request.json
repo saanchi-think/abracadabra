@@ -1,0 +1,325 @@
+{
+  "name": "Think Portal \u2014 Send Portal On Request (activate after hosting)",
+  "nodes": [
+    {
+      "id": "sp-notes",
+      "name": "Notes",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        -320
+      ],
+      "parameters": {
+        "width": 480,
+        "height": 320,
+        "content": "## Send Portal On Request \u2014 INACTIVE until hosting is live\nStaff email ai@think-technologies.com with subject:\n  send portal <company name>\n\u2192 matches the client (only for @think-technologies.com\nsenders), emails the client their portal link + sign-in\ninstructions from ai@, and confirms back to the staff sender.\nNo match / no login email \u2192 replies to staff with the reason,\nnothing goes to any client.\n\n\u26a0 PORTAL_BASE assumes GitHub Pages\n(saanchi-think.github.io/abracadabra). Confirm hosting is\nlive and the URL is right BEFORE activating, then test with\na dummy client first."
+      }
+    },
+    {
+      "id": "sp-trigger",
+      "name": "Send-Portal Email Received",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        60
+      ],
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "q": "=subject:\"send portal\" -from:me newer_than:2d"
+        }
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "H1xPx71L1s7gJpno",
+          "name": "Think Gmail A/C"
+        }
+      }
+    },
+    {
+      "id": "sp-clients",
+      "name": "Fetch Clients",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        -40,
+        60
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://gnhuwffzttgriyjjbfyf.supabase.co/rest/v1/clients?select=id,slug,name",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "sp-match",
+      "name": "Match Client",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        180,
+        60
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Match the requested company against the clients list.\n// Trigger email: subject like 'send portal <company name or slug>'\nconst trig = $('Send-Portal Email Received').first().json;\nconst fromRaw = String(trig.From || trig.from || (trig.headers && trig.headers.from) || '');\nconst subject = String(trig.Subject || trig.subject || (trig.headers && trig.headers.subject) || '');\nconst staffEmail = (fromRaw.match(/[\\w.+-]+@[\\w.-]+/) || [''])[0].toLowerCase();\nconst clients = $input.all().map(i => i.json).filter(c => c && c.slug);\nconst hay = subject.toLowerCase();\nlet matched = null;\nfor (const c of clients) {\n  if ((c.name && hay.includes(String(c.name).toLowerCase())) || (c.slug && hay.includes(String(c.slug).toLowerCase()))) { matched = c; break; }\n}\nconst isStaff = staffEmail.endsWith('@think-technologies.com');\nreturn [{ json: { ok: !!(matched && isStaff), reason: !isStaff ? 'sender not @think-technologies.com' : (!matched ? 'no client name in subject matched the client list' : ''), staffEmail, subject, client_id: matched ? matched.id : null, client_name: matched ? matched.name : null, slug: matched ? matched.slug : null } }];"
+      }
+    },
+    {
+      "id": "sp-invite",
+      "name": "Fetch Login Email",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        400,
+        60
+      ],
+      "alwaysOutputData": true,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://gnhuwffzttgriyjjbfyf.supabase.co/rest/v1/invitations?client_id=eq.' + ($json.client_id || '00000000-0000-0000-0000-000000000000') + '&role=eq.client&select=email&limit=1' }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "sp-combine",
+      "name": "Combine",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        620,
+        60
+      ],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const m = $('Match Client').first().json;\nconst inv = ($json && $json.email) ? $json.email : null;\nreturn [{ json: Object.assign({}, m, { clientEmail: inv, ok: m.ok && !!inv, reason: m.ok && !inv ? 'client has no login email \u2014 set it in the admin panel first' : m.reason }) }];"
+      }
+    },
+    {
+      "id": "sp-if",
+      "name": "OK To Send?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        840,
+        60
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "sp-send",
+      "name": "Email Client Their Portal",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1080,
+        -60
+      ],
+      "parameters": {
+        "sendTo": "={{ $json.clientEmail }}",
+        "subject": "=Your {{ $json.client_name }} client portal from Think Technologies",
+        "emailType": "text",
+        "message": "=Hi,\n\nYour Think Technologies client portal is ready:\nhttps://saanchi-think.github.io/abracadabra/index.html?client={{ $json.slug }}\n\nSign in with this email address ({{ $json.clientEmail }}) \u2014 you'll receive a secure sign-in link, no password needed.\n\nInside you'll find your meeting notes, proposals and files, action items, and a place to leave feedback \u2014 updated as we work together.\n\n\u2014 Think Technologies",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "H1xPx71L1s7gJpno",
+          "name": "Think Gmail A/C"
+        }
+      },
+      "webhookId": "02e00461-92a9-4ac9-8854-6f6775343e5f"
+    },
+    {
+      "id": "sp-confirm",
+      "name": "Confirm To Staff",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1300,
+        -60
+      ],
+      "parameters": {
+        "sendTo": "={{ $('Combine').first().json.staffEmail }}",
+        "subject": "=Portal sent to {{ $('Combine').first().json.client_name }}",
+        "emailType": "text",
+        "message": "=Done \u2014 the portal link was emailed to {{ $('Combine').first().json.clientEmail }} for {{ $('Combine').first().json.client_name }}.",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "H1xPx71L1s7gJpno",
+          "name": "Think Gmail A/C"
+        }
+      },
+      "webhookId": "ec542dac-dc27-4444-8b4b-3e7fb0aba6f6"
+    },
+    {
+      "id": "sp-fail",
+      "name": "Tell Staff Why Not",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1080,
+        180
+      ],
+      "parameters": {
+        "sendTo": "={{ $json.staffEmail || 'kavya@think-technologies.com' }}",
+        "subject": "=Couldn't send portal \u2014 {{ $json.reason }}",
+        "emailType": "text",
+        "message": "=Your 'send portal' request wasn't completed.\n\nSubject received: {{ $json.subject }}\nReason: {{ $json.reason }}\n\nFix it in the admin panel (or check the company name spelling) and email again.",
+        "options": {}
+      },
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "H1xPx71L1s7gJpno",
+          "name": "Think Gmail A/C"
+        }
+      },
+      "webhookId": "8ee19830-c39c-4262-b40f-7370df75474e"
+    }
+  ],
+  "connections": {
+    "Send-Portal Email Received": {
+      "main": [
+        [
+          {
+            "node": "Fetch Clients",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Clients": {
+      "main": [
+        [
+          {
+            "node": "Match Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match Client": {
+      "main": [
+        [
+          {
+            "node": "Fetch Login Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Login Email": {
+      "main": [
+        [
+          {
+            "node": "Combine",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combine": {
+      "main": [
+        [
+          {
+            "node": "OK To Send?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OK To Send?": {
+      "main": [
+        [
+          {
+            "node": "Email Client Their Portal",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tell Staff Why Not",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Client Their Portal": {
+      "main": [
+        [
+          {
+            "node": "Confirm To Staff",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

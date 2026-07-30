@@ -8,12 +8,12 @@
       "typeVersion": 1,
       "position": [
         -200,
-        -280
+        -300
       ],
       "parameters": {
-        "width": 440,
-        "height": 280,
-        "content": "## Intake Form (prototype)\nReceives submissions from intake.html and emails the team.\nNew-client intake ahead of the discovery meeting: contact\ninfo, teammates to CC, company + website + socials,\nindustry (for tagging), and the one main pain point \u2014\ntyped, or recorded as a voice note (attached to the email\nas an audio file), or both.\n\nRecipients fixed (kavya@ + saanchi@)."
+        "width": 460,
+        "height": 300,
+        "content": "## Intake Form\nintake.html submissions:\n1. AUTO-CREATE the client portal (clients upsert by slug +\n   login invitation for the submitter email) \u2014 appears in the\n   admin panel immediately. Nothing is sent to the client.\n2. Email the team the full submission (voice note attached\n   when recorded).\n\nTo deliver the portal to the client: email\nai@think-technologies.com 'send portal <company>' \u2014\nhandled by 'Think Portal \u2014 Send Portal On Request'\n(activate once hosting is live)."
       }
     },
     {
@@ -33,7 +33,7 @@
           "allowedOrigins": "*"
         }
       },
-      "webhookId": "a54ccff5-3243-4cff-9959-988afa312dd3"
+      "webhookId": "2f83635a-02fe-459f-bb32-279d03883d5e"
     },
     {
       "id": "intake-prep",
@@ -41,12 +41,98 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        220,
+        200,
         0
       ],
       "parameters": {
         "mode": "runOnceForEachItem",
-        "jsCode": "const b = $json.body || {};\nconst out = { name: b.name, email: b.email, teamEmails: b.teamEmails || '', company: b.company, site: b.site || '', social: b.social || '', industry: b.industry || '', painPoint: b.painPoint || '', audioSeconds: b.audioSeconds || 0, hasAudio: !!b.audioBase64 };\nif (b.audioBase64) {\n  const mime = b.audioMime || 'audio/webm';\n  const ext = mime.includes('wav') ? 'wav' : mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm';\n  const bin = await this.helpers.prepareBinaryData(Buffer.from(b.audioBase64, 'base64'), 'pain-point-voice-note.' + ext, mime);\n  return { json: out, binary: { voiceNote: bin } };\n}\nreturn { json: out };"
+        "jsCode": "const b = $json.body || {};\nfunction slugify(s) { return String(s || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }\nfunction cleanDomain(v) { return String(v || '').trim().toLowerCase().replace(/^https?:\\/\\//, '').replace(/^www\\./, '').replace(/\\/.*$/, ''); }\nconst emailDomain = String(b.email || '').split('@')[1] || '';\nconst domain = cleanDomain(b.site) || emailDomain;\nconst out = {\n  name: b.name, email: b.email, teamEmails: b.teamEmails || '', company: b.company,\n  site: b.site || '', social: b.social || '', industry: b.industry || '', painPoint: b.painPoint || '',\n  audioSeconds: b.audioSeconds || 0, hasAudio: !!b.audioBase64,\n  slug: slugify(b.company), domain,\n  logo_url: domain ? ('https://www.google.com/s2/favicons?domain=' + domain + '&sz=128') : null\n};\nif (b.audioBase64) {\n  const mime = b.audioMime || 'audio/webm';\n  const ext = mime.includes('wav') ? 'wav' : mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm';\n  const bin = await this.helpers.prepareBinaryData(Buffer.from(b.audioBase64, 'base64'), 'pain-point-voice-note.' + ext, mime);\n  return { json: out, binary: { voiceNote: bin } };\n}\nreturn { json: out };"
+      }
+    },
+    {
+      "id": "intake-create",
+      "name": "Create Client Portal",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        400,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://gnhuwffzttgriyjjbfyf.supabase.co/rest/v1/clients?on_conflict=slug",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=representation"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ slug: $json.slug, name: $json.company, domain: $json.domain || null, logo_url: $json.logo_url, logo_on_light: true }) }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "intake-merge",
+      "name": "Merge Client",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const prep = $('Prepare Submission').item.json;\nconst created = $json || {};\nconst out = Object.assign({}, prep, { client_id: created.id || null, slug: created.slug || prep.slug });\nconst bin = $('Prepare Submission').item.binary;\nif (bin && bin.voiceNote) return { json: out, binary: { voiceNote: bin.voiceNote } };\nreturn { json: out };"
+      }
+    },
+    {
+      "id": "intake-invite",
+      "name": "Invite Client Login",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        800,
+        0
+      ],
+      "continueOnFail": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "method": "POST",
+        "url": "https://gnhuwffzttgriyjjbfyf.supabase.co/rest/v1/invitations?on_conflict=email",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ email: $json.email, role: 'client', client_id: $json.client_id }) }}",
+        "options": {}
       }
     },
     {
@@ -55,7 +141,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        440,
+        1000,
         0
       ],
       "parameters": {
@@ -67,7 +153,7 @@
           },
           "conditions": [
             {
-              "leftValue": "={{ $json.hasAudio }}",
+              "leftValue": "={{ $('Merge Client').item.json.hasAudio }}",
               "rightValue": true,
               "operator": {
                 "type": "boolean",
@@ -86,14 +172,14 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        680,
-        -110
+        1240,
+        -120
       ],
       "parameters": {
         "sendTo": "kavya@think-technologies.com, saanchi@think-technologies.com",
-        "subject": "=New intake [{{ $json.industry || 'no industry' }}] \u2014 {{ $json.company || $json.name || 'unknown' }} (voice note)",
+        "subject": "=New intake [{{ $('Merge Client').item.json.industry || 'no industry' }}] \u2014 {{ $('Merge Client').item.json.company }} (voice note)",
         "emailType": "text",
-        "message": "=New client intake submission:\n\nName: {{ $json.name }}\nCompany email: {{ $json.email }}\nTeammates to keep updated: {{ $json.teamEmails || '\u2014' }}\n\nCompany: {{ $json.company }}\nWebsite: {{ $json.site || '\u2014' }}\nSocial media: {{ $json.social || '\u2014' }}\nIndustry: {{ $json.industry }}\n\nMain pain point (typed): {{ $json.painPoint || '\u2014 (voice note only)' }}\n\n\ud83c\udfa4 Voice note attached ({{ $json.audioSeconds }}s).\n\n\u2014 sent by the intake form prototype",
+        "message": "={{ 'New client intake submission:\\n\\nName: ' + $('Merge Client').item.json.name + '\\nCompany email: ' + $('Merge Client').item.json.email + '\\nTeammates to keep updated: ' + ($('Merge Client').item.json.teamEmails || '\u2014') + '\\n\\nCompany: ' + $('Merge Client').item.json.company + '\\nWebsite: ' + ($('Merge Client').item.json.site || '\u2014') + '\\nSocial media: ' + ($('Merge Client').item.json.social || '\u2014') + '\\nIndustry: ' + $('Merge Client').item.json.industry + '\\n\\nMain pain point (typed): ' + ($('Merge Client').item.json.painPoint || '\u2014 (voice note only)') + '\\n\\n\ud83c\udfa4 Voice note attached (' + $('Merge Client').item.json.audioSeconds + 's).' + '\\n\\nPORTAL AUTO-CREATED (not sent to the client):\\n- It now appears in the admin panel under ' + $('Merge Client').item.json.company + '\\n- Portal link (live once hosting is enabled): https://saanchi-think.github.io/abracadabra/index.html?client=' + $('Merge Client').item.json.slug + '\\n- Next: link their Google Drive folder in the admin panel, then email ai@think-technologies.com with subject: send portal ' + $('Merge Client').item.json.company }}",
         "options": {
           "attachmentsUi": {
             "attachmentsBinary": [
@@ -110,7 +196,7 @@
           "name": "Think Gmail A/C"
         }
       },
-      "webhookId": "0ac5dd0b-307b-4b12-8b8e-f16c10668b2c"
+      "webhookId": "990a5f98-61ae-4b9a-aba9-09be541e0697"
     },
     {
       "id": "intake-email-plain",
@@ -118,14 +204,14 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.1,
       "position": [
-        680,
-        140
+        1240,
+        120
       ],
       "parameters": {
         "sendTo": "kavya@think-technologies.com, saanchi@think-technologies.com",
-        "subject": "=New intake [{{ $json.industry || 'no industry' }}] \u2014 {{ $json.company || $json.name || 'unknown' }}",
+        "subject": "=New intake [{{ $('Merge Client').item.json.industry || 'no industry' }}] \u2014 {{ $('Merge Client').item.json.company }}",
         "emailType": "text",
-        "message": "=New client intake submission:\n\nName: {{ $json.name }}\nCompany email: {{ $json.email }}\nTeammates to keep updated: {{ $json.teamEmails || '\u2014' }}\n\nCompany: {{ $json.company }}\nWebsite: {{ $json.site || '\u2014' }}\nSocial media: {{ $json.social || '\u2014' }}\nIndustry: {{ $json.industry }}\n\nMain pain point (for the discovery meeting):\n{{ $json.painPoint }}\n\n\u2014 sent by the intake form prototype",
+        "message": "={{ 'New client intake submission:\\n\\nName: ' + $('Merge Client').item.json.name + '\\nCompany email: ' + $('Merge Client').item.json.email + '\\nTeammates to keep updated: ' + ($('Merge Client').item.json.teamEmails || '\u2014') + '\\n\\nCompany: ' + $('Merge Client').item.json.company + '\\nWebsite: ' + ($('Merge Client').item.json.site || '\u2014') + '\\nSocial media: ' + ($('Merge Client').item.json.social || '\u2014') + '\\nIndustry: ' + $('Merge Client').item.json.industry + '\\n\\nMain pain point (for the discovery meeting):\\n' + $('Merge Client').item.json.painPoint + '\\n\\nPORTAL AUTO-CREATED (not sent to the client):\\n- It now appears in the admin panel under ' + $('Merge Client').item.json.company + '\\n- Portal link (live once hosting is enabled): https://saanchi-think.github.io/abracadabra/index.html?client=' + $('Merge Client').item.json.slug + '\\n- Next: link their Google Drive folder in the admin panel, then email ai@think-technologies.com with subject: send portal ' + $('Merge Client').item.json.company }}",
         "options": {}
       },
       "credentials": {
@@ -134,7 +220,7 @@
           "name": "Think Gmail A/C"
         }
       },
-      "webhookId": "9a33cb24-929d-4103-9f49-62d4c78cc6ee"
+      "webhookId": "875b9bcc-ffa7-48d8-9882-efb232d79a25"
     }
   ],
   "connections": {
@@ -150,6 +236,39 @@
       ]
     },
     "Prepare Submission": {
+      "main": [
+        [
+          {
+            "node": "Create Client Portal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Client Portal": {
+      "main": [
+        [
+          {
+            "node": "Merge Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Client": {
+      "main": [
+        [
+          {
+            "node": "Invite Client Login",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invite Client Login": {
       "main": [
         [
           {
