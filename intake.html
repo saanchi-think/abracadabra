@@ -30,6 +30,7 @@
   .sect:first-child { margin-top: 0; }
   label { display: block; font-weight: 600; font-size: 13.5px; margin: 16px 0 7px; }
   .hint { font-weight: 400; color: var(--muted); }
+  .req { color: var(--accent); font-weight: 700; }
   input, textarea { width: 100%; border: 1px solid var(--border); border-radius: 11px; padding: 12px 14px; font: 400 14px/1.5 var(--font); color: var(--text); background: var(--surface-2); outline: none; }
   input:focus, textarea:focus { border-color: #d9b2a8; }
   textarea { min-height: 120px; resize: vertical; }
@@ -52,27 +53,28 @@
     <p class="lede">A few details ahead of your discovery meeting so we show up already knowing your business — and you spend the call on what matters.</p>
 
     <div class="card" id="formCard">
+      <div class="hint" style="font-size:12.5px;margin-bottom:2px"><span class="req">*</span> = required</div>
       <div class="sect">About you</div>
-      <label for="fName">Your name</label>
+      <label for="fName">Your name <span class="req">*</span></label>
       <input id="fName" type="text" placeholder="Jane Doe" autocomplete="name">
 
-      <label for="fEmail">Company email</label>
+      <label for="fEmail">Company email <span class="req">*</span></label>
       <input id="fEmail" type="email" placeholder="jane@acme.com" autocomplete="email">
 
       <label for="fTeamEmails">Teammates to keep in the loop <span class="hint">(their emails, comma-separated — optional)</span></label>
       <input id="fTeamEmails" type="text" placeholder="ops@acme.com, cfo@acme.com" autocomplete="off">
 
       <div class="sect">About the company</div>
-      <label for="fCompany">Company name</label>
+      <label for="fCompany">Company name <span class="req">*</span></label>
       <input id="fCompany" type="text" placeholder="Acme Corp" autocomplete="organization">
 
-      <label for="fSite">Company website</label>
+      <label for="fSite">Company website <span class="hint">(optional)</span></label>
       <input id="fSite" type="text" placeholder="https://acme.com" autocomplete="url">
 
       <label for="fSocial">Social media links <span class="hint">(optional)</span></label>
       <input id="fSocial" type="text" placeholder="LinkedIn, Instagram, …" autocomplete="off">
 
-      <label for="fIndustry">Industry</label>
+      <label for="fIndustry">Industry <span class="req">*</span></label>
       <input id="fIndustry" type="text" list="industryList" placeholder="e.g. Real estate" autocomplete="off">
       <datalist id="industryList">
         <option value="Real estate"></option>
@@ -90,7 +92,7 @@
       </datalist>
 
       <div class="sect">The main thing</div>
-      <label for="fPain">If you had to pick one, what's the main pain point you plan to bring up in the discovery meeting?</label>
+      <label for="fPain">If you had to pick one, what's the main pain point you plan to bring up in the discovery meeting? <span class="req">*</span></label>
       <textarea id="fPain" placeholder="e.g. Every deal lives in a different spreadsheet and nobody knows the latest status…"></textarea>
 
       <!-- honeypot: bots fill this, humans never see it -->
