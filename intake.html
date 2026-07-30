@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Work with Think Technologies — Intake</title>
+<title>New Client Intake — Think Technologies</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -21,18 +21,20 @@
   .top { background: #0E0E0E; color: #fff; padding: 26px 28px; }
   .top .brand { font-weight: 700; font-size: 22px; letter-spacing: -0.01em; }
   .top .brand span { color: #E06A50; }
-  .wrap { max-width: 620px; margin: 0 auto; padding: 40px 20px 80px; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 40px 20px 80px; }
   .eyebrow { display: inline-block; color: var(--accent); font-weight: 600; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 10px; }
   h1 { font-size: 32px; line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 10px; }
   .lede { color: var(--muted); font-size: 15px; line-height: 1.55; margin: 0 0 28px; }
   .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 26px; }
-  label { display: block; font-weight: 600; font-size: 13.5px; margin: 18px 0 7px; }
-  label:first-of-type { margin-top: 0; }
+  .sect { margin: 26px 0 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+  .sect:first-child { margin-top: 0; }
+  label { display: block; font-weight: 600; font-size: 13.5px; margin: 16px 0 7px; }
+  .hint { font-weight: 400; color: var(--muted); }
   input, textarea { width: 100%; border: 1px solid var(--border); border-radius: 11px; padding: 12px 14px; font: 400 14px/1.5 var(--font); color: var(--text); background: var(--surface-2); outline: none; }
   input:focus, textarea:focus { border-color: #d9b2a8; }
   textarea { min-height: 120px; resize: vertical; }
   .hp { position: absolute; left: -9999px; opacity: 0; height: 0; overflow: hidden; }
-  .btn { margin-top: 22px; width: 100%; border: 0; border-radius: 12px; padding: 14px; background: var(--accent); color: #fff; font: 600 15px var(--font); cursor: pointer; }
+  .btn { margin-top: 24px; width: 100%; border: 0; border-radius: 12px; padding: 14px; background: var(--accent); color: #fff; font: 600 15px var(--font); cursor: pointer; }
   .btn:disabled { opacity: 0.6; cursor: default; }
   .msg { margin-top: 14px; font-size: 14px; line-height: 1.5; display: none; }
   .msg.ok { display: block; color: #2c6e49; }
@@ -46,20 +48,49 @@
   <div class="top"><div class="brand">[think<span>]</span> Technologies</div></div>
   <div class="wrap">
     <span class="eyebrow">New client intake</span>
-    <h1>Tell us where it hurts.</h1>
-    <p class="lede">A few basics and one honest answer — that's all we need to figure out where AI and automation can actually move the needle for your business.</p>
+    <h1>Before we meet.</h1>
+    <p class="lede">A few details ahead of your discovery meeting so we show up already knowing your business — and you spend the call on what matters.</p>
 
     <div class="card" id="formCard">
+      <div class="sect">About you</div>
       <label for="fName">Your name</label>
       <input id="fName" type="text" placeholder="Jane Doe" autocomplete="name">
 
-      <label for="fCompany">Company</label>
-      <input id="fCompany" type="text" placeholder="Acme Corp" autocomplete="organization">
-
-      <label for="fEmail">Work email</label>
+      <label for="fEmail">Company email</label>
       <input id="fEmail" type="email" placeholder="jane@acme.com" autocomplete="email">
 
-      <label for="fPain">What's the one thing in your business that eats the most time or causes the most frustration?</label>
+      <label for="fTeamEmails">Teammates to keep in the loop <span class="hint">(their emails, comma-separated — optional)</span></label>
+      <input id="fTeamEmails" type="text" placeholder="ops@acme.com, cfo@acme.com" autocomplete="off">
+
+      <div class="sect">About the company</div>
+      <label for="fCompany">Company name</label>
+      <input id="fCompany" type="text" placeholder="Acme Corp" autocomplete="organization">
+
+      <label for="fSite">Company website</label>
+      <input id="fSite" type="text" placeholder="https://acme.com" autocomplete="url">
+
+      <label for="fSocial">Social media links <span class="hint">(optional)</span></label>
+      <input id="fSocial" type="text" placeholder="LinkedIn, Instagram, …" autocomplete="off">
+
+      <label for="fIndustry">Industry</label>
+      <input id="fIndustry" type="text" list="industryList" placeholder="e.g. Real estate" autocomplete="off">
+      <datalist id="industryList">
+        <option value="Real estate"></option>
+        <option value="Professional services"></option>
+        <option value="Retail & e-commerce"></option>
+        <option value="Manufacturing"></option>
+        <option value="Nonprofit"></option>
+        <option value="Healthcare"></option>
+        <option value="Finance"></option>
+        <option value="Hospitality & events"></option>
+        <option value="Media & creative"></option>
+        <option value="Government"></option>
+        <option value="Education"></option>
+        <option value="Technology"></option>
+      </datalist>
+
+      <div class="sect">The main thing</div>
+      <label for="fPain">If you had to pick one, what's the main pain point you plan to bring up in the discovery meeting?</label>
       <textarea id="fPain" placeholder="e.g. Every deal lives in a different spreadsheet and nobody knows the latest status…"></textarea>
 
       <!-- honeypot: bots fill this, humans never see it -->
@@ -71,7 +102,7 @@
 
     <div class="card done" id="doneCard" hidden>
       <h2>Got it — thank you!</h2>
-      <p>Someone from Think Technologies will reach out within a business day.</p>
+      <p>Someone from Think Technologies will reach out within a business day to lock in your discovery meeting.</p>
     </div>
   </div>
 
@@ -83,11 +114,15 @@
 
   $('fSubmit').addEventListener('click', async () => {
     const name = $('fName').value.trim();
-    const company = $('fCompany').value.trim();
     const email = $('fEmail').value.trim();
+    const teamEmails = $('fTeamEmails').value.trim();
+    const company = $('fCompany').value.trim();
+    const site = $('fSite').value.trim();
+    const social = $('fSocial').value.trim();
+    const industry = $('fIndustry').value.trim();
     const painPoint = $('fPain').value.trim();
     if ($('fWebsite').value) return; // honeypot tripped — silently drop
-    if (!name || !email || !painPoint) { showMsg('Please fill in your name, email, and the pain point — that’s the whole form.', 'err'); return; }
+    if (!name || !email || !company || !industry || !painPoint) { showMsg('Please fill in your name, company email, company name, industry, and the pain point.', 'err'); return; }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showMsg('That email doesn’t look right.', 'err'); return; }
     const btn = $('fSubmit');
     btn.disabled = true; btn.textContent = 'Sending…';
@@ -95,7 +130,7 @@
       await fetch(INTAKE_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, company, email, painPoint })
+        body: JSON.stringify({ name, email, teamEmails, company, site, social, industry, painPoint })
       });
       $('formCard').hidden = true;
       $('doneCard').hidden = false;
