@@ -82,6 +82,7 @@
       <div class="sub">Admin</div>
     </div>
     <div class="sub" style="color:#8A827C;display:flex;align-items:center;gap:16px">
+      <a href="#" id="changePasswordLink" class="hint" style="color:#8A827C" hidden>Change password</a>
       <a href="#" id="signOutLink" class="hint" style="color:#8A827C" hidden>Sign out</a>
       Client Portal Manager
     </div>
@@ -118,9 +119,6 @@
         <label>Client login email</label>
         <input id="clientEmail" type="email" placeholder="contact@acme.com" autocomplete="off">
 
-        <label>Google Drive folder link (optional — powers Proposals &amp; Media + Contract)</label>
-        <input id="driveFolder" type="text" placeholder="https://drive.google.com/drive/folders/…" autocomplete="off">
-
         <div class="logo-preview">
           <div class="logo-box" id="logoBox"><span class="ph">Logo preview</span></div>
           <div class="logo-meta" id="logoMeta">Enter a domain to preview the logo.</div>
@@ -141,8 +139,8 @@
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-  const SUPABASE_URL = 'https://gnhuwffzttgriyjjbfyf.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9';
+  const SUPABASE_URL = 'https://qjflezaygstvntrofcsj.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_ttKyJTl60U3J4XnLFOeOdA_gXldDIvf';
   const _persist = localStorage.getItem('tt_persist') !== '0';
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: { storage: _persist ? window.localStorage : window.sessionStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
@@ -150,9 +148,12 @@
 
   // --- gate: staff only, @think-technologies.com only — real Supabase email+password auth ---
   const STAFF_DOMAIN = 'think-technologies.com';
+  const FIND_DRIVE_FOLDER_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-find-client-folder';
+  const DRIVE_FOLDER_INFO_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-drive-folder-info';
   const loginGate = document.getElementById('loginGate');
   const adminApp = document.getElementById('adminApp');
   const signOutLink = document.getElementById('signOutLink');
+  const changePasswordLink = document.getElementById('changePasswordLink');
   const loginEmailEl = document.getElementById('loginEmail');
   const loginPasswordEl = document.getElementById('loginPassword');
   const loginBtn = document.getElementById('loginBtn');
@@ -166,7 +167,7 @@
     if (!email.endsWith('@' + STAFF_DOMAIN)) { await sb.auth.signOut(); return false; }
     const { data: profile } = await sb.from('profiles').select('role').eq('id', session.user.id).maybeSingle();
     if (!profile || profile.role !== 'staff') { await sb.auth.signOut(); return false; }
-    loginGate.hidden = true; adminApp.hidden = false; signOutLink.hidden = false;
+    loginGate.hidden = true; adminApp.hidden = false; signOutLink.hidden = false; changePasswordLink.hidden = false;
     loadClients();
     return true;
   }
@@ -177,7 +178,14 @@
     if (!email.endsWith('@' + STAFF_DOMAIN)) { showLoginMsg('Use your @' + STAFF_DOMAIN + ' email.', 'err'); return; }
     if (!password) { showLoginMsg('Enter your password.', 'err'); return; }
     loginBtn.disabled = true; loginBtn.textContent = 'Signing in…';
-    const { error } = await sb.auth.signInWithPassword({ email, password });
+    let { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      // First time this email has signed in — self-serve create the account.
+      // Any @think-technologies.com signup is auto-granted staff (DB trigger).
+      const { error: signUpErr } = await sb.auth.signUp({ email, password });
+      if (!signUpErr) ({ error } = await sb.auth.signInWithPassword({ email, password }));
+      else error = signUpErr;
+    }
     loginBtn.disabled = false; loginBtn.textContent = 'Sign in →';
     if (error) { showLoginMsg(error.message, 'err'); return; }
     const ok = await checkStaffAndEnter();
@@ -188,14 +196,24 @@
     await sb.auth.signOut();
     location.reload();
   });
+  changePasswordLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const next = prompt('Enter your new password:');
+    if (!next) return;
+    if (next.length < 6) { alert('Password must be at least 6 characters.'); return; }
+    const { error } = await sb.auth.updateUser({ password: next });
+    if (error) { alert('Could not update password: ' + error.message); return; }
+    alert('Password updated.');
+  });
 
   await checkStaffAndEnter();
 
   const $ = id => document.getElementById(id);
-  const nameEl = $('companyName'), domainEl = $('domain'), emailEl = $('clientEmail'), driveFolderEl = $('driveFolder');
+  const nameEl = $('companyName'), domainEl = $('domain'), emailEl = $('clientEmail');
   const logoBox = $('logoBox'), logoMeta = $('logoMeta'), msg = $('msg'), createBtn = $('createBtn');
 
   // Accepts a full Drive folder URL or a bare folder ID; returns the ID or null.
+  function escHtml(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
   function parseDriveFolderId(v) {
     v = (v || '').trim();
     if (!v) return null;
@@ -310,7 +328,7 @@
             ? '✉ ' + emailByClient[c.id]
             : '<span class="warn-email">⚠ no login email</span> <input type="email" class="mini-email" placeholder="client@email.com"> <button class="set-email">Set</button>'}</div>
           <div class="client-email">${c.drive_folder_id
-            ? '📁 <a href="https://drive.google.com/drive/folders/' + c.drive_folder_id + '" target="_blank" rel="noopener">Drive folder connected</a>'
+            ? '📁 <a href="https://drive.google.com/drive/folders/' + c.drive_folder_id + '" target="_blank" rel="noopener">' + (c.drive_folder_name ? escHtml(c.drive_folder_name) : 'Drive folder connected') + '</a>'
             : '<span class="warn-email">⚠ no Drive folder</span> <input type="text" class="mini-email mini-folder" placeholder="Drive folder link"> <button class="set-folder">Set</button>'}</div>
           <a class="client-link" href="${url}">${url}</a>
         </div>
@@ -359,7 +377,13 @@
         const fid = parseDriveFolderId(inp.value);
         if (!fid) { inp.focus(); alert('Paste the full Drive folder URL (…/drive/folders/XXXX) or just the folder ID.'); return; }
         setFolderBtn.disabled = true; setFolderBtn.textContent = 'Saving…';
-        const { error: e3 } = await sb.from('clients').update({ drive_folder_id: fid }).eq('id', c.id);
+        let folderName = null;
+        try {
+          const r = await fetch(DRIVE_FOLDER_INFO_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folderId: fid }) });
+          const j = await r.json();
+          folderName = j.name || null;
+        } catch (e) {}
+        const { error: e3 } = await sb.from('clients').update({ drive_folder_id: fid, drive_folder_name: folderName }).eq('id', c.id);
         if (e3) { setFolderBtn.disabled = false; setFolderBtn.textContent = 'Set'; alert('Could not save: ' + e3.message); return; }
         loadClients();
       });
@@ -374,12 +398,9 @@
     const slug = slugify(name);
     const email = emailEl.value.trim().toLowerCase();
     if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showMsg('Please enter the client’s login email — without it they can’t sign in or receive invites.', 'err'); return; }
-    const driveFolderId = parseDriveFolderId(driveFolderEl.value);
-    if (driveFolderEl.value.trim() && !driveFolderId) { showMsg('That Drive folder link doesn’t look right — paste the full folder URL (…/drive/folders/XXXX) or just the folder ID.', 'err'); return; }
     createBtn.disabled = true; createBtn.textContent = 'Saving…';
     const { data: created, error } = await sb.from('clients').upsert({
-      slug, name, domain: domain || null, logo_url: resolvedLogo || null, logo_on_light: resolvedOnLight,
-      ...(driveFolderId ? { drive_folder_id: driveFolderId } : {})
+      slug, name, domain: domain || null, logo_url: resolvedLogo || null, logo_on_light: resolvedOnLight
     }, { onConflict: 'slug' }).select('id').single();
     if (error) {
       createBtn.disabled = false; createBtn.textContent = 'Create portal →';
@@ -391,9 +412,23 @@
       const { error: invErr } = await sb.from('invitations').upsert({ email, role: 'client', client_id: created.id });
       if (invErr) { showMsg(`Portal created, but couldn't add the login email: ${invErr.message}`, 'err'); createBtn.disabled = false; createBtn.textContent = 'Create portal →'; loadClients(); return; }
     }
+    // Auto-find the client's Drive folder by name — never manually pasted. If the
+    // search is ambiguous (no match, or more than one), drive_folder_id is left
+    // blank and staff can set it by hand from the client list below.
+    let driveMsg = '';
+    try {
+      const r = await fetch(FIND_DRIVE_FOLDER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+      const j = await r.json();
+      if (j.folderId) {
+        await sb.from('clients').update({ drive_folder_id: j.folderId, drive_folder_name: j.folderName || null }).eq('id', created.id);
+        driveMsg = ` Drive folder linked automatically: "${j.folderName}".`;
+      } else {
+        driveMsg = j.matchCount > 1 ? ' Multiple matching Drive folders found — set it manually below.' : ' No matching Drive folder found — set it manually below.';
+      }
+    } catch (e) { driveMsg = ' Could not search Drive for a folder — set it manually below.'; }
     createBtn.disabled = false; createBtn.textContent = 'Create portal →';
-    showMsg(`Portal created for ${name}${email ? ' — ' + email + ' can now sign in' : ''}! Their link is in the list →`, 'ok');
-    nameEl.value = domainEl.value = emailEl.value = driveFolderEl.value = ''; nameEditedByUser = false;
+    showMsg(`Portal created for ${name}${email ? ' — ' + email + ' can now sign in' : ''}!${driveMsg} Their link is in the list →`, 'ok');
+    nameEl.value = domainEl.value = emailEl.value = ''; nameEditedByUser = false;
     logoBox.innerHTML = '<span class="ph">Logo preview</span>'; logoMeta.textContent = 'Enter a domain to preview the logo.'; resolvedLogo = '';
     loadClients();
   });

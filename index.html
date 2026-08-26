@@ -223,6 +223,7 @@
   .cmt-av { width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: #fff; font: 600 10.5px/28px var(--font); text-align: center; flex-shrink: 0; }
   .cmt-b { background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; padding: 9px 13px; font-size: 13.5px; color: var(--text); line-height: 1.5; }
   .cmt-b .cmt-who { font-weight: 600; font-size: 12px; margin-bottom: 2px; }
+  .cmt-b .cmt-when { font-weight: 400; color: var(--text-muted); margin-left: 6px; }
   .cmt-reply-btn { font: 600 11.5px/1 var(--font); color: var(--text-muted); background: var(--panel); border: 1px solid var(--border); border-radius: 7px; padding: 6px 11px; cursor: pointer; transition: all .15s; }
   .cmt-reply-btn:hover { color: var(--accent); border-color: var(--accent-line); }
   .cmt-footer { display: flex; gap: 8px; margin-top: 8px; }
@@ -231,6 +232,7 @@
   .cmt-replies { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; padding-left: 14px; border-left: 2px solid var(--border); }
   .cmt-replies:empty { display: none; margin: 0; padding: 0; border: none; }
   .cmt.cmt-reply { margin: 0; }
+  .cmt-reply .cmt-b { background: none; border: none; padding: 0; }
 
   /* ===== STATUS ===== */
   .prog-card { margin-bottom: 30px; }
@@ -358,12 +360,13 @@
   .portfolio-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 18px; }
   .pf-card { display: block; text-decoration: none; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; background: var(--panel); box-shadow: var(--shadow-sm); transition: transform .15s, box-shadow .15s; }
   .pf-card:hover { transform: translateY(-3px); box-shadow: 0 12px 28px -12px rgba(0,0,0,.18); }
-  .pf-img { aspect-ratio: 16/10; background-size: cover; background-position: center; background-color: var(--surface-2); }
-  .pf-title { padding: 12px 14px; font: 600 13.5px/1.4 var(--font); color: var(--text); }
-  .portfolio-link { display: inline-flex; text-decoration: none; margin-bottom: 34px; }
+  .pf-img { display: block; width: 100%; aspect-ratio: 1/1; object-fit: contain; background: var(--panel); }
+  .pf-title { padding: 12px 14px; font: 600 13.5px/1.4 var(--font); color: var(--text); height: 66px; box-sizing: border-box; display: flex; align-items: center; overflow: hidden; }
+  .portfolio-link { display: inline-flex; text-decoration: none; }
   @media (max-width: 860px) { .portfolio-grid { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 560px) { .portfolio-grid { grid-template-columns: 1fr; } }
-  .req { max-width: 560px; }
+  .portfolio-actions { display: flex; justify-content: flex-end; margin-bottom: 18px; }
+  .req { max-width: 560px; margin-top: 40px; }
   .req .lbl { font: 600 13px/1 var(--font); margin: 22px 0 10px; }
   .chips { display: flex; gap: 9px; flex-wrap: wrap; }
   .chip { font: 500 13px/1 var(--font); padding: 10px 16px; border-radius: 999px; border: 1px solid var(--border); cursor: pointer; transition: all .15s; background: var(--panel); }
@@ -414,7 +417,11 @@
   }
 
   /* portal-not-found overlay */
-  #portalNotFound { position: fixed; inset: 0; z-index: 9999; background: var(--ink); display: grid; place-items: center; padding: 24px; }
+  #portalNotFound, #clientLoginGate, #accessDenied { position: fixed; inset: 0; z-index: 9999; background: var(--ink); display: grid; place-items: center; padding: 24px; }
+  .glogin-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; background: #fff; color: #1f1f1f; font: 600 14.5px/1 var(--font); padding: 13px 20px; border-radius: 999px; border: 1px solid rgba(0,0,0,.1); cursor: pointer; margin-top: 22px; transition: box-shadow .15s; }
+  .glogin-btn:hover { box-shadow: 0 8px 20px -6px rgba(0,0,0,.35); }
+  .glogin-btn svg { width: 18px; height: 18px; }
+  #clientEmailInput::placeholder, #clientPasswordInput::placeholder { color: #6F6862; }
   .pnf-card { max-width: 460px; text-align: center; }
   .pnf-logo { display: flex; justify-content: center; margin-bottom: 26px; }
   .pnf-logo .think-mark { height: 44px; aspect-ratio: 376 / 139; background: linear-gradient(180deg, #F7AB77, #C0330F); filter: drop-shadow(0 6px 20px rgba(192,51,15,.45)); }
@@ -485,6 +492,40 @@
     <div class="pnf-logo"><span class="think-mark" role="img" aria-label="Think Technologies"></span></div>
     <h1>Portal not found</h1>
     <p>We couldn’t find a client portal at this link. Please double-check the link your Think Technologies contact shared with you — or reach out and we’ll send a fresh one.</p>
+  </div>
+</div>
+<div id="clientLoginGate" hidden>
+  <div class="pnf-card">
+    <div class="pnf-logo"><span class="think-mark" role="img" aria-label="Think Technologies"></span></div>
+    <h1>Sign in to view your portal</h1>
+    <p>For security, please sign in with the email your Think Technologies contact used to invite you.</p>
+    <button class="glogin-btn" id="googleLoginBtn">
+      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M23.52 12.27c0-.85-.08-1.67-.22-2.45H12v4.64h6.47a5.53 5.53 0 0 1-2.4 3.63v3h3.87c2.27-2.09 3.58-5.17 3.58-8.82z"/><path fill="#34A853" d="M12 24c3.24 0 5.96-1.07 7.95-2.91l-3.87-3c-1.08.72-2.45 1.15-4.08 1.15-3.13 0-5.79-2.12-6.74-4.96H1.27v3.1A12 12 0 0 0 12 24z"/><path fill="#FBBC05" d="M5.26 14.28A7.2 7.2 0 0 1 4.88 12c0-.79.14-1.56.38-2.28v-3.1H1.27A12 12 0 0 0 0 12c0 1.94.46 3.77 1.27 5.38z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0A12 12 0 0 0 1.27 6.62l3.99 3.1C6.21 6.87 8.87 4.75 12 4.75z"/></svg>
+      Continue with Google
+    </button>
+    <div style="display:flex;align-items:center;gap:12px;margin:20px 0;color:#A29A94;font:600 11px/1 var(--font);text-transform:uppercase;letter-spacing:.06em;">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,.14);"></div>or<div style="flex:1;height:1px;background:rgba(255,255,255,.14);"></div>
+    </div>
+    <div style="background:rgba(232,129,79,.1);border:1px solid rgba(232,129,79,.3);border-radius:10px;padding:12px 14px;margin-bottom:16px;">
+      <p style="font:700 13.5px/1.4 var(--font);color:#fff;margin:0;">First time here? Create your account below.</p>
+      <p style="font-size:12.5px;color:#A29A94;margin:4px 0 0;">Enter the email your Think Technologies contact invited and choose any password — this creates your account on the spot. After that, use the same email and password to sign in instantly every time.</p>
+    </div>
+    <input id="clientEmailInput" type="email" placeholder="you@company.com" autocomplete="email" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:12px 14px;font:400 14.5px var(--font);color:#fff;outline:none;box-sizing:border-box;">
+    <input id="clientPasswordInput" type="password" placeholder="Choose a password" autocomplete="current-password" style="width:100%;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:12px 14px;font:400 14.5px var(--font);color:#fff;outline:none;box-sizing:border-box;margin-top:10px;">
+    <label style="display:flex;align-items:center;gap:9px;font:500 13px/1 var(--font);color:#A29A94;cursor:pointer;margin-top:14px;">
+      <input type="checkbox" id="clientKeepSignedIn" checked style="width:auto;">
+      Keep me signed in
+    </label>
+    <button class="glogin-btn" id="clientEmailLoginBtn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.22);margin-top:12px;">Create an account</button>
+    <div class="msg err" id="clientLoginMsg" style="display:none;margin-top:16px;"></div>
+  </div>
+</div>
+<div id="accessDenied" hidden>
+  <div class="pnf-card">
+    <div class="pnf-logo"><span class="think-mark" role="img" aria-label="Think Technologies"></span></div>
+    <h1>This account isn’t invited</h1>
+    <p id="accessDeniedMsg">The Google account you signed in with hasn’t been invited to this portal. Please sign in with the email your Think Technologies contact used, or reach out for a fresh invite.</p>
+    <button class="glogin-btn" id="tryAnotherAccountBtn" style="background:transparent;color:#fff;border-color:rgba(255,255,255,.22);">Try a different account</button>
   </div>
 </div>
 <div class="app">
@@ -645,6 +686,27 @@
       <span class="eyebrow">Live feedback</span>
       <h2 class="page-title">Review the latest build</h2>
 
+      <div class="card staff-only" id="artifactEditor" hidden style="margin-bottom:18px;">
+        <label style="display:block;font:600 12px/1 var(--font);color:var(--text-muted);margin-bottom:8px;">Live artifact link (staff only) — paste a Claude artifact or a published/embeddable Google Doc, Sheet, or Slides link</label>
+        <div class="mini-input" style="margin-top:0;">
+          <input id="artifactUrlInput" type="text" placeholder="https://…">
+          <button class="mini go" id="artifactSaveBtn">Save</button>
+          <button class="mini" id="artifactRemoveBtn">Remove</button>
+        </div>
+        <label style="display:block;font:600 12px/1 var(--font);color:var(--text-muted);margin:16px 0 8px;">Or upload a build (.zip containing one or more .html files)</label>
+        <div class="mini-input" style="margin-top:0;">
+          <input id="artifactZipInput" type="file" accept=".zip">
+        </div>
+        <div id="artifactPagePicker" hidden style="margin-top:10px;">
+          <label style="display:block;font:600 12px/1 var(--font);color:var(--text-muted);margin-bottom:6px;">Multiple pages found — which one should clients land on?</label>
+          <div class="mini-input" style="margin-top:0;">
+            <select id="artifactPageSelect" style="flex:1;border:1px solid var(--border);border-radius:9px;padding:10px 12px;font:400 13.5px var(--font);color:var(--text);background:var(--panel);"></select>
+            <button class="mini go" id="artifactPageConfirm">Use this page</button>
+          </div>
+        </div>
+        <div id="artifactUploadStatus" style="font:600 12px/1.4 var(--font);color:var(--text-muted);margin-top:8px;"></div>
+      </div>
+
       <div class="card preview-card" id="demoCard" hidden>
         <div class="preview-head">
           <div>
@@ -729,33 +791,36 @@
       <span class="eyebrow">Explore our work</span>
       <h2 class="page-title">Request to See Our Previous Work</h2>
 
+      <div class="portfolio-actions">
+        <a class="btn portfolio-link" href="https://think-technologies.com/watchmework" target="_blank" rel="noopener">View Full Portfolio →</a>
+      </div>
+
       <div class="portfolio-grid">
         <a class="pf-card" href="https://think-technologies.com/watchmework/design-core-detroit-ai-workflow-case-study" target="_blank" rel="noopener">
-          <div class="pf-img" style="background-image:url('https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/7552e97d-2af4-438d-b352-ec610a1fa184/Design+Core+%26+Think++v3.png')"></div>
+          <img class="pf-img" src="https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/7552e97d-2af4-438d-b352-ec610a1fa184/Design+Core+%26+Think++v3.png" alt="Design Core Detroit — AI Workflow Case Study" loading="lazy">
           <div class="pf-title">Design Core Detroit — AI Workflow Case Study</div>
         </a>
         <a class="pf-card" href="https://think-technologies.com/watchmework/xclusive-seats-mvp-platform-case-study" target="_blank" rel="noopener">
-          <div class="pf-img" style="background-image:url('https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/9d887bb7-980b-4f5c-9201-23158d2eab42/xclusive+seats+v2.png')"></div>
+          <img class="pf-img" src="https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/9d887bb7-980b-4f5c-9201-23158d2eab42/xclusive+seats+v2.png" alt="Xclusive Seats — Platform Case Study" loading="lazy">
           <div class="pf-title">Xclusive Seats — Platform Case Study</div>
         </a>
         <a class="pf-card" href="https://think-technologies.com/watchmework/ai-media-recovery-local-government" target="_blank" rel="noopener">
-          <div class="pf-img" style="background-image:url('https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/f87e0c6b-c1a7-4d49-836c-6af73747b018/Local+Government+AI+.png')"></div>
+          <img class="pf-img" src="https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/f87e0c6b-c1a7-4d49-836c-6af73747b018/Local+Government+AI+.png" alt="AI Media Recovery for Local Government" loading="lazy">
           <div class="pf-title">AI Media Recovery for Local Government</div>
         </a>
         <a class="pf-card" href="https://think-technologies.com/watchmework/wheelworks-inventory-system" target="_blank" rel="noopener">
-          <div class="pf-img" style="background-image:url('https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/a3c610a4-632e-40a1-be29-9a4939bfb73c/Wheelworks+Think+Review+v2.png')"></div>
+          <img class="pf-img" src="https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/a3c610a4-632e-40a1-be29-9a4939bfb73c/Wheelworks+Think+Review+v2.png" alt="Wheelworks Detroit — Custom AI-Powered IMS" loading="lazy">
           <div class="pf-title">Wheelworks Detroit — Custom AI-Powered IMS</div>
         </a>
         <a class="pf-card" href="https://think-technologies.com/watchmework/realteam" target="_blank" rel="noopener">
-          <div class="pf-img" style="background-image:url('https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/d5ffdf89-82c1-4341-baec-eb0c7771d1d2/ChatGPT+Image+May+10%2C+2025%2C+02_09_00+PM.png')"></div>
+          <img class="pf-img" src="https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/d5ffdf89-82c1-4341-baec-eb0c7771d1d2/ChatGPT+Image+May+10%2C+2025%2C+02_09_00+PM.png" alt="RealTeam — Performance Dashboard &amp; Data Infrastructure" loading="lazy">
           <div class="pf-title">RealTeam — Performance Dashboard &amp; Data Infrastructure</div>
         </a>
         <a class="pf-card" href="https://think-technologies.com/watchmework/pogoai" target="_blank" rel="noopener">
-          <div class="pf-img" style="background-image:url('https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/27a51e7e-80a1-4adb-bb70-3e1c21ba2ff3/Copy+of+Politica+AI+v2+%28LinkedIn+Post%29.png')"></div>
+          <img class="pf-img" src="https://images.squarespace-cdn.com/content/v1/676ac3ff68e89f1028936d60/27a51e7e-80a1-4adb-bb70-3e1c21ba2ff3/Copy+of+Politica+AI+v2+%28LinkedIn+Post%29.png" alt="Politica — AI-Powered Political Research Tool" loading="lazy">
           <div class="pf-title">Politica — AI-Powered Political Research Tool</div>
         </a>
       </div>
-      <a class="btn ghost-dark portfolio-link" href="https://think-technologies.com/watchmework" target="_blank" rel="noopener">View Full Portfolio →</a>
 
       <div class="req">
         <div class="lbl">Which area are you curious about?</div>
@@ -777,8 +842,9 @@
           </div>
         </div>
         <div class="lbl">Anything else you'd like to mention?</div>
-        <textarea placeholder="General comments, specific examples you're after, or context that helps us point you to the right work…"></textarea>
-        <button class="btn">Send request →</button>
+        <textarea id="workReqNote" placeholder="General comments, specific examples you're after, or context that helps us point you to the right work…"></textarea>
+        <button class="btn" id="workReqSend">Send request →</button>
+        <div class="msg" id="workReqMsg" style="margin-top:10px;font:600 13px/1.4 var(--font);"></div>
       </div>
     </section>
 
@@ -898,17 +964,23 @@
 <!-- ===== CLIENT LOADER: pull this client's branding from Supabase ===== -->
 <script type="module">
   import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+  import JSZip from 'https://cdn.jsdelivr.net/npm/jszip@3/+esm';
   const _persist = localStorage.getItem('tt_persist') !== '0';
-  const sb = createClient('https://gnhuwffzttgriyjjbfyf.supabase.co', 'sb_publishable_-T3_xSvBTJNxFrqxRE-1Sw_bcsQYLs9', {
+  const sb = createClient('https://qjflezaygstvntrofcsj.supabase.co', 'sb_publishable_ttKyJTl60U3J4XnLFOeOdA_gXldDIvf', {
     auth: { storage: _persist ? window.localStorage : window.sessionStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
   });
 
   const showNotFound = () => { document.getElementById('portalNotFound').hidden = false; };
+  const showClientLoginGate = (msg) => {
+    document.getElementById('clientLoginGate').hidden = false;
+    if (msg) { const m = document.getElementById('clientLoginMsg'); m.textContent = msg; m.style.display = 'block'; }
+  };
+  const showAccessDenied = () => { document.getElementById('accessDenied').hidden = false; };
 
   (async () => {
-    // Clients browse with no login at all. Staff still sign in (for edit
-    // controls + admin); if a staff session exists, we use it — otherwise
-    // this is a public visitor and we just look up the client by the URL slug.
+    // Staff still sign in for edit controls + admin. Clients must sign in
+    // with Google — access is granted only if their email was pre-invited
+    // (see invitations table / handle_new_user() trigger in auth.sql).
     const { data: { session } } = await sb.auth.getSession();
     let profile = null, role = 'none';
     if (session) {
@@ -927,12 +999,46 @@
       if (!urlSlug) { location.replace('admin.html'); return; }   // staff with no client → admin
       q = q.eq('slug', urlSlug);
     } else if (role === 'client' && profile && profile.client_id) {
-      // a client who happens to be signed in stays locked to their own portal
+      // a signed-in, invited client stays locked to their own portal
       q = q.eq('id', profile.client_id);
+    } else if (session) {
+      // signed in with Google, but this email was never invited to any portal
+      document.getElementById('tryAnotherAccountBtn').addEventListener('click', async () => {
+        await sb.auth.signOut();
+        location.reload();
+      });
+      showAccessDenied();
+      return;
     } else {
-      // public visitor — no login required, just look up by the link's slug
+      // not signed in — must sign in before viewing a client portal, via
+      // Google or email+password (self-serve creates the account on first use).
       if (!urlSlug) { showNotFound(); return; }
-      q = q.eq('slug', urlSlug);
+      const keepEl = document.getElementById('clientKeepSignedIn');
+      document.getElementById('googleLoginBtn').addEventListener('click', async () => {
+        localStorage.setItem('tt_persist', keepEl.checked ? '1' : '0');
+        await sb.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: location.origin + location.pathname + '?client=' + encodeURIComponent(urlSlug) } });
+      });
+      document.getElementById('clientEmailLoginBtn').addEventListener('click', async () => {
+        const email = document.getElementById('clientEmailInput').value.trim().toLowerCase();
+        const password = document.getElementById('clientPasswordInput').value;
+        const msgEl = document.getElementById('clientLoginMsg');
+        const showErr = (t) => { msgEl.textContent = t; msgEl.style.display = 'block'; };
+        if (!email || !password) { showErr('Enter your email and a password.'); return; }
+        localStorage.setItem('tt_persist', keepEl.checked ? '1' : '0');
+        const btn = document.getElementById('clientEmailLoginBtn');
+        btn.disabled = true; btn.textContent = 'Signing in…';
+        let { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) {
+          const { error: signUpErr } = await sb.auth.signUp({ email, password });
+          if (!signUpErr) ({ error } = await sb.auth.signInWithPassword({ email, password }));
+          else error = signUpErr;
+        }
+        btn.disabled = false; btn.textContent = 'Create an account';
+        if (error) { showErr(error.message); return; }
+        location.reload();
+      });
+      showClientLoginGate();
+      return;
     }
 
     let data, error;
@@ -979,6 +1085,9 @@
     const WEBHOOK_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-meeting';
     const CANCEL_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-meeting-cancel';
     const isStaff = role === 'staff';
+    // TEMP: fixed Think Technologies address for calendar invites, regardless of
+    // who's signed in — swap for a per-staff-member email later if needed.
+    const staffEmail = 'saanchi@think-technologies.com';
     const clientId = data.id;
     const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     if (isStaff) { document.body.classList.add('is-staff'); document.querySelectorAll('.staff-only').forEach(e => e.hidden = false); }
@@ -1001,11 +1110,15 @@
       if (c.author_role !== myRole) return false;
       return (Date.now() - new Date(c.created_at).getTime()) < EDIT_WINDOW_MS;
     }
+    function fmtCommentTime(iso) {
+      const d = new Date(iso);
+      return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' }) + ' · ' + d.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+    }
     function commentEl(c, isReply) {
       const think = c.author_role === 'think';
       const av = think ? 'T' : (c.author_name ? c.author_name.trim().charAt(0).toUpperCase() : 'C');
       const el = document.createElement('div'); el.className = 'cmt' + (isReply ? ' cmt-reply' : ''); el.dataset.id = c.id;
-      el.innerHTML = '<div class="cmt-av' + (think ? ' think' : '') + '">' + av + '</div><div class="cmt-b"><div class="cmt-who">' + esc(c.author_name) + '</div>' +
+      el.innerHTML = '<div class="cmt-av' + (think ? ' think' : '') + '">' + av + '</div><div class="cmt-b"><div class="cmt-who">' + esc(c.author_name) + '<span class="cmt-when">' + fmtCommentTime(c.created_at) + '</span></div>' +
         '<div class="cmt-body">' + esc(c.body) + '</div>' +
         '<div class="cmt-footer">' +
           (canEditComment(c) ? '<button class="cmt-reply-btn cmt-edit-btn">Edit</button>' : '') +
@@ -1044,7 +1157,21 @@
         });
       });
     }
-    function wireCommentReply(el, meetingId, parentId) {
+    const COMMENT_NOTIFY_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-meeting-comment';
+    async function notifyCommentRecipient(meetingTitle, body) {
+      try {
+        let recipientEmail = null;
+        if (isStaff) {
+          const { data: inv } = await sb.from('invitations').select('email').eq('client_id', clientId).eq('role', 'client').limit(1);
+          if (inv && inv.length) recipientEmail = inv[0].email;
+        } else {
+          recipientEmail = staffEmail;
+        }
+        if (!recipientEmail) return;
+        await fetch(COMMENT_NOTIFY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ recipientEmail, senderName: isStaff ? 'Think Technologies' : name, body, meetingTitle, portalLink: location.origin + '/index.html?client=' + (data.slug || '') }) });
+      } catch (e) {}
+    }
+    function wireCommentReply(el, meetingId, parentId, meetingTitle) {
       const btn = el.querySelector('.cmt-reply-action'); if (!btn) return;
       const repliesBox = el.querySelector('.cmt-replies');
       btn.addEventListener('click', () => {
@@ -1060,12 +1187,13 @@
           const { data: ins, error } = await sb.from('meeting_comments').insert(payload).select().single();
           if (error) { wrap.querySelector('.go').disabled = false; alert('Could not post reply: ' + error.message); return; }
           repliesBox.appendChild(commentEl(ins, true)); wrap.remove();
+          notifyCommentRecipient(meetingTitle, v);
         };
         wrap.querySelector('.go').addEventListener('click', submit);
         inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
       });
     }
-    function toggleCommentInput(bottom, box, meetingId) {
+    function toggleCommentInput(bottom, box, meetingId, meetingTitle) {
       const ex = bottom.querySelector('.mini-input'); if (ex) { ex.remove(); return; }
       const wrap = document.createElement('div'); wrap.className = 'mini-input';
       wrap.innerHTML = '<input type="text" placeholder="Leave a comment…"><button class="mini go">Post</button>';
@@ -1077,7 +1205,8 @@
         const payload = { meeting_id: meetingId, client_id: clientId, author_name: isStaff ? 'Think Technologies' : name, author_role: isStaff ? 'think' : 'client', body: v };
         const { data: ins, error } = await sb.from('meeting_comments').insert(payload).select().single();
         if (error) { wrap.querySelector('.go').disabled = false; alert('Could not post comment: ' + error.message); return; }
-        const el = commentEl(ins, false); box.appendChild(el); wireCommentReply(el, meetingId, ins.id); wrap.remove();
+        const el = commentEl(ins, false); box.appendChild(el); wireCommentReply(el, meetingId, ins.id, meetingTitle); wrap.remove();
+        notifyCommentRecipient(meetingTitle, v);
       };
       wrap.querySelector('.go').addEventListener('click', submit);
       inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
@@ -1085,6 +1214,7 @@
     const COMMENT_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>';
     function meetingCard(m, comments) {
       const f = fmtDate(m.meeting_date);
+      const meetingTitle = m.title || ('meeting notes — ' + f.mo + ' ' + f.dy + ', ' + f.yr);
       const pts = (Array.isArray(m.points) ? m.points : []).map(p => '<li>' + esc(p) + '</li>').join('');
       const card = document.createElement('div'); card.className = 'mtg' + (m.hidden ? ' mtg-hidden' : ''); card.dataset.id = m.id;
       card.innerHTML =
@@ -1100,12 +1230,12 @@
       topLevel.forEach(c => {
         const el = commentEl(c, false);
         box.appendChild(el);
-        wireCommentReply(el, m.id, c.id);
+        wireCommentReply(el, m.id, c.id, meetingTitle);
         const repliesBox = el.querySelector('.cmt-replies');
         (repliesByParent[c.id] || []).forEach(r => repliesBox.appendChild(commentEl(r, true)));
       });
       const commentBtn = card.querySelector('.mtg-comment-btn');
-      if (commentBtn) commentBtn.addEventListener('click', () => toggleCommentInput(card.querySelector('.mtg-bottom'), box, m.id));
+      if (commentBtn) commentBtn.addEventListener('click', () => toggleCommentInput(card.querySelector('.mtg-bottom'), box, m.id, meetingTitle));
       if (isStaff) {
         card.querySelector('[data-act="edit"]').addEventListener('click', () => editNotesInline(card, m));
         card.querySelector('[data-act="del"]').addEventListener('click', () => toggleMeetingHidden(m));
@@ -1229,11 +1359,12 @@
         '<div class="ed-actions">' +
           '<button class="btn" id="ed-save">Save</button>' +
           '<button class="btn ghost" id="ed-cancel">Cancel</button>' +
-          (m ? '<button class="btn ghost-danger" id="ed-cancel-meeting">Cancel meeting</button>' : '') +
+          (m ? '<button class="btn ghost-danger" id="ed-cancel-meeting">' + (m.calendar_event_id ? 'Cancel meeting' : 'Delete meeting') + '</button>' : '') +
         '</div></div>';
       document.getElementById('ed-cancel').addEventListener('click', () => { wrap.innerHTML = ''; });
       document.getElementById('ed-save').addEventListener('click', () => saveMeeting(m));
       if (m) document.getElementById('ed-cancel-meeting').addEventListener('click', () => cancelMeeting(m));
+      document.getElementById('ed-start').addEventListener('input', e => { if (e.target.value) document.getElementById('ed-end').value = plusMinutes(e.target.value, 30); });
     }
     function fmtTime(t) { if (!t) return ''; let [h, mm] = t.split(':').map(Number); const ap = h < 12 ? 'AM' : 'PM'; h = h % 12 || 12; return h + ':' + String(mm).padStart(2, '0') + ' ' + ap; }
     function tzInfo() {
@@ -1268,7 +1399,7 @@
       if (!attendeeEmail) return { sent: false, reason: 'this client has no login email set (add one in the admin panel)' };
       const startISO = zonedTimeToUtcISO(mtg.meeting_date, mtg.start_time, tz);
       const endISO = mtg.end_time ? zonedTimeToUtcISO(mtg.meeting_date, mtg.end_time, tz) : new Date(new Date(startISO).getTime() + 3600000).toISOString();
-      const payload = { title: mtg.title, description: (mtg.points || []).join('\n'), location: mtg.location || '', start: startISO, end: endISO, timezone: tz, attendeeEmail: attendeeEmail, clientName: name, organizer: 'Think Technologies', eventId: mtg.calendar_event_id || null };
+      const payload = { title: mtg.title, description: (mtg.points || []).join('\n'), location: mtg.location || '', start: startISO, end: endISO, timezone: tz, attendeeEmail: attendeeEmail, staffEmail: staffEmail, clientName: name, organizer: 'Think Technologies', eventId: mtg.calendar_event_id || null };
       try {
         const r = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
         let eventId = null; try { const body = await r.json(); eventId = body && body.id ? body.id : null; } catch (e) {}
@@ -1286,34 +1417,50 @@
       const time_label = startT ? (fmtTime(startT) + (endT ? ' – ' + fmtTime(endT) : '') + (abbr ? ' ' + abbr : '')) : null;
       const payload = { client_id: clientId, title, meeting_date: document.getElementById('ed-date').value || null, start_time: startT, end_time: endT, time_label, location: 'Google Meet', tz, points };
       const btn = document.getElementById('ed-save'); btn.disabled = true; btn.textContent = 'Saving…';
-      let error, saved;
-      if (m) ({ data: saved, error } = await sb.from('meetings').update(payload).eq('id', m.id).select().single());
-      else ({ data: saved, error } = await sb.from('meetings').insert(payload).select().single());
-      if (error) { btn.disabled = false; btn.textContent = 'Save'; alert('Could not save: ' + error.message); return; }
-      // if staff opted in, fire the calendar invite — for a new meeting this creates
-      // the event; for an edit, sendInvite() reuses saved.calendar_event_id so the
-      // SAME event gets updated instead of a duplicate being created.
+      // A scheduled meeting (has a start time, invite requested) must never exist
+      // without a real calendar event behind it — so the invite is sent FIRST, and
+      // nothing is written to the DB unless it actually succeeds. This guarantees
+      // "Cancel meeting" is only ever offered for meetings that truly have an event.
       const inviteEl = document.getElementById('ed-invite');
-      if (inviteEl && inviteEl.checked) {
-        const res = await sendInvite(saved, tz);
-        if (res.eventId) await sb.from('meetings').update({ calendar_event_id: res.eventId }).eq('id', saved.id);
-        mtgToast(res.sent ? ('Meeting saved — calendar invite sent to ' + res.reason) : ('Meeting saved, but no invite: ' + res.reason), res.sent);
-      } else {
-        mtgToast('Meeting saved.', true);
+      const wantsInvite = !!(inviteEl && inviteEl.checked);
+      let calendarEventId = m ? m.calendar_event_id : null;
+      if (wantsInvite && startT) {
+        const res = await sendInvite(Object.assign({}, payload, { calendar_event_id: calendarEventId }), tz);
+        if (!res.eventId) {
+          btn.disabled = false; btn.textContent = 'Save';
+          alert('Could not schedule this meeting — the calendar invite failed (' + res.reason + '). Nothing was saved; fix the issue and try again.');
+          return;
+        }
+        calendarEventId = res.eventId;
       }
+      const finalPayload = calendarEventId ? Object.assign({}, payload, { calendar_event_id: calendarEventId }) : payload;
+      let error, saved;
+      if (m) ({ data: saved, error } = await sb.from('meetings').update(finalPayload).eq('id', m.id).select().single());
+      else ({ data: saved, error } = await sb.from('meetings').insert(finalPayload).select().single());
+      if (error) { btn.disabled = false; btn.textContent = 'Save'; alert('Could not save: ' + error.message + (calendarEventId ? ' (a calendar event was already created — eventId ' + calendarEventId + ' — you may need to cancel it manually).' : '')); return; }
+      mtgToast(wantsInvite && startT ? 'Meeting saved — calendar invite sent.' : 'Meeting saved.', true);
       document.getElementById('meetingEditorWrap').innerHTML = '';
       renderMeetings();
     }
     async function cancelMeeting(m) {
-      if (!confirm('Cancel this meeting? The calendar invite will be cancelled and the client notified.')) return;
-      if (m.calendar_event_id) {
-        try { await fetch(CANCEL_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventId: m.calendar_event_id }) }); }
-        catch (e) {}
+      const hasEvent = !!m.calendar_event_id;
+      const confirmMsg = hasEvent
+        ? 'Cancel this meeting? The calendar invite will be cancelled and the client notified.'
+        : 'Delete this meeting? No calendar invite is on file for it, so the client will NOT receive a cancellation email.';
+      if (!confirm(confirmMsg)) return;
+      let cancelOk = true;
+      if (hasEvent) {
+        try {
+          const r = await fetch(CANCEL_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ eventId: m.calendar_event_id }) });
+          cancelOk = r.ok;
+        } catch (e) { cancelOk = false; }
       }
       const { error } = await sb.from('meetings').delete().eq('id', m.id);
       if (error) { alert('Could not cancel: ' + error.message); return; }
       document.getElementById('meetingEditorWrap').innerHTML = '';
-      mtgToast('Meeting cancelled.', true);
+      if (hasEvent && !cancelOk) mtgToast('Meeting deleted, but the calendar cancellation failed — the client may not have been notified.', false);
+      else if (!hasEvent) mtgToast('Meeting deleted (no calendar invite was ever sent, so no email went out).', false);
+      else mtgToast('Meeting cancelled — client notified.', true);
       renderMeetings();
     }
     async function toggleMeetingHidden(m) {
@@ -1341,6 +1488,7 @@
         '<div class="ed-actions"><button class="btn" id="rq-send">Send request</button><button class="btn ghost" id="rq-cancel">Cancel</button></div></div>';
       document.getElementById('rq-cancel').addEventListener('click', () => { wrap.innerHTML = ''; });
       document.getElementById('rq-send').addEventListener('click', submitRequest);
+      document.getElementById('rq-start').addEventListener('input', e => { if (e.target.value) document.getElementById('rq-end').value = plusMinutes(e.target.value, 30); });
     }
     async function submitRequest() {
       const date = document.getElementById('rq-date').value || null;
@@ -1373,6 +1521,7 @@
         '<div class="ed-actions"><button class="btn" id="rs-send">Send request</button><button class="btn ghost" id="rs-cancel">Cancel</button></div></div>';
       document.getElementById('rs-cancel').addEventListener('click', () => { wrap.innerHTML = ''; });
       document.getElementById('rs-send').addEventListener('click', () => submitReschedule(m));
+      document.getElementById('rs-start').addEventListener('input', e => { if (e.target.value) document.getElementById('rs-end').value = plusMinutes(e.target.value, 30); });
     }
     async function submitReschedule(m) {
       const date = document.getElementById('rs-date').value || null;
@@ -1386,7 +1535,7 @@
       if (error) { btn.disabled = false; btn.textContent = 'Send request'; alert('Could not send: ' + error.message); return; }
       const f = fmtDate(date);
       const newWhen = f.mo + ' ' + f.dy + ', ' + f.yr + ' at ' + fmtTime(start) + (end ? ' – ' + fmtTime(end) : '') + ' ' + tzAbbr(tz);
-      const noteWithContext = 'Requesting to move "' + (m.title || 'the meeting') + '" (currently ' + (m.time_label || 'unscheduled') + ') to ' + newWhen + '.' + (note ? ' Note: ' + note : '');
+      const noteWithContext = 'Requesting to move "' + (m.title || 'the meeting') + '" (currently ' + (m.time_label || 'unscheduled') + ') to ' + newWhen + '.' + (note ? '\n\nNote: ' + note : '');
       try { await fetch(REQUEST_NOTIFY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientName: name, when: newWhen, note: noteWithContext, portalLink: location.origin + '/index.html?client=' + (data.slug || '') }) }); } catch (e) {}
       document.getElementById('rescheduleFormWrap').innerHTML = '';
       mtgToast('Reschedule request sent — the Think team will confirm by email.', true);
@@ -1444,27 +1593,28 @@
       const time_label = r.preferred_start ? fmtTime(r.preferred_start) + (r.preferred_end ? ' – ' + fmtTime(r.preferred_end) : '') + (abbr ? ' ' + abbr : '') : null;
 
       if (r.target_meeting_id) {
-        // reschedule: update the EXISTING meeting in place, and patch the same calendar event
+        // reschedule: the invite must succeed BEFORE the meeting's time is changed,
+        // so we never end up with a "rescheduled" meeting the calendar doesn't know about.
         const { data: target } = await sb.from('meetings').select('*').eq('id', r.target_meeting_id).maybeSingle();
-        const payload = { meeting_date: r.preferred_date, start_time: r.preferred_start, end_time: r.preferred_end, time_label, tz };
-        const { data: saved, error } = await sb.from('meetings').update(payload).eq('id', r.target_meeting_id).select().single();
-        if (error) { alert('Could not reschedule: ' + error.message); return; }
-        const mergedForInvite = Object.assign({}, saved, { calendar_event_id: target && target.calendar_event_id });
-        const res = await sendInvite(mergedForInvite, tz);
-        if (res.eventId && !mergedForInvite.calendar_event_id) await sb.from('meetings').update({ calendar_event_id: res.eventId }).eq('id', r.target_meeting_id);
+        if (!target) { alert('Could not reschedule: the original meeting no longer exists.'); return; }
+        const proposed = Object.assign({}, target, { meeting_date: r.preferred_date, start_time: r.preferred_start, end_time: r.preferred_end, time_label, tz });
+        const res = await sendInvite(proposed, tz);
+        if (!res.eventId) { alert('Could not reschedule — the calendar invite failed (' + res.reason + '). Nothing was changed; try again.'); return; }
+        const { error } = await sb.from('meetings').update({ meeting_date: r.preferred_date, start_time: r.preferred_start, end_time: r.preferred_end, time_label, tz, calendar_event_id: res.eventId }).eq('id', r.target_meeting_id);
+        if (error) { alert('Could not reschedule: ' + error.message + ' (a calendar event was already updated — eventId ' + res.eventId + ').'); return; }
         await sb.from('meeting_requests').update({ status: 'accepted' }).eq('id', r.id);
-        mtgToast(res.sent ? ('Rescheduled — updated invite sent to ' + res.reason) : ('Rescheduled, but no invite: ' + res.reason), res.sent);
+        mtgToast('Rescheduled — updated invite sent to ' + res.reason, true);
         renderRequests(); renderMeetings();
         return;
       }
 
       const payload = { client_id: clientId, title: 'Meeting with ' + (r.requester_name || name), meeting_date: r.preferred_date, start_time: r.preferred_start, end_time: r.preferred_end, time_label, location: 'Google Meet', tz, points: r.note ? [r.note] : [] };
-      const { data: saved, error } = await sb.from('meetings').insert(payload).select().single();
-      if (error) { alert('Could not accept: ' + error.message); return; }
-      const res = await sendInvite(saved, tz);
-      if (res.eventId) await sb.from('meetings').update({ calendar_event_id: res.eventId }).eq('id', saved.id);
+      const res = await sendInvite(payload, tz);
+      if (!res.eventId) { alert('Could not accept — the calendar invite failed (' + res.reason + '). The request is still pending; try again.'); return; }
+      const { data: saved, error } = await sb.from('meetings').insert(Object.assign({}, payload, { calendar_event_id: res.eventId })).select().single();
+      if (error) { alert('Could not save the meeting: ' + error.message + ' (a calendar event was already created — eventId ' + res.eventId + ' — you may need to cancel it manually).'); return; }
       await sb.from('meeting_requests').update({ status: 'accepted' }).eq('id', r.id);
-      mtgToast(res.sent ? ('Accepted — invite sent to ' + res.reason) : ('Accepted & booked — no invite: ' + res.reason), res.sent);
+      mtgToast('Accepted — invite sent to ' + res.reason, true);
       renderRequests(); renderMeetings();
     }
     function declineRequest(r, el) {
@@ -1489,6 +1639,25 @@
     const reqBtn = document.getElementById('requestMeetingBtn');
     if (reqBtn) reqBtn.addEventListener('click', openRequestForm);
     if (!isStaff) document.querySelectorAll('.client-only').forEach(e => e.hidden = false);
+
+    // ===== WORK REQUEST (See Our Work tab — client asks to see relevant past work) =====
+    const WORK_REQUEST_NOTIFY_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-work-request';
+    const workReqSend = document.getElementById('workReqSend');
+    if (workReqSend) workReqSend.addEventListener('click', async () => {
+      const areas = Array.from(document.querySelectorAll('#request .chip.on')).map(c => c.textContent.trim());
+      const note = (document.getElementById('workReqNote').value || '').trim();
+      const msgEl = document.getElementById('workReqMsg');
+      if (!areas.length && !note) { msgEl.textContent = 'Pick an area or add a note so we know what you\'re after.'; msgEl.style.color = 'var(--accent)'; return; }
+      workReqSend.disabled = true; workReqSend.textContent = 'Sending…';
+      const { error } = await sb.from('work_requests').insert({ client_id: clientId, requester_name: name, areas, note: note || null });
+      if (error) { workReqSend.disabled = false; workReqSend.textContent = 'Send request →'; msgEl.textContent = 'Could not send: ' + error.message; msgEl.style.color = 'var(--accent)'; return; }
+      try { await fetch(WORK_REQUEST_NOTIFY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientName: name, areas: areas.join(', ') || 'Not specified', note: note || '(no additional note)', portalLink: location.origin + '/index.html?client=' + (data.slug || '') }) }); } catch (e) {}
+      workReqSend.disabled = false; workReqSend.textContent = 'Send request →';
+      msgEl.textContent = 'Request sent — the Think team will follow up soon.'; msgEl.style.color = 'var(--text-muted)';
+      document.querySelectorAll('#request .chip.on').forEach(c => c.classList.remove('on'));
+      document.getElementById('industrySubs').hidden = true;
+      document.getElementById('workReqNote').value = '';
+    });
 
     renderMeetings();
     renderRequests();
@@ -1604,8 +1773,8 @@
         '<div class="reqrow-ic">' + (a.status === 'done' ? CHECK_SVG : UPLOAD_SVG) + '</div>' +
         '<div class="reqrow-main"><div class="reqrow-name">' + esc(a.name) + '</div>' + (a.note ? '<div class="reqrow-note">' + esc(a.note) + '</div>' : '') + '</div>' +
         (a.status === 'done'
-          ? '<span class="reqrow-done">Done</span> <button class="btn small reqrow-undo" title="Move back to pending">Undo</button>'
-          : '<button class="btn small reqrow-up">Mark as done</button>');
+          ? '<span class="reqrow-done">Done</span>' + (isStaff ? ' <button class="btn small reqrow-undo" title="Move back to pending">Undo</button>' : '')
+          : (isStaff ? '<button class="btn small reqrow-up">Mark as done</button>' : ''));
       const btn = row.querySelector('.reqrow-up');
       if (btn) btn.addEventListener('click', async () => {
         btn.disabled = true; btn.textContent = 'Saving…';
@@ -1633,11 +1802,14 @@
         label: 'neighborhood-intelligence.tribe.dev'
       }
     };
-    (function renderDemo() {
+    function renderDemo() {
       const card = document.getElementById('demoCard');
       const emptyCard = document.getElementById('demoEmptyCard');
       if (!card || !emptyCard) return;
-      const demo = DEMOS[data.slug];
+      card.hidden = true; emptyCard.hidden = true;
+      const demo = data.live_artifact_url
+        ? { url: data.live_artifact_url, title: 'Live artifact', sub: 'Shared by Think Technologies', label: data.live_artifact_url }
+        : DEMOS[data.slug];
       if (!demo) { emptyCard.hidden = false; return; }
       document.getElementById('demoTitle').textContent = demo.title;
       document.getElementById('demoSub').textContent = demo.sub;
@@ -1645,6 +1817,88 @@
       document.getElementById('demoFrame').src = demo.url;
       document.getElementById('demoOpen').href = demo.url;
       card.hidden = false;
+    }
+    renderDemo();
+    (function wireArtifactEditor() {
+      const saveBtn = document.getElementById('artifactSaveBtn');
+      const removeBtn = document.getElementById('artifactRemoveBtn');
+      const input = document.getElementById('artifactUrlInput');
+      if (!saveBtn || !input) return;
+      input.value = data.live_artifact_url || '';
+      saveBtn.addEventListener('click', async () => {
+        const val = input.value.trim();
+        if (!/^https?:\/\//i.test(val)) { input.focus(); alert('Paste a full link starting with https://'); return; }
+        saveBtn.disabled = true; saveBtn.textContent = 'Saving…';
+        const { error } = await sb.from('clients').update({ live_artifact_url: val }).eq('id', clientId);
+        saveBtn.disabled = false; saveBtn.textContent = 'Save';
+        if (error) { alert('Could not save: ' + error.message); return; }
+        data.live_artifact_url = val;
+        renderDemo();
+      });
+      removeBtn.addEventListener('click', async () => {
+        if (!confirm('Remove the live artifact link?')) return;
+        removeBtn.disabled = true;
+        const { error } = await sb.from('clients').update({ live_artifact_url: null }).eq('id', clientId);
+        removeBtn.disabled = false;
+        if (error) { alert('Could not remove: ' + error.message); return; }
+        data.live_artifact_url = null;
+        input.value = '';
+        renderDemo();
+      });
+      const MIME_TYPES = { html: 'text/html', htm: 'text/html', css: 'text/css', js: 'application/javascript', mjs: 'application/javascript', json: 'application/json', png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif', svg: 'image/svg+xml', webp: 'image/webp', ico: 'image/x-icon', woff: 'font/woff', woff2: 'font/woff2', ttf: 'font/ttf', otf: 'font/otf', mp4: 'video/mp4', webm: 'video/webm', pdf: 'application/pdf', docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation', txt: 'text/plain', md: 'text/plain', map: 'application/json' };
+      function mimeFor(name) { const ext = (name.split('.').pop() || '').toLowerCase(); return MIME_TYPES[ext] || 'application/octet-stream'; }
+      const zipInput = document.getElementById('artifactZipInput');
+      const statusEl = document.getElementById('artifactUploadStatus');
+      const pickerWrap = document.getElementById('artifactPagePicker');
+      const pageSelect = document.getElementById('artifactPageSelect');
+      const pageConfirm = document.getElementById('artifactPageConfirm');
+      let pendingEntries = null;
+      async function uploadEntries(entries, entryPointName) {
+        const stamp = String(Date.now());
+        const basePath = clientId + '/' + stamp;
+        let done = 0;
+        for (const entry of entries) {
+          statusEl.textContent = 'Uploading ' + (done + 1) + ' of ' + entries.length + '…';
+          const blob = await entry.async('blob');
+          const path = basePath + '/' + entry.name;
+          const { error } = await sb.storage.from('live-artifacts').upload(path, blob, { contentType: mimeFor(entry.name), upsert: true });
+          if (error) { statusEl.textContent = 'Upload failed on ' + entry.name + ': ' + error.message; statusEl.style.color = 'var(--accent)'; return; }
+          done++;
+        }
+        const { data: pub } = sb.storage.from('live-artifacts').getPublicUrl(basePath + '/' + entryPointName);
+        const publicUrl = pub.publicUrl;
+        const { error: saveErr } = await sb.from('clients').update({ live_artifact_url: publicUrl }).eq('id', clientId);
+        if (saveErr) { statusEl.textContent = 'Uploaded, but could not save the link: ' + saveErr.message; statusEl.style.color = 'var(--accent)'; return; }
+        data.live_artifact_url = publicUrl;
+        input.value = publicUrl;
+        statusEl.textContent = 'Uploaded ' + entries.length + ' files — live artifact updated.';
+        statusEl.style.color = 'var(--text-muted)';
+        pickerWrap.hidden = true;
+        zipInput.value = '';
+        renderDemo();
+      }
+      if (zipInput) zipInput.addEventListener('change', async () => {
+        const file = zipInput.files[0]; if (!file) return;
+        pickerWrap.hidden = true;
+        statusEl.style.color = 'var(--text-muted)'; statusEl.textContent = 'Reading zip…';
+        let zip;
+        try { zip = await JSZip.loadAsync(file); } catch (e) { statusEl.textContent = 'Could not read that zip file.'; statusEl.style.color = 'var(--accent)'; return; }
+        const entries = Object.values(zip.files).filter(f => !f.dir);
+        if (!entries.length) { statusEl.textContent = 'That zip has no files in it.'; statusEl.style.color = 'var(--accent)'; return; }
+        pendingEntries = entries;
+        const htmlEntries = entries.filter(f => /\.html?$/i.test(f.name));
+        if (!htmlEntries.length) { statusEl.textContent = 'No .html files found in that zip.'; statusEl.style.color = 'var(--accent)'; return; }
+        const indexEntry = htmlEntries.find(f => /(^|\/)index\.html?$/i.test(f.name));
+        if (indexEntry) { statusEl.textContent = 'Found index.html — uploading…'; await uploadEntries(entries, indexEntry.name); return; }
+        if (htmlEntries.length === 1) { statusEl.textContent = 'Found ' + htmlEntries[0].name + ' — uploading…'; await uploadEntries(entries, htmlEntries[0].name); return; }
+        pageSelect.innerHTML = htmlEntries.map(f => '<option value="' + f.name + '">' + f.name + '</option>').join('');
+        pickerWrap.hidden = false;
+        statusEl.textContent = 'Multiple pages found — pick which one clients should land on.';
+      });
+      if (pageConfirm) pageConfirm.addEventListener('click', async () => {
+        if (!pendingEntries) return;
+        await uploadEntries(pendingEntries, pageSelect.value);
+      });
     })();
 
     // ===== LIVE FEEDBACK: persisted comment thread =====
