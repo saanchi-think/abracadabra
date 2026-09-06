@@ -184,6 +184,10 @@
       // Any @think-technologies.com signup is auto-granted staff (DB trigger).
       const { error: signUpErr } = await sb.auth.signUp({ email, password });
       if (!signUpErr) ({ error } = await sb.auth.signInWithPassword({ email, password }));
+      // signUp failing because the account already exists means this IS an
+      // existing user — the original signIn failure was a real wrong password,
+      // not a first-time signup. Show that instead of the signUp error.
+      else if (/registered|exists/i.test(signUpErr.message || '')) error = { message: 'Incorrect email or password.' };
       else error = signUpErr;
     }
     loginBtn.disabled = false; loginBtn.textContent = 'Sign in →';
