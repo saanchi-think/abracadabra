@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Client Intake — Think Technologies</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --text: #141210;
+    --muted: #5B5651;
+    --surface: #FFFFFF;
+    --surface-2: #F4F1EF;
+    --border: #ECE7E4;
+    --accent: #B33F2A;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { font-family: var(--font); color: var(--text); background: var(--surface-2); -webkit-font-smoothing: antialiased; }
+  .top { background: #0E0E0E; color: #fff; padding: 26px 28px; }
+  .top .brand { font-weight: 700; font-size: 22px; letter-spacing: -0.01em; }
+  .wrap { max-width: 640px; margin: 0 auto; padding: 40px 20px 80px; }
+  .eyebrow { display: inline-block; color: var(--accent); font-weight: 600; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 10px; }
+  h1 { font-size: 32px; line-height: 1.15; letter-spacing: -0.02em; margin: 0 0 10px; }
+  .lede { color: var(--muted); font-size: 15px; line-height: 1.55; margin: 0 0 28px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 26px; }
+  .sect { margin: 26px 0 4px; font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); }
+  .sect:first-child { margin-top: 0; }
+  label { display: block; font-weight: 600; font-size: 13.5px; margin: 16px 0 7px; }
+  .hint { font-weight: 400; color: var(--muted); }
+  .req { color: var(--accent); font-weight: 700; }
+  input, textarea { width: 100%; border: 1px solid var(--border); border-radius: 11px; padding: 12px 14px; font: 400 14px/1.5 var(--font); color: var(--text); background: var(--surface-2); outline: none; }
+  input:focus, textarea:focus { border-color: #d9b2a8; }
+  textarea { min-height: 120px; resize: vertical; }
+  .hp { position: absolute; left: -9999px; opacity: 0; height: 0; overflow: hidden; }
+  .btn { margin-top: 24px; width: 100%; border: 0; border-radius: 12px; padding: 14px; background: var(--accent); color: #fff; font: 600 15px var(--font); cursor: pointer; }
+  .btn:disabled { opacity: 0.6; cursor: default; }
+  .msg { margin-top: 14px; font-size: 14px; line-height: 1.5; display: none; }
+  .msg.ok { display: block; color: #2c6e49; }
+  .msg.err { display: block; color: var(--accent); }
+  .done { text-align: center; padding: 30px 10px; }
+  .rec-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .rec-btn { border: 1px solid var(--border); background: var(--surface-2); color: var(--text); border-radius: 11px; padding: 10px 14px; font: 600 13.5px var(--font); cursor: pointer; }
+  .rec-btn.recording { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .rec-time { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .rec-player { display: none; align-items: center; gap: 10px; margin-top: 10px; }
+  .rec-player.show { display: flex; flex-wrap: wrap; }
+  .rec-player audio { height: 40px; max-width: 100%; }
+  .rec-remove { border: 0; background: none; color: var(--accent); font: 600 13px var(--font); cursor: pointer; text-decoration: underline; }
+  .done h2 { margin: 0 0 8px; font-size: 24px; }
+  .done p { color: var(--muted); margin: 0; }
+</style>
+</head>
+<body>
+  <div class="top"><div class="brand">[think<span>]</span> Technologies</div></div>
+  <div class="wrap">
+    <span class="eyebrow">New client intake</span>
+    <h1>Before we meet.</h1>
+    <p class="lede">A few details ahead of your discovery meeting so we show up already knowing your business — and you spend the call on what matters.</p>
+
+    <div class="card" id="formCard">
+      <div class="hint" style="font-size:12.5px;margin-bottom:2px"><span class="req">*</span> = required</div>
+      <div class="sect">About you</div>
+      <label for="fName">Your name <span class="req">*</span></label>
+      <input id="fName" type="text" placeholder="Jane Doe" autocomplete="name">
+
+      <label for="fEmail">Company email <span class="req">*</span></label>
+      <input id="fEmail" type="email" placeholder="jane@acme.com" autocomplete="email">
+
+      <label for="fTeamEmails">Teammates to keep in the loop <span class="hint">(their emails, comma-separated)</span></label>
+      <input id="fTeamEmails" type="text" placeholder="ops@acme.com, cfo@acme.com" autocomplete="off">
+
+      <div class="sect">About the company</div>
+      <label for="fCompany">Company name <span class="req">*</span></label>
+      <input id="fCompany" type="text" placeholder="Acme Corp" autocomplete="organization">
+
+      <label for="fSite">Company website <span class="hint">(recommended)</span></label>
+      <input id="fSite" type="text" placeholder="https://acme.com" autocomplete="url">
+
+      <label for="fSocial">Social media links</label>
+      <input id="fSocial" type="text" placeholder="LinkedIn, Instagram, …" autocomplete="off">
+
+      <label for="fIndustry">Industry <span class="req">*</span></label>
+      <input id="fIndustry" type="text" list="industryList" placeholder="e.g. Real estate" autocomplete="off">
+      <datalist id="industryList">
+        <option value="Real estate"></option>
+        <option value="Professional services"></option>
+        <option value="Retail & e-commerce"></option>
+        <option value="Manufacturing"></option>
+        <option value="Nonprofit"></option>
+        <option value="Healthcare"></option>
+        <option value="Finance"></option>
+        <option value="Hospitality & events"></option>
+        <option value="Media & creative"></option>
+        <option value="Government"></option>
+        <option value="Education"></option>
+        <option value="Technology"></option>
+      </datalist>
+
+      <div class="sect">The main thing</div>
+      <label for="fPain">If you had to pick one, what's the main pain point you plan to bring up in the discovery meeting? <span class="req">*</span> <span class="hint">(type it, record it, or both)</span></label>
+      <textarea id="fPain" placeholder="e.g. Every deal lives in a different spreadsheet and nobody knows the latest status…"></textarea>
+      <div class="rec-row">
+        <button type="button" class="rec-btn" id="recBtn">🎤 Record it instead</button>
+        <span class="rec-time" id="recTime" hidden>0:00 / 2:00 max</span>
+      </div>
+      <div class="rec-player" id="recPlayer">
+        <audio id="recAudio" controls></audio>
+        <button type="button" class="rec-remove" id="recRemove">Remove recording</button>
+      </div>
+
+      <!-- honeypot: bots fill this, humans never see it -->
+      <input class="hp" id="fWebsite" type="text" tabindex="-1" autocomplete="off">
+
+      <button class="btn" id="fSubmit">Send it over →</button>
+      <div class="msg" id="fMsg"></div>
+    </div>
+
+    <div class="card done" id="doneCard" hidden>
+      <h2>Got it — thank you!</h2>
+      <p>Someone from Think Technologies will reach out within a business day to lock in your discovery meeting.</p>
+    </div>
+  </div>
+
+<script>
+  const INTAKE_WEBHOOK_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/think-intake';
+  const $ = id => document.getElementById(id);
+  const msg = $('fMsg');
+  function showMsg(text, cls) { msg.textContent = text; msg.className = 'msg ' + cls; }
+
+  // --- voice note recorder (MediaRecorder) ---
+  let audioBlob = null, mediaRecorder = null, recChunks = [], recTimer = null, recSeconds = 0;
+  const recBtn = $('recBtn'), recTime = $('recTime'), recPlayer = $('recPlayer'), recAudio = $('recAudio'), recRemove = $('recRemove');
+  function fmtT(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    clearInterval(recTimer);
+    recBtn.classList.remove('recording'); recBtn.textContent = '🎤 Re-record'; recTime.hidden = true;
+  }
+  recBtn.addEventListener('click', async () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') { stopRecording(); return; }
+    let stream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+    catch (e) { showMsg('Microphone access was blocked — type your answer instead, or allow the mic in your browser.', 'err'); return; }
+    recChunks = []; audioBlob = null; recPlayer.classList.remove('show');
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => { if (e.data.size) recChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      stream.getTracks().forEach(t => t.stop());
+      audioBlob = new Blob(recChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+      recAudio.src = URL.createObjectURL(audioBlob);
+      recPlayer.classList.add('show');
+    };
+    mediaRecorder.start();
+    recSeconds = 0; recTime.hidden = false; recTime.textContent = '0:00 / 2:00 max';
+    recBtn.classList.add('recording'); recBtn.textContent = '■ Stop recording';
+    recTimer = setInterval(() => {
+      recSeconds++; recTime.textContent = fmtT(recSeconds) + ' / 2:00 max';
+      if (recSeconds >= 120) stopRecording();
+    }, 1000);
+  });
+  recRemove.addEventListener('click', () => { audioBlob = null; recAudio.src = ''; recPlayer.classList.remove('show'); recBtn.textContent = '🎤 Record it instead'; });
+  function blobToBase64(blob) {
+    return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(blob); });
+  }
+
+  $('fSubmit').addEventListener('click', async () => {
+    const name = $('fName').value.trim();
+    const email = $('fEmail').value.trim();
+    const teamEmails = $('fTeamEmails').value.trim();
+    const company = $('fCompany').value.trim();
+    const site = $('fSite').value.trim();
+    const social = $('fSocial').value.trim();
+    const industry = $('fIndustry').value.trim();
+    const painPoint = $('fPain').value.trim();
+    if ($('fWebsite').value) return; // honeypot tripped — silently drop
+    if (!name || !email || !company || !industry || (!painPoint && !audioBlob)) { showMsg('Please fill in your name, company email, company name, industry, and the pain point (typed or recorded).', 'err'); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showMsg('That email doesn’t look right.', 'err'); return; }
+    const btn = $('fSubmit');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      await fetch(INTAKE_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, teamEmails, company, site, social, industry, painPoint,
+          audioBase64: audioBlob ? await blobToBase64(audioBlob) : null,
+          audioMime: audioBlob ? (audioBlob.type || 'audio/webm') : null,
+          audioSeconds: audioBlob ? recSeconds : null })
+      });
+      $('formCard').hidden = true;
+      $('doneCard').hidden = false;
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'Send it over →';
+      showMsg('Something went wrong sending the form — please try again.', 'err');
+    }
+  });
+</script>
+</body>
+</html>

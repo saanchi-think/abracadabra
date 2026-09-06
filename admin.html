@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Think · Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0E0E0E; --panel: #FFFFFF; --text: #101010; --text-muted: #6B6B6B; --text-dim: #9A9A9A;
+    --accent: #C0330F; --accent-soft: rgba(192,51,15,.07); --accent-line: rgba(192,51,15,.22);
+    --good: #1F7A4D; --surface-2: #F6F6F6; --border: #E7E7E7; --border-soft: #F0F0F0;
+    --grad: linear-gradient(135deg, #E8814F, #C0330F);
+    --radius: 16px; --shadow-sm: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+    --font: 'Poppins', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font); background: var(--surface-2); color: var(--text); min-height: 100vh; }
+  .top { background: var(--bg); color: #fff; padding: 20px 34px; display: flex; align-items: center; justify-content: space-between; }
+  .brand { display: flex; align-items: center; gap: 12px; }
+  .brand .logo { font: 800 20px/1 var(--font); letter-spacing: -.5px; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .brand .logo b { color: #fff; -webkit-text-fill-color: #fff; }
+  .brand .sub { font: 600 11px/1 var(--font); letter-spacing: .14em; text-transform: uppercase; color: #8A827C; }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 34px 80px; }
+  .eyebrow { display: inline-flex; align-items: center; gap: 8px; font: 600 12px/1 var(--font); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px; }
+  .eyebrow::before { content: ""; width: 22px; height: 2px; background: var(--accent); border-radius: 2px; }
+  h1 { font: 700 30px/1.1 var(--font); margin-bottom: 6px; }
+  .lede { color: var(--text-muted); font-size: 14.5px; margin-bottom: 34px; }
+  .grid { display: grid; grid-template-columns: 1.1fr 1.3fr; gap: 26px; align-items: start; }
+  @media (max-width: 860px) { .grid { grid-template-columns: 1fr; } }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow-sm); }
+  .card h2 { font: 700 17px/1.2 var(--font); margin-bottom: 18px; }
+  label { display: block; font: 600 12.5px/1 var(--font); margin: 16px 0 8px; }
+  label:first-of-type { margin-top: 0; }
+  input { width: 100%; border: 1px solid var(--border); border-radius: 11px; padding: 12px 14px; font: 400 14px/1.4 var(--font); color: var(--text); background: var(--surface-2); outline: none; }
+  input:focus { border-color: var(--accent-line); }
+  .hint { font-size: 12px; color: var(--text-dim); margin-top: 6px; }
+  .logo-preview { margin-top: 18px; display: flex; align-items: center; gap: 14px; padding: 16px; border: 1px dashed var(--border); border-radius: 12px; background: var(--surface-2); }
+  .logo-box { width: 64px; height: 64px; border-radius: 12px; background: #fff; border: 1px solid var(--border); display: grid; place-items: center; overflow: hidden; flex-shrink: 0; }
+  .logo-box img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .logo-box .ph { font-size: 11px; color: var(--text-dim); text-align: center; padding: 6px; }
+  .logo-meta { font-size: 13px; color: var(--text-muted); }
+  .btn { margin-top: 22px; width: 100%; border: none; border-radius: 999px; padding: 14px 20px; font: 600 14px/1 var(--font); color: #fff; background: var(--grad); cursor: pointer; box-shadow: 0 8px 22px -8px rgba(192,51,15,.6); transition: transform .12s; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+  .msg { margin-top: 14px; font-size: 13px; padding: 11px 14px; border-radius: 10px; display: none; }
+  .msg.ok { display: block; background: rgba(31,122,77,.08); border: 1px solid rgba(31,122,77,.28); color: var(--good); }
+  .msg.err { display: block; background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--accent); }
+  .client-row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--border-soft); }
+  .client-row:last-child { border-bottom: none; }
+  .client-logo { width: 58px; height: 58px; border-radius: 14px; background: #fff; border: 1px solid var(--border); box-shadow: 0 1px 4px rgba(0,0,0,.07); display: grid; place-items: center; overflow: hidden; flex-shrink: 0; padding: 8px; }
+  .client-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .client-info { flex: 1; min-width: 0; }
+  .client-name { font-weight: 600; font-size: 14px; }
+  .client-email { font-size: 12px; color: var(--text-muted); margin: 2px 0 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .warn-email { color: #B26A00; }
+  .mini-email { font: 400 12px/1 var(--font); border: 1px solid var(--border); border-radius: 7px; padding: 5px 8px; background: var(--surface-2); outline: none; }
+  .mini-email:focus { border-color: var(--accent-line); }
+  .set-email { font: 600 11.5px/1 var(--font); border: 1px solid var(--accent-line); background: var(--accent-soft); color: var(--accent); border-radius: 7px; padding: 5px 10px; cursor: pointer; }
+  .mini-drive { font: 400 12px/1 var(--font); border: 1px solid var(--border); border-radius: 7px; padding: 5px 8px; background: var(--surface-2); outline: none; width: 190px; }
+  .mini-drive:focus { border-color: var(--accent-line); }
+  .set-drive { font: 600 11.5px/1 var(--font); border: 1px solid var(--accent-line); background: var(--accent-soft); color: var(--accent); border-radius: 7px; padding: 5px 10px; cursor: pointer; }
+  .client-link { font-size: 12.5px; color: var(--accent); text-decoration: none; word-break: break-all; }
+  .client-link:hover { text-decoration: underline; }
+  .empty { color: var(--text-dim); font-size: 13.5px; padding: 20px 0; text-align: center; }
+  .copy-btn { border: 1px solid var(--border); background: var(--surface-2); border-radius: 8px; padding: 7px 11px; font: 600 12px/1 var(--font); color: var(--text-muted); cursor: pointer; white-space: nowrap; }
+  .copy-btn:hover { border-color: var(--accent-line); color: var(--accent); }
+  .row-actions { display: flex; flex-direction: column; gap: 6px; }
+  .delete-btn { border: 1px solid rgba(192,51,15,.35); background: transparent; border-radius: 8px; padding: 7px 11px; font: 600 12px/1 var(--font); color: #C0330F; cursor: pointer; white-space: nowrap; }
+  .delete-btn:hover { background: rgba(192,51,15,.08); }
+  .delete-btn:disabled { opacity: .5; cursor: not-allowed; }
+</style>
+</head>
+<body>
+  <div class="top">
+    <div class="brand">
+      <div class="logo">[<b>think</b>]</div>
+      <div class="sub">Admin</div>
+    </div>
+    <div class="sub" style="color:#8A827C;display:flex;align-items:center;gap:16px">
+      <a href="#" id="changePasswordLink" class="hint" style="color:#8A827C" hidden>Change password</a>
+      <a href="#" id="signOutLink" class="hint" style="color:#8A827C" hidden>Sign out</a>
+      Client Portal Manager
+    </div>
+  </div>
+
+  <div class="wrap" id="loginGate" style="max-width:420px">
+    <span class="eyebrow">Internal</span>
+    <h1>Staff sign in</h1>
+    <p class="lede">Enter your Think Technologies email and password.</p>
+    <div class="card">
+      <label>Email</label>
+      <input id="loginEmail" type="email" placeholder="you@think-technologies.com" autocomplete="username">
+      <label>Password</label>
+      <input id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password">
+      <button class="btn" id="loginBtn">Sign in →</button>
+      <div class="msg" id="loginMsg"></div>
+    </div>
+  </div>
+
+  <div class="wrap" id="adminApp" hidden>
+    <span class="eyebrow">Internal</span>
+    <h1>Add a client</h1>
+
+    <div class="grid">
+      <!-- ADD CLIENT -->
+      <div class="card">
+        <h2>New client</h2>
+        <label>Website domain</label>
+        <input id="domain" type="text" placeholder="acme.com" autocomplete="off">
+
+        <label>Company name</label>
+        <input id="companyName" type="text" placeholder="Auto-filled from domain" autocomplete="off" autocorrect="off" autocapitalize="off" data-lpignore="true" data-1p-ignore>
+
+        <label>Client login email</label>
+        <input id="clientEmail" type="email" placeholder="contact@acme.com" autocomplete="off">
+
+        <div class="logo-preview">
+          <div class="logo-box" id="logoBox"><span class="ph">Logo preview</span></div>
+          <div class="logo-meta" id="logoMeta">Enter a domain to preview the logo.</div>
+        </div>
+
+        <button class="btn" id="createBtn">Create portal →</button>
+        <div class="msg" id="msg"></div>
+      </div>
+
+      <!-- EXISTING CLIENTS -->
+      <div class="card">
+        <h2>Client portals</h2>
+        <div id="clientList"><div class="empty">Loading…</div></div>
+      </div>
+    </div>
+  </div>
+
+<script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+  const SUPABASE_URL = 'https://qjflezaygstvntrofcsj.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_ttKyJTl60U3J4XnLFOeOdA_gXldDIvf';
+  const _persist = localStorage.getItem('tt_persist') !== '0';
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: { storage: _persist ? window.localStorage : window.sessionStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+  });
+
+  // --- gate: staff only, @think-technologies.com only — real Supabase email+password auth ---
+  const STAFF_DOMAIN = 'think-technologies.com';
+  const FIND_DRIVE_FOLDER_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-find-client-folder';
+  const DRIVE_FOLDER_INFO_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-drive-folder-info';
+  const loginGate = document.getElementById('loginGate');
+  const adminApp = document.getElementById('adminApp');
+  const signOutLink = document.getElementById('signOutLink');
+  const changePasswordLink = document.getElementById('changePasswordLink');
+  const loginEmailEl = document.getElementById('loginEmail');
+  const loginPasswordEl = document.getElementById('loginPassword');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginMsg = document.getElementById('loginMsg');
+  function showLoginMsg(text, type) { loginMsg.textContent = text; loginMsg.className = 'msg ' + type; }
+
+  async function checkStaffAndEnter() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return false;
+    const email = (session.user.email || '').toLowerCase();
+    if (!email.endsWith('@' + STAFF_DOMAIN)) { await sb.auth.signOut(); return false; }
+    const { data: profile } = await sb.from('profiles').select('role').eq('id', session.user.id).maybeSingle();
+    if (!profile || profile.role !== 'staff') { await sb.auth.signOut(); return false; }
+    loginGate.hidden = true; adminApp.hidden = false; signOutLink.hidden = false; changePasswordLink.hidden = false;
+    loadClients();
+    return true;
+  }
+
+  loginBtn.addEventListener('click', async () => {
+    const email = loginEmailEl.value.trim().toLowerCase();
+    const password = loginPasswordEl.value;
+    if (!email.endsWith('@' + STAFF_DOMAIN)) { showLoginMsg('Use your @' + STAFF_DOMAIN + ' email.', 'err'); return; }
+    if (!password) { showLoginMsg('Enter your password.', 'err'); return; }
+    loginBtn.disabled = true; loginBtn.textContent = 'Signing in…';
+    let { error } = await sb.auth.signInWithPassword({ email, password });
+    if (error) {
+      // First time this email has signed in — self-serve create the account.
+      // Any @think-technologies.com signup is auto-granted staff (DB trigger).
+      const { error: signUpErr } = await sb.auth.signUp({ email, password });
+      if (!signUpErr) ({ error } = await sb.auth.signInWithPassword({ email, password }));
+      else error = signUpErr;
+    }
+    loginBtn.disabled = false; loginBtn.textContent = 'Sign in →';
+    if (error) { showLoginMsg(error.message, 'err'); return; }
+    const ok = await checkStaffAndEnter();
+    if (!ok) showLoginMsg('This account isn’t set up for staff access.', 'err');
+  });
+  signOutLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    await sb.auth.signOut();
+    location.reload();
+  });
+  changePasswordLink.addEventListener('click', async (e) => {
+    e.preventDefault();
+    const next = prompt('Enter your new password:');
+    if (!next) return;
+    if (next.length < 6) { alert('Password must be at least 6 characters.'); return; }
+    const { error } = await sb.auth.updateUser({ password: next });
+    if (error) { alert('Could not update password: ' + error.message); return; }
+    alert('Password updated.');
+  });
+
+  await checkStaffAndEnter();
+
+  const $ = id => document.getElementById(id);
+  const nameEl = $('companyName'), domainEl = $('domain'), emailEl = $('clientEmail');
+  const logoBox = $('logoBox'), logoMeta = $('logoMeta'), msg = $('msg'), createBtn = $('createBtn');
+
+  // Accepts a full Drive folder URL or a bare folder ID; returns the ID or null.
+  function escHtml(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c])); }
+  function parseDriveFolderId(v) {
+    v = (v || '').trim();
+    if (!v) return null;
+    const m = v.match(/\/folders\/([A-Za-z0-9_-]{10,})/);
+    if (m) return m[1];
+    if (/^[A-Za-z0-9_-]{10,}$/.test(v)) return v;
+    return null;
+  }
+
+  // --- logo resolution via Brandfetch (transparent, high-quality) + favicon fallback ---
+  const BRANDFETCH_CLIENT_ID = '1id0MMCBxRhX8u81xkT';
+  // brand icon (square app-icon mark) — clean and uniform on a white tile
+  function bfCheck(domain) { return `https://cdn.brandfetch.io/${domain}/w/400/h/400/type/icon/fallback/404?c=${BRANDFETCH_CLIENT_ID}`; }
+  function bfShow(domain)  { return `https://cdn.brandfetch.io/${domain}/w/400/h/400/type/icon/fallback/transparent?c=${BRANDFETCH_CLIENT_ID}`; }
+  function favicon(domain) { return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`; }
+  let resolvedLogo = '';       // URL to display
+  let resolvedOnLight = true;  // logos render on a clean white tile
+
+  function cleanDomain(v) {
+    return v.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
+  }
+  function loadImg(url) {
+    return new Promise(res => { const i = new Image(); i.onload = () => res(i.naturalWidth ? i : null); i.onerror = () => res(null); i.src = url; });
+  }
+  function renderPreview(src, onLight) {
+    logoBox.style.background = onLight ? '#fff' : '#0E0E0E';
+    logoBox.innerHTML = '<img src="' + src + '" style="max-width:100%;max-height:100%;object-fit:contain">';
+  }
+
+  async function previewLogo() {
+    const domain = cleanDomain(domainEl.value);
+    logoBox.style.background = '';
+    if (!domain) { logoBox.innerHTML = '<span class="ph">Logo preview</span>'; logoMeta.textContent = 'Enter a domain to preview the logo.'; resolvedLogo = ''; resolvedOnLight = false; return; }
+    logoMeta.textContent = 'Fetching logo…';
+
+    // 1. Brandfetch brand icon — errors out via fallback/404 if none
+    if (await loadImg(bfCheck(domain))) {
+      resolvedLogo = bfShow(domain); resolvedOnLight = true;
+      renderPreview(resolvedLogo, true);
+      logoMeta.textContent = 'Brandfetch icon found ✓';
+      return;
+    }
+    // 2. favicon fallback
+    if (await loadImg(favicon(domain))) {
+      resolvedLogo = favicon(domain); resolvedOnLight = true;
+      renderPreview(resolvedLogo, true);
+      logoMeta.textContent = 'No Brandfetch icon — using favicon.';
+      return;
+    }
+    // 3. nothing
+    logoBox.innerHTML = '<span class="ph">No logo found</span>'; logoBox.style.background = '';
+    logoMeta.textContent = 'Couldn’t find a logo — you can still create the portal.';
+    resolvedLogo = ''; resolvedOnLight = false;
+  }
+  // --- company name resolution via Brandfetch search + domain-label fallback ---
+  let nameEditedByUser = false;
+  nameEl.addEventListener('input', () => { nameEditedByUser = true; });
+
+  function guessNameFromDomain(domain) {
+    const label = (domain.split('.')[0] || '').replace(/[-_]+/g, ' ').trim();
+    return label.replace(/\b\w/g, c => c.toUpperCase());
+  }
+  async function fetchCompanyName(domain) {
+    try {
+      const res = await fetch(`https://api.brandfetch.io/v2/search/${domain}?c=${BRANDFETCH_CLIENT_ID}`);
+      if (!res.ok) return '';
+      const results = await res.json();
+      const match = results.find(r => (r.domain || '').toLowerCase() === domain) || results[0];
+      return (match && match.name) || '';
+    } catch (e) { return ''; }
+  }
+  async function previewName() {
+    if (nameEditedByUser) return;
+    const domain = cleanDomain(domainEl.value);
+    if (!domain) { nameEl.value = ''; return; }
+    const fetched = await fetchCompanyName(domain);
+    if (nameEditedByUser) return; // user typed while we were fetching
+    nameEl.value = fetched || guessNameFromDomain(domain);
+  }
+
+  let t; domainEl.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => { previewLogo(); previewName(); }, 450);
+  });
+
+  function slugify(s) { return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''); }
+  // TEMP: appends staffPreview=1 so links from this admin list open each client's
+  // STAFF view directly, without needing a real sign-in. Once magic-link auth is
+  // back, drop &staffPreview=1 — a signed-in staff session will render the staff
+  // view on the plain client URL automatically.
+  function portalUrl(slug) { return `${location.origin}${location.pathname.replace(/admin\.html$/, 'index.html')}?client=${slug}&staffPreview=1`; }
+
+  async function loadClients() {
+    const { data, error } = await sb.from('clients').select('*').order('created_at', { ascending: false });
+    const list = $('clientList');
+    if (error) { list.innerHTML = `<div class="msg err" style="display:block">${error.message}</div>`; return; }
+    if (!data.length) { list.innerHTML = '<div class="empty">No clients yet. Add your first one.</div>'; return; }
+    // map each client to its login email (where invites go)
+    const emailByClient = {};
+    const { data: invs } = await sb.from('invitations').select('email, client_id').eq('role', 'client');
+    (invs || []).forEach(i => { if (i.client_id) emailByClient[i.client_id] = i.email; });
+    list.innerHTML = '';
+    data.forEach(c => {
+      const url = portalUrl(c.slug);
+      const row = document.createElement('div');
+      row.className = 'client-row';
+      row.innerHTML = `
+        <div class="client-logo" style="${c.logo_url && !c.logo_on_light ? 'background:#0E0E0E' : ''}">${c.logo_url ? `<img src="${c.logo_url}" alt="">` : '<span style="font-size:20px;font-weight:700">' + c.name.charAt(0) + '</span>'}</div>
+        <div class="client-info">
+          <div class="client-name">${c.name}</div>
+          <div class="client-email">${emailByClient[c.id]
+            ? '✉ ' + emailByClient[c.id]
+            : '<span class="warn-email">⚠ no login email</span> <input type="email" class="mini-email" placeholder="client@email.com"> <button class="set-email">Set</button>'}</div>
+          <div class="client-email">${c.drive_folder_id
+            ? '📁 <a href="https://drive.google.com/drive/folders/' + c.drive_folder_id + '" target="_blank" rel="noopener">' + (c.drive_folder_name ? escHtml(c.drive_folder_name) : 'Drive folder connected') + '</a>'
+            : '<span class="warn-email">⚠ no Drive folder</span> <input type="text" class="mini-email mini-folder" placeholder="Drive folder link"> <button class="set-folder">Set</button>'}</div>
+          <a class="client-link" href="${url}">${url}</a>
+        </div>
+        <div class="row-actions">
+          <button class="copy-btn" data-url="${url}">Copy link</button>
+          <button class="delete-btn">Delete</button>
+        </div>`;
+      row.querySelector('.copy-btn').addEventListener('click', e => {
+        navigator.clipboard.writeText(e.target.dataset.url);
+        e.target.textContent = 'Copied ✓';
+        setTimeout(() => e.target.textContent = 'Copy link', 1500);
+      });
+      row.querySelector('.delete-btn').addEventListener('click', async (e) => {
+        if (!confirm(`Delete the portal for "${c.name}"? This permanently removes all their meetings, notes, and login access. This can't be undone.`)) return;
+        const btn = e.target;
+        btn.disabled = true; btn.textContent = 'Deleting…';
+        try {
+          await sb.from('meeting_comments').delete().eq('client_id', c.id);
+          await sb.from('meeting_requests').delete().eq('client_id', c.id);
+          await sb.from('meetings').delete().eq('client_id', c.id);
+          await sb.from('client_actions').delete().eq('client_id', c.id);
+          await sb.from('processed_transcripts').delete().eq('client_id', c.id);
+          await sb.from('invitations').delete().eq('client_id', c.id);
+          await sb.from('profiles').update({ client_id: null }).eq('client_id', c.id);
+          const { error: delErr } = await sb.from('clients').delete().eq('id', c.id);
+          if (delErr) throw delErr;
+          loadClients();
+        } catch (err) {
+          btn.disabled = false; btn.textContent = 'Delete';
+          alert('Could not delete: ' + err.message);
+        }
+      });
+      const setBtn = row.querySelector('.set-email');
+      if (setBtn) setBtn.addEventListener('click', async () => {
+        const inp = row.querySelector('.mini-email');
+        const em = (inp.value || '').trim().toLowerCase();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { inp.focus(); return; }
+        setBtn.disabled = true; setBtn.textContent = 'Saving…';
+        const { error: e2 } = await sb.from('invitations').upsert({ email: em, role: 'client', client_id: c.id });
+        if (e2) { setBtn.disabled = false; setBtn.textContent = 'Set'; alert('Could not save: ' + e2.message); return; }
+        loadClients();
+      });
+      const setFolderBtn = row.querySelector('.set-folder');
+      if (setFolderBtn) setFolderBtn.addEventListener('click', async () => {
+        const inp = row.querySelector('.mini-folder');
+        const fid = parseDriveFolderId(inp.value);
+        if (!fid) { inp.focus(); alert('Paste the full Drive folder URL (…/drive/folders/XXXX) or just the folder ID.'); return; }
+        setFolderBtn.disabled = true; setFolderBtn.textContent = 'Saving…';
+        let folderName = null;
+        try {
+          const r = await fetch(DRIVE_FOLDER_INFO_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ folderId: fid }) });
+          const j = await r.json();
+          folderName = j.name || null;
+        } catch (e) {}
+        const { error: e3 } = await sb.from('clients').update({ drive_folder_id: fid, drive_folder_name: folderName }).eq('id', c.id);
+        if (e3) { setFolderBtn.disabled = false; setFolderBtn.textContent = 'Set'; alert('Could not save: ' + e3.message); return; }
+        loadClients();
+      });
+      list.appendChild(row);
+    });
+  }
+
+  createBtn.addEventListener('click', async () => {
+    const domain = cleanDomain(domainEl.value);
+    if (!domain) { showMsg('Please enter the client’s website domain.', 'err'); return; }
+    const name = nameEl.value.trim() || guessNameFromDomain(domain);
+    const slug = slugify(name);
+    const email = emailEl.value.trim().toLowerCase();
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { showMsg('Please enter the client’s login email — without it they can’t sign in or receive invites.', 'err'); return; }
+    createBtn.disabled = true; createBtn.textContent = 'Saving…';
+    const { data: created, error } = await sb.from('clients').upsert({
+      slug, name, domain: domain || null, logo_url: resolvedLogo || null, logo_on_light: resolvedOnLight
+    }, { onConflict: 'slug' }).select('id').single();
+    if (error) {
+      createBtn.disabled = false; createBtn.textContent = 'Create portal →';
+      showMsg(error.message, 'err');
+      return;
+    }
+    // grant the client's contact access to this portal (magic-link invitation)
+    if (email) {
+      const { error: invErr } = await sb.from('invitations').upsert({ email, role: 'client', client_id: created.id });
+      if (invErr) { showMsg(`Portal created, but couldn't add the login email: ${invErr.message}`, 'err'); createBtn.disabled = false; createBtn.textContent = 'Create portal →'; loadClients(); return; }
+    }
+    // Auto-find the client's Drive folder by name — never manually pasted. If the
+    // search is ambiguous (no match, or more than one), drive_folder_id is left
+    // blank and staff can set it by hand from the client list below.
+    let driveMsg = '';
+    try {
+      const r = await fetch(FIND_DRIVE_FOLDER_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name }) });
+      const j = await r.json();
+      if (j.folderId) {
+        await sb.from('clients').update({ drive_folder_id: j.folderId, drive_folder_name: j.folderName || null }).eq('id', created.id);
+        driveMsg = ` Drive folder linked automatically: "${j.folderName}".`;
+      } else {
+        driveMsg = j.matchCount > 1 ? ' Multiple matching Drive folders found — set it manually below.' : ' No matching Drive folder found — set it manually below.';
+      }
+    } catch (e) { driveMsg = ' Could not search Drive for a folder — set it manually below.'; }
+    createBtn.disabled = false; createBtn.textContent = 'Create portal →';
+    showMsg(`Portal created for ${name}${email ? ' — ' + email + ' can now sign in' : ''}!${driveMsg} Their link is in the list →`, 'ok');
+    nameEl.value = domainEl.value = emailEl.value = ''; nameEditedByUser = false;
+    logoBox.innerHTML = '<span class="ph">Logo preview</span>'; logoMeta.textContent = 'Enter a domain to preview the logo.'; resolvedLogo = '';
+    loadClients();
+  });
+
+  function showMsg(text, type) { msg.textContent = text; msg.className = 'msg ' + type; }
+</script>
+</body>
+</html>
