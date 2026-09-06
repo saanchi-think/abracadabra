@@ -69,6 +69,9 @@
   .empty { color: var(--text-dim); font-size: 13.5px; padding: 20px 0; text-align: center; }
   .copy-btn { border: 1px solid var(--border); background: var(--surface-2); border-radius: 8px; padding: 7px 11px; font: 600 12px/1 var(--font); color: var(--text-muted); cursor: pointer; white-space: nowrap; }
   .copy-btn:hover { border-color: var(--accent-line); color: var(--accent); }
+  .invite-btn { border: 1px solid rgba(31,122,77,.35); background: rgba(31,122,77,.06); border-radius: 8px; padding: 7px 11px; font: 600 12px/1 var(--font); color: var(--good); cursor: pointer; white-space: nowrap; }
+  .invite-btn:hover { background: rgba(31,122,77,.12); }
+  .invite-btn:disabled { opacity: .5; cursor: not-allowed; }
   .row-actions { display: flex; flex-direction: column; gap: 6px; }
   .delete-btn { border: 1px solid rgba(192,51,15,.35); background: transparent; border-radius: 8px; padding: 7px 11px; font: 600 12px/1 var(--font); color: #C0330F; cursor: pointer; white-space: nowrap; }
   .delete-btn:hover { background: rgba(192,51,15,.08); }
@@ -150,6 +153,7 @@
   const STAFF_DOMAIN = 'think-technologies.com';
   const FIND_DRIVE_FOLDER_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-find-client-folder';
   const DRIVE_FOLDER_INFO_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-drive-folder-info';
+  const INVITE_CLIENT_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/invite-client';
   const loginGate = document.getElementById('loginGate');
   const adminApp = document.getElementById('adminApp');
   const signOutLink = document.getElementById('signOutLink');
@@ -338,12 +342,26 @@
         </div>
         <div class="row-actions">
           <button class="copy-btn" data-url="${url}">Copy link</button>
+          <button class="invite-btn"${emailByClient[c.id] ? '' : ' disabled title="Set a login email first"'}>Invite client</button>
           <button class="delete-btn">Delete</button>
         </div>`;
       row.querySelector('.copy-btn').addEventListener('click', e => {
         navigator.clipboard.writeText(e.target.dataset.url);
         e.target.textContent = 'Copied ✓';
         setTimeout(() => e.target.textContent = 'Copy link', 1500);
+      });
+      row.querySelector('.invite-btn').addEventListener('click', async (e) => {
+        const btn = e.target;
+        btn.disabled = true; btn.textContent = 'Sending…';
+        try {
+          const r = await fetch(INVITE_CLIENT_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client_id: c.id }) });
+          const j = await r.json();
+          if (j.success) { btn.textContent = 'Invited ✓'; setTimeout(() => { btn.disabled = false; btn.textContent = 'Invite client'; }, 2000); }
+          else { alert('Could not send invite: ' + (j.reason || 'unknown error')); btn.disabled = false; btn.textContent = 'Invite client'; }
+        } catch (err) {
+          alert('Could not send invite: ' + err.message);
+          btn.disabled = false; btn.textContent = 'Invite client';
+        }
       });
       row.querySelector('.delete-btn').addEventListener('click', async (e) => {
         if (!confirm(`Delete the portal for "${c.name}"? This permanently removes all their meetings, notes, and login access. This can't be undone.`)) return;
