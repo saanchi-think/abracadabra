@@ -730,11 +730,11 @@
         </div>
       </div>
 
-      <div class="fb-compose">
+      <div class="fb-compose client-only" hidden>
         <input id="pvText" type="text" placeholder="Leave feedback on this build…">
         <button class="btn" id="pvPost">Comment</button>
       </div>
-      <div class="discuss-thread" id="pvThread"></div>
+      <div class="comments" id="pvThread"></div>
     </section>
 
     <!-- PROPOSALS & MEDIA -->
@@ -1905,27 +1905,71 @@
       });
     })();
 
-    // ===== LIVE FEEDBACK: persisted comment thread =====
+    // ===== LIVE FEEDBACK: persisted, threaded comment thread =====
     // Comments save to status_comments (tag 'live-feedback') and the Think
-    // team is emailed via the portal-feedback-notify n8n webhook.
+    // team is emailed via the portal-feedback-notify n8n webhook. Only
+    // clients can start a new thread (see .fb-compose.client-only above);
+    // staff can reply to whatever the client posts.
     const FEEDBACK_NOTIFY_URL = 'https://n8n.srv1000837.hstgr.cloud/webhook/portal-feedback-notify';
     const pvThread = document.getElementById('pvThread');
     const pvText = document.getElementById('pvText');
     const pvPost = document.getElementById('pvPost');
-    function feedbackNode(c) {
-      const isThink = c.author_role === 'think';
-      const el = document.createElement('div'); el.className = 'dcomment';
-      el.innerHTML = '<div class="cmt-av' + (isThink ? ' think' : '') + '">' + (isThink ? 'T' : esc((c.author_name || name).charAt(0))) + '</div>' +
-        '<div class="dcomment-main"><div class="dcomment-head"><span class="dcomment-who">' + esc(c.author_name || (isThink ? 'Think Technologies' : name)) + '</span></div>' +
-        '<div class="dcomment-text">' + esc(c.body) + '</div></div>';
+    async function notifyFeedbackRecipient(body) {
+      try {
+        const authorRole = isStaff ? 'think' : 'client';
+        const authorName = isStaff ? 'Think Technologies' : name;
+        await fetch(FEEDBACK_NOTIFY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientName: name, author: authorName, role: authorRole, comment: body, portalLink: location.origin + location.pathname + '?client=' + (data.slug || '') }) });
+      } catch (e) {}
+    }
+    function feedbackCommentEl(c, isReply) {
+      const think = c.author_role === 'think';
+      const av = think ? 'T' : ((c.author_name || name).trim().charAt(0).toUpperCase());
+      const el = document.createElement('div'); el.className = 'cmt' + (isReply ? ' cmt-reply' : ''); el.dataset.id = c.id;
+      el.innerHTML = '<div class="cmt-av' + (think ? ' think' : '') + '">' + av + '</div><div class="cmt-b"><div class="cmt-who">' + esc(c.author_name || (think ? 'Think Technologies' : name)) + '<span class="cmt-when">' + fmtCommentTime(c.created_at) + '</span></div>' +
+        '<div class="cmt-body">' + esc(c.body) + '</div>' +
+        (!isReply ? '<div class="cmt-footer"><button class="cmt-reply-btn cmt-reply-action">Reply</button></div><div class="cmt-replies"></div>' : '') + '</div>';
       return el;
+    }
+    function wireFeedbackReply(el, parentId) {
+      const btn = el.querySelector('.cmt-reply-action'); if (!btn) return;
+      const repliesBox = el.querySelector('.cmt-replies');
+      btn.addEventListener('click', () => {
+        const ex = el.querySelector('.mini-input'); if (ex) { ex.remove(); return; }
+        const wrap = document.createElement('div'); wrap.className = 'mini-input';
+        wrap.innerHTML = '<input type="text" placeholder="' + (isStaff ? 'Reply as Think…' : 'Reply…') + '"><button class="mini go">Reply</button>';
+        repliesBox.appendChild(wrap);
+        const inp = wrap.querySelector('input'); inp.focus();
+        const submit = async () => {
+          const v = inp.value.trim(); if (!v) return;
+          wrap.querySelector('.go').disabled = true;
+          const authorRole = isStaff ? 'think' : 'client';
+          const authorName = isStaff ? 'Think Technologies' : name;
+          const payload = { client_id: clientId, tag: 'live-feedback', parent_id: parentId, author_name: authorName, author_role: authorRole, body: v };
+          const { data: ins, error } = await sb.from('status_comments').insert(payload).select().single();
+          if (error) { wrap.querySelector('.go').disabled = false; alert('Could not post reply: ' + error.message); return; }
+          repliesBox.appendChild(feedbackCommentEl(ins, true)); wrap.remove();
+          notifyFeedbackRecipient(v);
+        };
+        wrap.querySelector('.go').addEventListener('click', submit);
+        inp.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+      });
     }
     async function loadFeedback() {
       if (!pvThread) return;
       pvThread.innerHTML = '';
       const { data: rows, error } = await sb.from('status_comments').select('*').eq('client_id', clientId).eq('tag', 'live-feedback').order('created_at');
       if (error) { pvThread.innerHTML = '<div class="lib-empty">Feedback thread isn’t connected yet — run status.sql in Supabase to enable it.</div>'; return; }
-      (rows || []).forEach(c => pvThread.appendChild(feedbackNode(c)));
+      const all = rows || [];
+      const topLevel = all.filter(c => !c.parent_id);
+      const repliesByParent = {};
+      all.filter(c => c.parent_id).forEach(c => { (repliesByParent[c.parent_id] = repliesByParent[c.parent_id] || []).push(c); });
+      topLevel.forEach(c => {
+        const el = feedbackCommentEl(c, false);
+        pvThread.appendChild(el);
+        wireFeedbackReply(el, c.id);
+        const repliesBox = el.querySelector('.cmt-replies');
+        (repliesByParent[c.id] || []).forEach(r => repliesBox.appendChild(feedbackCommentEl(r, true)));
+      });
     }
     if (pvPost) pvPost.addEventListener('click', async () => {
       const v = pvText.value.trim(); if (!v) return;
@@ -1937,7 +1981,7 @@
       if (error) { alert('Could not post: ' + error.message); return; }
       pvText.value = '';
       loadFeedback();
-      try { await fetch(FEEDBACK_NOTIFY_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ clientName: name, author: authorName, role: authorRole, comment: v, portalLink: location.origin + location.pathname + '?client=' + (data.slug || '') }) }); } catch (e) {}
+      notifyFeedbackRecipient(v);
     });
     if (pvText) pvText.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); pvPost.click(); } });
     loadFeedback();
